@@ -1,0 +1,21 @@
+# Node.js dependencies
+node_modules/
+
+# Python bytecode files
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Django database file
+db.sqlite3
+
+# Frontend build directory
+build/
+
+# macOS metadata files
+.DS_Store
+
+# Windows metadata files
+Thumbs.db
