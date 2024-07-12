@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import logo from './logo.svg';  // Asegúrate de que el logo esté importado correctamente
 import './App.scss';
