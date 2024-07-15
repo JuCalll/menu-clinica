@@ -12,12 +12,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Menu',
+            name='Paciente',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField()),
-                ('is_available', models.BooleanField(default=True)),
+                ('name', models.CharField(max_length=100)),
+                ('room', models.CharField(max_length=10)),
+                ('recommended_diet', models.CharField(max_length=255)),
             ],
         ),
     ]

@@ -1,6 +1,9 @@
+# pedidos/urls.py
+
 from django.urls import path
-from . import views
+from .views import PedidoListCreateView, PedidoDetailView
 
 urlpatterns = [
-    # Aquí se agregarán las rutas para las vistas del menú
+    path('', PedidoListCreateView.as_view(), name='pedido-list-create'),
+    path('<int:pk>/', PedidoDetailView.as_view(), name='pedido-detail'),
 ]

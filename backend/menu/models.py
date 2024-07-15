@@ -1,7 +1,7 @@
 from django.db import models
 
 class Menu(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
     description = models.TextField()
     is_available = models.BooleanField(default=True)
 

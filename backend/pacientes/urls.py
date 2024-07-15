@@ -1,6 +1,7 @@
 from django.urls import path
-from . import views
+from .views import PacienteListCreateView, PacienteDetailView
 
 urlpatterns = [
-    # Aquí se agregarán las rutas para las vistas del menú
+    path('pacientes/', PacienteListCreateView.as_view(), name='paciente-list-create'),
+    path('pacientes/<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),
 ]
