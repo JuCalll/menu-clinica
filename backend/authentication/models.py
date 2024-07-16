@@ -6,7 +6,7 @@ class CustomUserManager(BaseUserManager):
     # Método para crear un usuario normal
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('El campo de correo electrónico debe estar configurado')  # Mensaje de error en español
+            raise ValueError('El campo de correo electrónico debe estar configurado')  # Mensaje de error 
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
