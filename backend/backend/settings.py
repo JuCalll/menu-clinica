@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',  # Mensajes de Django
     'django.contrib.staticfiles',  # Archivos estáticos de Django
     'rest_framework',  # Django REST framework
+    'corsheaders',  # Django CORS headers
     'authentication',  # Aplicación de autenticación personalizada
     'menu',  # Aplicación de menús
     'pedidos',  # Aplicación de pedidos
@@ -54,7 +55,7 @@ REST_FRAMEWORK = {
 
 # Configuración de Simple JWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),  # Duración del token de acceso
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Duración del token de acceso
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Duración del token de actualización
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -85,14 +86,25 @@ AUTH_USER_MODEL = 'authentication.CustomUser'
 
 # Configuración de middlewares
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Middleware de CORS
+    'django.middleware.common.CommonMiddleware',  # Asegúrate de que esté después de corsheaders
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Configurar CORS
+CORS_ALLOW_ALL_ORIGINS = True  # Permitir todas las solicitudes de origen cruzado
+# O si deseas permitir solo ciertos orígenes
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
+CORS_ALLOW_CREDENTIALS = True  # Permitir el envío de credenciales en solicitudes CORS
 
 # Configuración de URL raíz
 ROOT_URLCONF = 'backend.urls'
