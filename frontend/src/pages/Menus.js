@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import '../styles/DataList.scss';
 
 const Menus = () => {
     const [menus, setMenus] = useState([]);
@@ -17,12 +18,13 @@ const Menus = () => {
     }, []);
 
     return (
-        <div>
+        <div className="data-list">
             <h2>Menus</h2>
             <ul>
                 {menus.map((menu) => (
                     <li key={menu.id}>
-                        {menu.name} - {menu.description}
+                        <h3>{menu.name}</h3>
+                        <p>{menu.description}</p>
                     </li>
                 ))}
             </ul>

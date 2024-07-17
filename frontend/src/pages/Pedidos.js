@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import '../styles/DataList.scss';
 
 const Pedidos = () => {
     const [pedidos, setPedidos] = useState([]);
@@ -17,12 +18,14 @@ const Pedidos = () => {
     }, []);
 
     return (
-        <div>
+        <div className="data-list">
             <h2>Pedidos</h2>
             <ul>
                 {pedidos.map((pedido) => (
                     <li key={pedido.id}>
-                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name}
+                        <h3>Status: {pedido.status}</h3>
+                        <p>Menu: {pedido.menu.name}</p>
+                        <p>Patient: {pedido.patient.name}</p>
                     </li>
                 ))}
             </ul>

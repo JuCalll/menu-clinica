@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../axiosConfig';
+import api from '../services/api'; // Asegúrate de que la ruta a 'api' es correcta
 
 const Register = () => {
     const [username, setUsername] = useState('');

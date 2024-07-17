@@ -1,7 +1,7 @@
-// src/pages/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import '../styles/Login.scss';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -14,14 +14,14 @@ const Login = () => {
         try {
             const response = await api.post('/auth/login/', { username, password });
             localStorage.setItem('token', response.data.access);
-            navigate('/'); // Redirigir al usuario a la página principal
+            navigate('/');
         } catch (error) {
             setError('Login failed');
         }
     };
 
     return (
-        <div>
+        <div className="login-container">
             <h2>Login</h2>
             <form onSubmit={handleLogin}>
                 <input
@@ -37,7 +37,7 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                 />
                 <button type="submit">Login</button>
-                {error && <p>{error}</p>}
+                {error && <p className="error">{error}</p>}
             </form>
         </div>
     );
