@@ -5,10 +5,10 @@ import '../styles/Sidebar.scss';
 const Sidebar = () => {
     return (
         <div className="sidebar">
-            <NavLink to="/" exact activeClassName="active">Home</NavLink>
-            <NavLink to="/menus" activeClassName="active">Menus</NavLink>
-            <NavLink to="/pedidos" activeClassName="active">Pedidos</NavLink>
-            <NavLink to="/pacientes" activeClassName="active">Pacientes</NavLink>
+            <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>Home</NavLink>
+            <NavLink to="/menus" className={({ isActive }) => isActive ? 'active' : ''}>Menus</NavLink>
+            <NavLink to="/pedidos" className={({ isActive }) => isActive ? 'active' : ''}>Pedidos</NavLink>
+            <NavLink to="/pacientes" className={({ isActive }) => isActive ? 'active' : ''}>Pacientes</NavLink>
         </div>
     );
 };
