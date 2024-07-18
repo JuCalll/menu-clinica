@@ -10,12 +10,16 @@ import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import './styles/App.scss';
 
+// Componente principal de la aplicación
 function App() {
     return (
         <Router>
             <Routes>
+                {/* Ruta para la página de inicio de sesión */}
                 <Route path="/login" element={<Login />} />
+                {/* Ruta para la página de registro */}
                 <Route path="/register" element={<Register />} />
+                {/* Ruta para las páginas privadas que requieren autenticación */}
                 <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
                     <Route path="/" element={<Home />} />
                     <Route path="/menus" element={<Menus />} />

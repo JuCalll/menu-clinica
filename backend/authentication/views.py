@@ -1,6 +1,3 @@
-# authentication/views.py
-
-# Importamos las clases necesarias de rest_framework y django
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken

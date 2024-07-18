@@ -1,46 +1,55 @@
-.login-container {
-    max-width: 400px;
-    margin: 100px auto;
-    padding: 20px;
-    background-color: white;
-    border: 1px solid #dee2e6;
-    border-radius: 5px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+// src/styles/Login.scss
 
+// Contenedor principal para el formulario de inicio de sesión
+.login-container {
+    max-width: 400px;  // Ancho máximo del contenedor
+    margin: 100px auto;  // Centrar el contenedor vertical y horizontalmente
+    padding: 20px;  // Relleno interno del contenedor
+    background-color: white;  // Fondo blanco
+    border: 1px solid #dee2e6;  // Borde del contenedor
+    border-radius: 5px;  // Bordes redondeados
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);  // Sombra para el contenedor
+
+    // Estilos para el encabezado h2 dentro del contenedor
     h2 {
-        color: #003366;
-        text-align: center;
+        color: #003366;  // Color del texto
+        text-align: center;  // Alinear el texto al centro
     }
 
+    // Estilos para el formulario
     form {
-        display: flex;
-        flex-direction: column;
+        display: flex;  // Usar flexbox para la disposición
+        flex-direction: column;  // Disposición en columna
 
+        // Estilos para los campos de entrada dentro del formulario
         input {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
+            margin-bottom: 10px;  // Margen inferior
+            padding: 10px;  // Relleno interno
+            border: 1px solid #dee2e6;  // Borde de los campos de entrada
+            border-radius: 5px;  // Bordes redondeados
         }
 
+        // Estilos para el botón dentro del formulario
         button {
-            padding: 10px;
-            background-color: #003366;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
+            padding: 10px;  // Relleno interno
+            background-color: #003366;  // Fondo del botón
+            color: white;  // Color del texto del botón
+            border: none;  // Sin borde
+            border-radius: 5px;  // Bordes redondeados
+            cursor: pointer;  // Cambia el cursor al pasar sobre el botón
+            font-weight: bold;  // Texto en negrita
 
+            // Estilos para el estado hover del botón
             &:hover {
-                background-color: #0099CC;
+                background-color: #0099CC;  // Cambio de color de fondo al pasar el cursor
             }
         }
 
+        // Estilos para el mensaje de error dentro del formulario
         .error {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
+            color: red;  // Color del texto de error
+            text-align: center;  // Alinear el texto al centro
+            margin-top: 10px;  // Margen superior
         }
     }
 }

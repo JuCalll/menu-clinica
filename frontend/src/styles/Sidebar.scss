@@ -1,24 +1,24 @@
 // src/styles/Sidebar.scss
 
 .sidebar {
-    width: 200px;
-    background-color: #343a40;
-    color: white;
-    height: 100vh;
-    padding-top: 20px;
+    width: 200px; // Ancho del sidebar
+    background-color: #343a40; // Color de fondo del sidebar
+    color: white; // Color del texto del sidebar
+    height: 100vh; // Altura del sidebar para cubrir toda la ventana
+    padding-top: 20px; // Relleno en la parte superior del sidebar
 }
 
 .sidebar a {
-    display: block;
-    color: white;
-    padding: 10px 20px;
-    text-decoration: none;
+    display: block; // Los enlaces se muestran como bloques
+    color: white; // Color del texto de los enlaces
+    padding: 10px 20px; // Relleno interno para los enlaces
+    text-decoration: none; // Sin subrayado para los enlaces
 }
 
 .sidebar a.active {
-    background-color: #007bff;
+    background-color: #007bff; // Color de fondo para el enlace activo
 }
 
 .sidebar a:hover {
-    background-color: #495057;
+    background-color: #495057; // Color de fondo al pasar el cursor sobre un enlace
 }

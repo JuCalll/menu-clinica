@@ -1,3 +1,4 @@
+// src/pages/Pacientes.js
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import '../styles/DataList.scss';
@@ -24,8 +25,8 @@ const Pacientes = () => {
                 {pacientes.map((paciente) => (
                     <li key={paciente.id}>
                         <h3>{paciente.name}</h3>
-                        <p>Room: {paciente.room}</p>
-                        <p>Diet: {paciente.recommended_diet}</p>
+                        <p>Habitación: {paciente.room}</p>
+                        <p>Restricciones: {paciente.recommended_diet}</p>
                     </li>
                 ))}
             </ul>

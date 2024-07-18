@@ -1,4 +1,3 @@
-# Importamos serializers de Django REST framework y el modelo CustomUser
 from rest_framework import serializers
 from .models import CustomUser
 

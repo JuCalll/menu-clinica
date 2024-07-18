@@ -1,0 +1,13 @@
+.home {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;  // Ajuste la altura según sea necesario para centrar el contenido verticalmente
+    text-align: center;
+    padding: 20px;
+
+    h1 {
+        font-size: 2em;
+        color: #003366;  // Color adecuado para el tema de la clínica
+    }
+}

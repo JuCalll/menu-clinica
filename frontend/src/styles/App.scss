@@ -1,27 +1,31 @@
 // src/styles/App.scss
 
+// Estilo global para el cuerpo del documento
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;  // Fuente utilizada
+    margin: 0;  // Eliminar margen por defecto
+    padding: 0;  // Eliminar padding por defecto
+    background-color: #f8f9fa;  // Color de fondo suave
 }
 
+// Estilo para todos los encabezados h1
 h1 {
-    color: #343a40;
-    text-align: center;
-    margin-top: 20px;
+    color: #343a40;  // Color del texto
+    text-align: center;  // Alinear texto al centro
+    margin-top: 20px;  // Espacio superior
 }
 
+// Estilo para todas las listas no ordenadas
 ul {
-    list-style-type: none;
-    padding: 0;
+    list-style-type: none;  // Eliminar viñetas
+    padding: 0;  // Eliminar padding por defecto
 
+    // Estilo para cada elemento de lista
     li {
-        background-color: #fff;
-        border: 1px solid #dee2e6;
-        margin: 10px;
-        padding: 10px;
-        border-radius: 5px;
+        background-color: #fff;  // Fondo blanco
+        border: 1px solid #dee2e6;  // Borde gris claro
+        margin: 10px;  // Margen entre elementos
+        padding: 10px;  // Relleno interno
+        border-radius: 5px;  // Bordes redondeados
     }
 }

@@ -1,72 +1,92 @@
+// src/styles/Menus.scss
+
 .menus {
-    padding: 20px;
+    padding: 20px;  // Relleno interno del contenedor principal
 
+    // Estilos para el encabezado h2
     h2 {
-        font-size: 24px;
-        margin-bottom: 20px;
+        font-size: 24px;  // Tamaño de fuente
+        margin-bottom: 20px;  // Margen inferior
     }
 
+    // Estilos para el botón principal
     button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        margin-bottom: 20px;
+        background-color: #007bff;  // Color de fondo
+        color: white;  // Color del texto
+        border: none;  // Sin borde
+        padding: 10px 20px;  // Relleno interno
+        cursor: pointer;  // Cambia el cursor al pasar sobre el botón
+        margin-bottom: 20px;  // Margen inferior
+
+        // Estilos para el estado hover del botón
         &:hover {
-            background-color: #0056b3;
+            background-color: #0056b3;  // Cambio de color de fondo al pasar el cursor
         }
     }
 
+    // Estilos para el formulario de menú
     .menu-form {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 20px;
+        display: flex;  // Usar flexbox para la disposición
+        flex-direction: column;  // Disposición en columna
+        margin-bottom: 20px;  // Margen inferior
 
+        // Estilos para los campos de entrada y el área de texto dentro del formulario
         input, textarea {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-bottom: 10px;  // Margen inferior
+            padding: 10px;  // Relleno interno
+            border: 1px solid #ccc;  // Borde de los campos
+            border-radius: 5px;  // Bordes redondeados
         }
 
+        // Estilos para el botón dentro del formulario
         button {
-            background-color: #28a745;
+            background-color: #28a745;  // Color de fondo
+
+            // Estilos para el estado hover del botón
             &:hover {
-                background-color: #218838;
+                background-color: #218838;  // Cambio de color de fondo al pasar el cursor
             }
         }
     }
 
+    // Estilos para la lista de menús
     .menu-list {
-        display: flex;
-        flex-wrap: wrap;
+        display: flex;  // Usar flexbox para la disposición
+        flex-wrap: wrap;  // Permitir que los elementos se envuelvan en múltiples líneas
 
+        // Estilos para cada ítem de menú
         .menu-item {
-            background-color: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px;
-            width: calc(33.333% - 20px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            background-color: white;  // Fondo blanco
+            border: 1px solid #ccc;  // Borde de los ítems
+            border-radius: 5px;  // Bordes redondeados
+            padding: 10px;  // Relleno interno
+            margin: 10px;  // Margen exterior
+            width: calc(33.333% - 20px);  // Ancho de los ítems con ajuste para el margen
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  // Sombra para los ítems
+            text-align: center;  // Alinear el texto al centro
 
+            // Estilos para el encabezado h3 dentro de los ítems
             h3 {
-                margin: 10px 0;
+                margin: 10px 0;  // Margen vertical
             }
 
+            // Estilos para los botones dentro de los ítems
             button {
-                background-color: #dc3545;
-                margin-top: 10px;
+                background-color: #dc3545;  // Color de fondo
+                margin-top: 10px;  // Margen superior
+
+                // Estilos para el estado hover del botón
                 &:hover {
-                    background-color: #c82333;
+                    background-color: #c82333;  // Cambio de color de fondo al pasar el cursor
                 }
 
+                // Estilos para el último botón dentro de los ítems
                 &:last-child {
-                    background-color: #ffc107;
+                    background-color: #ffc107;  // Color de fondo
+
+                    // Estilos para el estado hover del último botón
                     &:hover {
-                        background-color: #e0a800;
+                        background-color: #e0a800;  // Cambio de color de fondo al pasar el cursor
                     }
                 }
             }

@@ -1,26 +1,30 @@
 // src/styles/Header.scss
 
+// Estilos para el contenedor del encabezado
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
+    display: flex;  // Usar flexbox para la disposición
+    justify-content: space-between;  // Espacio entre los elementos hijos
+    align-items: center;  // Alinear elementos verticalmente en el centro
+    padding: 10px 20px;  // Relleno interno
+    background-color: #007bff;  // Color de fondo azul
+    color: white;  // Color del texto blanco
 }
 
+// Estilos para la sección izquierda del encabezado
 .header-left {
-    display: flex;
-    align-items: center;
+    display: flex;  // Usar flexbox para la disposición
+    align-items: center;  // Alinear elementos verticalmente en el centro
 }
 
+// Estilos para el logo
 .logo {
-    height: 40px;
-    margin-right: 10px;
+    height: 40px;  // Altura del logo
+    margin-right: 10px;  // Margen derecho
 }
 
+// Estilos para los enlaces en la sección derecha del encabezado
 .header-right a {
-    color: white;
-    text-decoration: none;
-    margin-left: 20px;
+    color: white;  // Color del texto blanco
+    text-decoration: none;  // Sin subrayado
+    margin-left: 20px;  // Margen izquierdo
 }
