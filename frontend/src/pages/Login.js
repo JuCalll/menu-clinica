@@ -27,9 +27,9 @@ const Login = () => {
 
     return (
         <div className="login-container">
-            <h2>Login</h2>
+            <h2>Iniciar Sesión</h2>
             <form onSubmit={handleLogin}>
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">Usuario</label>
                 <input
                     type="text"
                     id="username"
@@ -38,7 +38,7 @@ const Login = () => {
                     onChange={(e) => setUsername(e.target.value)}
                     required
                 />
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">Contraseña</label>
                 <input
                     type="password"
                     id="password"

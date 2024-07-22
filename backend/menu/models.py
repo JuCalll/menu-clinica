@@ -1,14 +1,33 @@
 from django.db import models
 
-# Definimos el modelo Menu
 class Menu(models.Model):
-    # Campo de texto para el nombre del menú con un máximo de 255 caracteres
+    """
+    Representa un menú en el sistema.
+
+    Atributos:
+        name (CharField): El nombre del menú (máximo 255 caracteres).
+        description (TextField): Una breve descripción del menú.
+        is_available (BooleanField): Indica si el menú está disponible o no (por defecto=True).
+
+    Ejemplo:
+        >>> menu = Menu(name="Desayuno", description="Comienza tu día con nuestras deliciosas opciones de desayuno", is_available=True)
+        >>> menu.save()
+    """
+
     name = models.CharField(max_length=255)
-    # Campo de texto para la descripción del menú
     description = models.TextField()
-    # Campo booleano para indicar si el menú está disponible, por defecto es True
     is_available = models.BooleanField(default=True)
 
-    # Método para representar el objeto Menu como una cadena
     def __str__(self):
+        """
+        Devuelve una representación de cadena del objeto Menu.
+
+        Devuelve:
+            str: El nombre del menú.
+
+        Ejemplo:
+            >>> menu = Menu(name="Almuerzo")
+            >>> str(menu)
+            'Almuerzo'
+        """
         return self.name

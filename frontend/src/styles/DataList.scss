@@ -1,33 +1,46 @@
 // src/styles/DataList.scss
 .data-list {
     padding: 20px;
-
+  
+    // Use a variable for the primary text color
+    $primary-text-color: #000000;
+  
     h2 {
-        margin-bottom: 20px;
-        color: #000000;
+      margin-bottom: 20px;
+      color: $primary-text-color;
     }
-
+  
     ul {
-        list-style-type: none;
-        padding: 0;
-
-        li {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            margin: 10px 0;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-
-            h3 {
-                margin: 0 0 10px;
-                color: #343a40;
-            }
-
-            p {
-                margin: 0;
-                color: #6c757d;
-            }
+      list-style-type: none;
+      padding: 0;
+  
+      li {
+        // Use a variable for the background color
+        $bg-color: white;
+        background-color: $bg-color;
+  
+        // Use a variable for the border color
+        $border-color: #dee2e6;
+        border: 1px solid $border-color;
+  
+        margin: 10px 0;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  
+        h3 {
+          margin: 0 0 10px;
+          // Use a variable for the secondary text color
+          $secondary-text-color: #343a40;
+          color: $secondary-text-color;
         }
+  
+        p {
+          margin: 0;
+          // Use a variable for the tertiary text color
+          $tertiary-text-color: #6c757d;
+          color: $tertiary-text-color;
+        }
+      }
     }
-}
+  }

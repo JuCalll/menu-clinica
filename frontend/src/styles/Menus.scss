@@ -1,5 +1,3 @@
-// src/styles/Menus.scss
-
 .menus {
     padding: 20px;  // Relleno interno del contenedor principal
 
@@ -90,6 +88,28 @@
                     }
                 }
             }
+        }
+    }
+
+    // Consultas de medios para hacer el diseño responsive
+    @media (max-width: 1200px) {
+        .menu-item {
+            width: calc(50% - 20px);  // Ajuste del ancho para pantallas medianas
+        }
+    }
+
+    @media (max-width: 768px) {
+        .menu-item {
+            width: calc(100% - 20px);  // Ajuste del ancho para pantallas pequeñas
+        }
+
+        button {
+            width: 100%;  // Ancho completo para el botón principal
+            padding: 15px;  // Ajuste de relleno
+        }
+
+        .menu-form input, .menu-form textarea {
+            width: 100%;  // Ancho completo para los campos de entrada
         }
     }
 }

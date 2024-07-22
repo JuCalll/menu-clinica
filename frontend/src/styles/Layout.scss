@@ -1,20 +1,22 @@
 // src/styles/Layout.scss
 
-// Estilos para el contenedor principal del layout
+// Layout container styles
 .layout {
-    display: flex;  // Usar flexbox para la disposición
-    flex-direction: column;  // Disposición en columna
-    height: 100vh;  // Altura del viewport
-}
-
-// Estilos para el contenido principal
-.main-content {
-    display: flex;  // Usar flexbox para la disposición
-    flex: 1;  // Flexibilidad para llenar el espacio disponible
-}
-
-// Estilos para el contenido específico dentro del main-content
-.content {
-    flex: 1;  // Flexibilidad para llenar el espacio disponible
-    padding: 20px;  // Relleno interno
-}
+    display: flex;
+    flex-direction: column;
+    height: 100vh; // Use `100vh` to make the layout full height
+    max-height: 100vh; // Add `max-height` to prevent overflow
+  }
+  
+  // Main content styles
+  .main-content {
+    display: flex;
+    flex: 1; // Take up the remaining space
+  }
+  
+  // Content styles
+  .content {
+    flex: 1; // Take up the remaining space
+    padding: 20px; // Add some breathing room
+    box-sizing: border-box; // Make padding inclusive of width
+  }

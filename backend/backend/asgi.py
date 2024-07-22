@@ -1,10 +1,21 @@
 """
-ASGI config for backend project.
+Configuración ASGI para el proyecto backend.
 
-Expone el callable ASGI como una variable de módulo llamada ``application``.
+Expone la aplicación ASGI como una variable de módulo llamada ``application``.
 
-Para más información sobre este archivo, consulta:
+Para obtener más información sobre este archivo, consulte:
 https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
+
+Este módulo configura la aplicación ASGI para el proyecto Django.
+
+Ejemplo:
+    Para utilizar esta aplicación ASGI con un servidor como Daphne, puede ejecutar el siguiente comando:
+
+    ```
+    daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+    ```
+
+    Esto iniciará la aplicación ASGI en `http://0.0.0.0:8000/`.
 """
 
 import os
