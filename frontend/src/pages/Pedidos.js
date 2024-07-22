@@ -1,5 +1,3 @@
-// src/pages/Pedidos.js
-
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import '../styles/Pedidos.scss';
@@ -42,7 +40,7 @@ const Pedidos = () => {
             <ul>
                 {pedidos.map((pedido) => (
                     <li key={pedido.id}>
-                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name}
+                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name} - Habitación: {pedido.patient.room.numero} - Servicio: {pedido.patient.room.servicio.nombre}
                         <button onClick={() => handleStatusUpdate(pedido.id)}>Marcar como Completado</button>
                     </li>
                 ))}
@@ -51,7 +49,7 @@ const Pedidos = () => {
             <ul>
                 {historicalPedidos.map((pedido) => (
                     <li key={pedido.id}>
-                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name}
+                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name} - Habitación: {pedido.patient.room.numero} - Servicio: {pedido.patient.room.servicio.nombre}
                     </li>
                 ))}
             </ul>

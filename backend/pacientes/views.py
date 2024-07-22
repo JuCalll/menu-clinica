@@ -4,10 +4,10 @@ from .serializers import PacienteSerializer
 
 # Vista para listar y crear pacientes
 class PacienteListCreateView(generics.ListCreateAPIView):
-    queryset = Paciente.objects.all()  # Consulta para obtener todos los pacientes
-    serializer_class = PacienteSerializer  # Serializador a utilizar
+    queryset = Paciente.objects.all()
+    serializer_class = PacienteSerializer
 
 # Vista para obtener, actualizar y eliminar un paciente específico
 class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Paciente.objects.all()  # Consulta para obtener todos los pacientes
-    serializer_class = PacienteSerializer  # Serializador a utilizar
+    queryset = Paciente.objects.all()
+    serializer_class = PacienteSerializer

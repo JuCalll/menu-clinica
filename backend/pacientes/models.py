@@ -1,14 +1,16 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from habitaciones.models import Habitacion
 
-# Definición del modelo Paciente
 class Paciente(models.Model):
-    # Nombre del paciente, campo de texto con longitud máxima de 100 caracteres
     name = models.CharField(max_length=100)
-    # Habitación del paciente, campo de texto con longitud máxima de 10 caracteres
-    room = models.CharField(max_length=10)
-    # Dieta recomendada para el paciente, campo de texto con longitud máxima de 255 caracteres
+    room = models.ForeignKey(Habitacion, on_delete=models.CASCADE)
     recommended_diet = models.CharField(max_length=255)
 
-    # Método para devolver el nombre del paciente como representación en cadena del objeto
+    def save(self, *args, **kwargs):
+        if Paciente.objects.filter(room=self.room).count() >= 2:
+            raise ValidationError('No se pueden asignar más de 2 pacientes a esta habitación.')
+        super(Paciente, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.name
