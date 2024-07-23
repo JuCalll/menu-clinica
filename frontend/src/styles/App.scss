@@ -1,31 +1,33 @@
-// src/styles/App.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-// Global styles for the document body
 body {
-    font-family: Arial, sans-serif; // Font used
-    margin: 0; // Remove default margin
-    padding: 0; // Remove default padding
-    background-color: #f8f9fa; // Soft background color
-  }
-  
-  // Styles for all h1 headings
-  h1 {
-    color: #343a40; // Text color
-    text-align: center; // Center text
-    margin-top: 20px; // Top margin
-  }
-  
-  // Styles for all unordered lists
-  ul {
-    list-style-type: none; // Remove bullets
-    padding: 0; // Remove default padding
-  
-    // Styles for each list item
+    font-family: 'Syne', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+h1 {
+    color: #174288; /* Color institucional */
+    text-align: center;
+    margin-top: 20px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+
     li {
-      background-color: #fff; // White background
-      border: 1px solid #dee2e6; // Light gray border
-      margin: 10px; // Margin between items
-      padding: 10px; // Internal padding
-      border-radius: 5px; // Rounded corners
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        margin: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+            border-color: #00A7E2;
+            box-shadow: 0 0 10px rgba(0, 167, 226, 0.5);
+        }
     }
-  }
+}

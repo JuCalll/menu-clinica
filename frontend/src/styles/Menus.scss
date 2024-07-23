@@ -1,115 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 .menus {
-    padding: 20px;  // Relleno interno del contenedor principal
+    font-family: 'Syne', sans-serif;
 
-    // Estilos para el encabezado h2
     h2 {
-        font-size: 24px;  // Tamaño de fuente
-        margin-bottom: 20px;  // Margen inferior
+        color: #174288;
+        margin-bottom: 20px;
     }
 
-    // Estilos para el botón principal
-    button {
-        background-color: #007bff;  // Color de fondo
-        color: white;  // Color del texto
-        border: none;  // Sin borde
-        padding: 10px 20px;  // Relleno interno
-        cursor: pointer;  // Cambia el cursor al pasar sobre el botón
-        margin-bottom: 20px;  // Margen inferior
-
-        // Estilos para el estado hover del botón
-        &:hover {
-            background-color: #0056b3;  // Cambio de color de fondo al pasar el cursor
-        }
-    }
-
-    // Estilos para el formulario de menú
     .menu-form {
-        display: flex;  // Usar flexbox para la disposición
-        flex-direction: column;  // Disposición en columna
-        margin-bottom: 20px;  // Margen inferior
+        background-color: #FFFFFF;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
 
-        // Estilos para los campos de entrada y el área de texto dentro del formulario
-        input, textarea {
-            margin-bottom: 10px;  // Margen inferior
-            padding: 10px;  // Relleno interno
-            border: 1px solid #ccc;  // Borde de los campos
-            border-radius: 5px;  // Bordes redondeados
+        .form-group {
+            margin-bottom: 15px;
+
+            input, textarea {
+                font-family: 'Syne', sans-serif;
+                border: 1px solid #DEE2E6;
+                border-radius: 4px;
+                padding: 10px;
+                font-size: 16px;
+
+                &:focus {
+                    border-color: #00A7E2;
+                    box-shadow: 0 0 5px rgba(0, 167, 226, 0.5);
+                }
+            }
         }
 
-        // Estilos para el botón dentro del formulario
-        button {
-            background-color: #28a745;  // Color de fondo
+        .btn-success {
+            background-color: #174288;
+            border-color: #174288;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 4px;
 
-            // Estilos para el estado hover del botón
             &:hover {
-                background-color: #218838;  // Cambio de color de fondo al pasar el cursor
+                background-color: #00A7E2;
+                border-color: #00A7E2;
             }
         }
     }
 
-    // Estilos para la lista de menús
     .menu-list {
-        display: flex;  // Usar flexbox para la disposición
-        flex-wrap: wrap;  // Permitir que los elementos se envuelvan en múltiples líneas
-
-        // Estilos para cada ítem de menú
         .menu-item {
-            background-color: white;  // Fondo blanco
-            border: 1px solid #ccc;  // Borde de los ítems
-            border-radius: 5px;  // Bordes redondeados
-            padding: 10px;  // Relleno interno
-            margin: 10px;  // Margen exterior
-            width: calc(33.333% - 20px);  // Ancho de los ítems con ajuste para el margen
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  // Sombra para los ítems
-            text-align: center;  // Alinear el texto al centro
+            .card {
+                border: none;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
-            // Estilos para el encabezado h3 dentro de los ítems
-            h3 {
-                margin: 10px 0;  // Margen vertical
-            }
+                .card-body {
+                    .card-title {
+                        font-size: 1.5rem;
+                        color: #174288;
+                    }
 
-            // Estilos para los botones dentro de los ítems
-            button {
-                background-color: #dc3545;  // Color de fondo
-                margin-top: 10px;  // Margen superior
+                    .card-text {
+                        font-size: 1rem;
+                        color: #6c757d;
+                    }
 
-                // Estilos para el estado hover del botón
-                &:hover {
-                    background-color: #c82333;  // Cambio de color de fondo al pasar el cursor
-                }
+                    .btn-warning {
+                        background-color: #ffc107;
+                        border-color: #ffc107;
+                        font-size: 14px;
+                        padding: 5px 10px;
+                        border-radius: 4px;
 
-                // Estilos para el último botón dentro de los ítems
-                &:last-child {
-                    background-color: #ffc107;  // Color de fondo
+                        &:hover {
+                            background-color: #e0a800;
+                            border-color: #e0a800;
+                        }
+                    }
 
-                    // Estilos para el estado hover del último botón
-                    &:hover {
-                        background-color: #e0a800;  // Cambio de color de fondo al pasar el cursor
+                    .btn-danger {
+                        background-color: #dc3545;
+                        border-color: #dc3545;
+                        font-size: 14px;
+                        padding: 5px 10px;
+                        border-radius: 4px;
+
+                        &:hover {
+                            background-color: #c82333;
+                            border-color: #c82333;
+                        }
                     }
                 }
             }
         }
     }
+}
 
-    // Consultas de medios para hacer el diseño responsive
-    @media (max-width: 1200px) {
-        .menu-item {
-            width: calc(50% - 20px);  // Ajuste del ancho para pantallas medianas
-        }
-    }
-
-    @media (max-width: 768px) {
-        .menu-item {
-            width: calc(100% - 20px);  // Ajuste del ancho para pantallas pequeñas
+@media (max-width: 767px) {
+    .menus {
+        .menu-form {
+            padding: 15px;
         }
 
-        button {
-            width: 100%;  // Ancho completo para el botón principal
-            padding: 15px;  // Ajuste de relleno
-        }
-
-        .menu-form input, .menu-form textarea {
-            width: 100%;  // Ancho completo para los campos de entrada
+        .btn-success {
+            padding: 10px 15px;
         }
     }
 }

@@ -1,14 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 .home {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 80vh; // Adjust the height as needed to vertically center the content
-    text-align: center;
-    padding: 20px;
-  
-    // Use a more specific selector to target the h1 element
-    > h1 {
-      font-size: 2em;
-      color: #003366; // Use a variable for the color to make it more maintainable
+    font-family: 'Syne', sans-serif;
+    background-color: #DEE2E6;
+    color: #174288;
+    padding: 50px 20px;
+
+    h1 {
+        font-size: 2.5rem;
+        color: #174288;
     }
-  }
+
+    @media (max-width: 767px) {
+        padding: 30px 10px;
+
+        h1 {
+            font-size: 2rem;
+        }
+    }
+}

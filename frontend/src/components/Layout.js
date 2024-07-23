@@ -1,22 +1,21 @@
 import React from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import FloatingButton from './FloatingButton'; 
 import { Outlet } from 'react-router-dom';
 import '../styles/Layout.scss';
 
-/**
- * Componente Layout que estructura la página con un encabezado, una barra lateral y un área de contenido.
- */
 const Layout = () => {
     return (
-        <div className="layout">
+        <div className="layout d-flex flex-column">
             <Header />
-            <div className="main-content">
+            <div className="main-content d-flex flex-grow-1">
                 <Sidebar />
-                <div className="content">
+                <div className="content flex-grow-1 p-3">
                     <Outlet />
                 </div>
             </div>
+            <FloatingButton /> 
         </div>
     );
 };

@@ -1,79 +1,68 @@
-.servicios-habitaciones {
-    padding: 20px;
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-    h2 {
+.servicios-habitaciones {
+    font-family: 'Syne', sans-serif;
+
+    h2, h3 {
+        color: #174288;
         margin-bottom: 20px;
     }
 
-    .servicios-section, .habitaciones-section {
-        margin-bottom: 40px;
+    .form-group {
+        margin-bottom: 15px;
 
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            &:hover {
-                background-color: #0056b3;
+        input, select {
+            font-family: 'Syne', sans-serif;
+            border: 1px solid #DEE2E6;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 16px;
+
+            &:focus {
+                border-color: #00A7E2;
+                box-shadow: 0 0 5px rgba(0, 167, 226, 0.5);
             }
         }
+    }
 
-        .data-form {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
+    .btn-primary {
+        background-color: #174288;
+        border-color: #174288;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 4px;
 
+        &:hover {
+            background-color: #00A7E2;
+            border-color: #00A7E2;
+        }
+    }
+
+    .list-group-item {
+        background-color: #FFFFFF;
+        border: 1px solid #DEE2E6;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        padding: 15px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+}
+
+@media (max-width: 767px) {
+    .servicios-habitaciones {
+        .form-group {
             input, select {
-                margin-bottom: 10px;
-                padding: 10px;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-            }
-
-            button {
-                background-color: #28a745;
-                &:hover {
-                    background-color: #218838;
-                }
+                padding: 8px;
             }
         }
 
-        ul {
-            list-style: none;
-            padding: 0;
+        .btn-primary {
+            padding: 10px 15px;
+        }
 
-            li {
-                background-color: #fff;
-                padding: 10px;
-                margin-bottom: 10px;
-                border-radius: 5px;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-
-                h3 {
-                    margin: 0;
-                }
-
-                p {
-                    margin: 5px 0;
-                }
-
-                button {
-                    background-color: #dc3545;
-                    margin-top: 10px;
-                    &:hover {
-                        background-color: #c82333;
-                    }
-
-                    &:last-child {
-                        background-color: #ffc107;
-                        &:hover {
-                            background-color: #e0a800;
-                        }
-                    }
-                }
-            }
+        .list-group-item {
+            padding: 15px;
         }
     }
 }

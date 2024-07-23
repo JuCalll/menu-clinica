@@ -1,0 +1,54 @@
+.floating-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+
+    .btn {
+        background-color: #174288;
+        border: none;
+        font-size: 24px;
+        padding: 15px;
+        border-radius: 50%;
+        color: #fff;
+        transition: background-color 0.3s, transform 0.3s;
+
+        &:hover {
+            background-color: #00A7E2;
+            transform: scale(1.1);
+        }
+    }
+
+    .floating-menu {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+
+        &.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .nav-link {
+            color: #174288;
+
+            &:hover {
+                color: #00A7E2;
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) {
+    .floating-button {
+        display: none;
+    }
+}

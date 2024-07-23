@@ -1,44 +1,51 @@
-// src/styles/Pedidos.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
 .pedidos {
-    padding: 20px; // Espaciado interno del contenedor principal
+    font-family: 'Syne', sans-serif;
 
-    // Estilos para el encabezado h2
     h2 {
-        margin-bottom: 20px; // Margen inferior
+        color: #174288;
+        margin-bottom: 20px;
     }
 
-    // Estilos para la lista no ordenada
-    ul {
-        list-style: none; // Eliminar el estilo de lista predeterminado
-        padding: 0; // Eliminar el relleno predeterminado
+    .list-group-item {
+        background-color: #FFFFFF;
+        border: 1px solid #DEE2E6;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
-        // Estilos para cada ítem de la lista
-        li {
-            display: flex; // Usar flexbox para la disposición
-            align-items: center; // Alinear los elementos verticalmente al centro
-            justify-content: space-between; // Espaciar los elementos a ambos extremos
-            background-color: #fff; // Fondo blanco
-            padding: 10px; // Relleno interno
-            margin-bottom: 10px; // Margen inferior
-            border-radius: 5px; // Bordes redondeados
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); // Sombra para los ítems
+        &.d-flex {
+            justify-content: space-between;
+            align-items: center;
+        }
 
-            // Estilos para el botón dentro de los ítems
-            button {
-                background-color: #007bff; // Color de fondo
-                color: #fff; // Color del texto
-                border: none; // Sin borde
-                padding: 5px 10px; // Relleno interno
-                border-radius: 5px; // Bordes redondeados
-                cursor: pointer; // Cambiar el cursor al pasar sobre el botón
-                transition: background-color 0.3s ease; // Transición suave para el color de fondo
+        .btn-success {
+            background-color: #174288;
+            border-color: #174288;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 4px;
 
-                // Estilos para el estado hover del botón
-                &:hover {
-                    background-color: #0056b3; // Cambio de color de fondo al pasar el cursor
-                }
+            &:hover {
+                background-color: #00A7E2;
+                border-color: #00A7E2;
             }
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .pedidos {
+        padding: 0 15px;
+
+        .list-group-item {
+            padding: 15px;
+        }
+
+        .btn-success {
+            padding: 10px 15px;
         }
     }
 }

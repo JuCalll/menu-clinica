@@ -4,12 +4,24 @@ import '../styles/Sidebar.scss';
 
 const Sidebar = () => {
     return (
-        <div className="sidebar">
-            <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>Inicio</NavLink>
-            <NavLink to="/menus" className={({ isActive }) => isActive ? 'active' : ''}>Menús</NavLink>
-            <NavLink to="/pedidos" className={({ isActive }) => isActive ? 'active' : ''}>Pedidos</NavLink>
-            <NavLink to="/pacientes" className={({ isActive }) => isActive ? 'active' : ''}>Pacientes</NavLink>
-            <NavLink to="/servicios-habitaciones" className={({ isActive }) => isActive ? 'active' : ''}>Servicios y Habitaciones</NavLink>
+        <div className="sidebar vh-100">
+            <nav className="nav flex-column">
+                <NavLink to="/" className="nav-link">
+                    Home
+                </NavLink>
+                <NavLink to="/menus" className="nav-link">
+                    Menus
+                </NavLink>
+                <NavLink to="/pedidos" className="nav-link">
+                    Pedidos
+                </NavLink>
+                <NavLink to="/pacientes" className="nav-link">
+                    Pacientes
+                </NavLink>
+                <NavLink to="/servicios-habitaciones" className="nav-link">
+                    Servicios y Habitaciones
+                </NavLink>
+            </nav>
         </div>
     );
 };

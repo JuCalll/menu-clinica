@@ -1,111 +1,112 @@
-// src/pages/Menus.js
-
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import '../styles/Menus.scss';
 
-// Componente funcional Menus
-// Maneja la visualización y manipulación de menús
 const Menus = () => {
-    const [menus, setMenus] = useState([]); // Estado para almacenar la lista de menús
-    const [showForm, setShowForm] = useState(false); // Estado para mostrar/ocultar el formulario
-    const [newMenu, setNewMenu] = useState({ name: '', description: '' }); // Estado para el nuevo menú
-    const [editMenu, setEditMenu] = useState(null); // Estado para editar un menú existente
+    const [menus, setMenus] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [newMenu, setNewMenu] = useState({ name: '', description: '' });
+    const [editMenu, setEditMenu] = useState(null);
 
-    // useEffect para obtener la lista de menús cuando se carga el componente
     useEffect(() => {
         const fetchMenus = async () => {
             try {
-                const response = await api.get('/menus/'); // Solicita la lista de menús a la API
-                setMenus(response.data); // Actualiza el estado con los datos recibidos
+                const response = await api.get('/menus/');
+                setMenus(response.data);
             } catch (error) {
-                console.error('Error fetching menus:', error); // Manejo de errores
+                console.error('Error fetching menus:', error);
             }
         };
-        fetchMenus(); // Llama a la función para obtener los menús
+        fetchMenus();
     }, []);
 
-    // Maneja los cambios en los campos del formulario
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setNewMenu({ ...newMenu, [name]: value }); // Actualiza el estado del nuevo menú
+        setNewMenu({ ...newMenu, [name]: value });
     };
 
-    // Maneja el envío del formulario para crear o actualizar un menú
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
             if (editMenu) {
-                await api.put(`/menus/${editMenu.id}/`, newMenu); // Actualiza el menú existente
+                await api.put(`/menus/${editMenu.id}/`, newMenu);
             } else {
-                await api.post('/menus/', newMenu); // Crea un nuevo menú
+                await api.post('/menus/', newMenu);
             }
-            setShowForm(false); // Oculta el formulario
-            setEditMenu(null); // Resetea el estado de edición
-            setNewMenu({ name: '', description: '' }); // Resetea el formulario
-            const response = await api.get('/menus/'); // Obtiene la lista actualizada de menús
-            setMenus(response.data); // Actualiza el estado con la lista actualizada
+            setShowForm(false);
+            setEditMenu(null);
+            setNewMenu({ name: '', description: '' });
+            const response = await api.get('/menus/');
+            setMenus(response.data);
         } catch (error) {
-            console.error('Error creating or updating menu:', error); // Manejo de errores
+            console.error('Error creating or updating menu:', error);
         }
     };
 
-    // Maneja la edición de un menú
     const handleEdit = (menu) => {
-        setEditMenu(menu); // Establece el menú a editar
-        setShowForm(true); // Muestra el formulario
-        setNewMenu({ name: menu.name, description: menu.description }); // Rellena el formulario con los datos del menú
+        setEditMenu(menu);
+        setShowForm(true);
+        setNewMenu({ name: menu.name, description: menu.description });
     };
 
-    // Maneja la eliminación de un menú
     const handleDelete = async (id) => {
         try {
-            await api.delete(`/menus/${id}/`); // Solicita la eliminación del menú a la API
-            const response = await api.get('/menus/'); // Obtiene la lista actualizada de menús
-            setMenus(response.data); // Actualiza el estado con la lista actualizada
+            await api.delete(`/menus/${id}/`);
+            const response = await api.get('/menus/');
+            setMenus(response.data);
         } catch (error) {
-            console.error('Error deleting menu:', error); // Manejo de errores
+            console.error('Error deleting menu:', error);
         }
     };
 
     return (
-        <div className="menus">
+        <div className="menus container mt-5">
             <h2>Menús</h2>
-            <button onClick={() => {
-                setShowForm(!showForm); // Alterna la visibilidad del formulario
-                setEditMenu(null); // Resetea el estado de edición
-                setNewMenu({ name: '', description: '' }); // Resetea el formulario
+            <button className="btn btn-primary mb-3" onClick={() => {
+                setShowForm(!showForm);
+                setEditMenu(null);
+                setNewMenu({ name: '', description: '' });
             }}>
                 {editMenu ? 'Editar Menú' : 'Crear Nuevo Menú'}
             </button>
             {showForm && (
                 <form onSubmit={handleSubmit} className="menu-form">
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Nombre del Menú"
-                        value={newMenu.name}
-                        onChange={handleInputChange}
-                        required
-                    />
-                    <textarea
-                        name="description"
-                        placeholder="Descripción"
-                        value={newMenu.description}
-                        onChange={handleInputChange}
-                        required
-                    ></textarea>
-                    <button type="submit">{editMenu ? 'Actualizar' : 'Crear'}</button>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Nombre del Menú"
+                            value={newMenu.name}
+                            onChange={handleInputChange}
+                            className="form-control"
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <textarea
+                            name="description"
+                            placeholder="Descripción"
+                            value={newMenu.description}
+                            onChange={handleInputChange}
+                            className="form-control"
+                            required
+                        ></textarea>
+                    </div>
+                    <button type="submit" className="btn btn-success">{editMenu ? 'Actualizar' : 'Crear'}</button>
                 </form>
             )}
-            <div className="menu-list">
+            <div className="menu-list row">
                 {menus.map((menu) => (
-                    <div key={menu.id} className="menu-item">
-                        <h3>{menu.name}</h3>
-                        <p>{menu.description}</p>
-                        <button onClick={() => handleEdit(menu)}>Editar</button>
-                        <button onClick={() => handleDelete(menu.id)}>Eliminar</button>
+                    <div key={menu.id} className="menu-item col-md-4">
+                        <div className="card mb-3">
+                            <div className="card-body">
+                                <h3 className="card-title">{menu.name}</h3>
+                                <p className="card-text">{menu.description}</p>
+                                <button className="btn btn-warning" onClick={() => handleEdit(menu)}>Editar</button>
+                                <button className="btn btn-danger" onClick={() => handleDelete(menu.id)}>Eliminar</button>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>

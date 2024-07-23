@@ -18,11 +18,11 @@ const Pacientes = () => {
     }, []);
 
     return (
-        <div className="data-list">
+        <div className="data-list container mt-5">
             <h2>Pacientes</h2>
-            <ul>
+            <ul className="list-group">
                 {pacientes.map((paciente) => (
-                    <li key={paciente.id}>
+                    <li key={paciente.id} className="list-group-item">
                         <h3>{paciente.name}</h3>
                         <p>Habitación: {paciente.room.numero}</p>
                         <p>Servicio: {paciente.room.servicio.nombre}</p>

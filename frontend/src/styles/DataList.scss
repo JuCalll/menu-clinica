@@ -1,46 +1,39 @@
-// src/styles/DataList.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 .data-list {
-    padding: 20px;
-  
-    // Use a variable for the primary text color
-    $primary-text-color: #000000;
-  
+    font-family: 'Syne', sans-serif;
+
     h2 {
-      margin-bottom: 20px;
-      color: $primary-text-color;
+        color: #174288;
+        margin-bottom: 20px;
     }
-  
-    ul {
-      list-style-type: none;
-      padding: 0;
-  
-      li {
-        // Use a variable for the background color
-        $bg-color: white;
-        background-color: $bg-color;
-  
-        // Use a variable for the border color
-        $border-color: #dee2e6;
-        border: 1px solid $border-color;
-  
-        margin: 10px 0;
+
+    .list-group-item {
+        background-color: #FFFFFF;
+        border: 1px solid #DEE2E6;
+        border-radius: 8px;
+        margin-bottom: 10px;
         padding: 20px;
-        border-radius: 5px;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
         h3 {
-          margin: 0 0 10px;
-          // Use a variable for the secondary text color
-          $secondary-text-color: #343a40;
-          color: $secondary-text-color;
+            color: #174288;
+            margin-bottom: 10px;
         }
-  
+
         p {
-          margin: 0;
-          // Use a variable for the tertiary text color
-          $tertiary-text-color: #6c757d;
-          color: $tertiary-text-color;
+            color: #6c757d;
+            margin: 5px 0;
         }
-      }
     }
-  }
+}
+
+@media (max-width: 767px) {
+    .data-list {
+        padding: 0 15px;
+
+        .list-group-item {
+            padding: 15px;
+        }
+    }
+}

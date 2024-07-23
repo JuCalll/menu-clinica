@@ -1,54 +1,56 @@
-// src/pages/Register.js
-
 import React, { useState } from 'react';
-import api from '../services/api'; // Asegúrate de que la ruta a 'api' es correcta
+import api from '../services/api';
+import '../styles/Login.scss';
 
-// Componente funcional Register
-// Maneja el registro de nuevos usuarios
 const Register = () => {
-    const [username, setUsername] = useState(''); // Estado para almacenar el nombre de usuario
-    const [email, setEmail] = useState(''); // Estado para almacenar el correo electrónico
-    const [password, setPassword] = useState(''); // Estado para almacenar la contraseña
-    const [error, setError] = useState(''); // Estado para manejar los errores
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
 
-    // Función para manejar el registro de un nuevo usuario
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            const response = await api.post('/auth/register/', { username, email, password }); // Solicita la creación del usuario a la API
-            console.log(response.data); // Imprime la respuesta en la consola
+            await api.post('/auth/register/', { username, email, password });
+            console.log('User registered successfully');
         } catch (error) {
-            setError('Registration failed'); // Maneja el error
+            setError('Registration failed');
         }
     };
 
     return (
-        <div>
-            <h2>Registro</h2>
+        <div className="register-container container mt-5">
+            <h2>Register</h2>
             <form onSubmit={handleRegister}>
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit">Register</button>
-                {error && <p className="error">{error}</p>}
+                <div className="form-group">
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <button type="submit" className="btn btn-primary btn-block">Register</button>
+                {error && <p className="text-danger text-center mt-2">{error}</p>}
             </form>
         </div>
     );

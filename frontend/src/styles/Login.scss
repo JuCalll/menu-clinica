@@ -1,55 +1,60 @@
-// src/styles/Login.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-// Contenedor principal para el formulario de inicio de sesión
 .login-container {
-    max-width: 400px;  // Ancho máximo del contenedor
-    margin: 100px auto;  // Centrar el contenedor vertical y horizontalmente
-    padding: 20px;  // Relleno interno del contenedor
-    background-color: white;  // Fondo blanco
-    border: 1px solid #dee2e6;  // Borde del contenedor
-    border-radius: 5px;  // Bordes redondeados
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);  // Sombra para el contenedor
+    font-family: 'Syne', sans-serif;
+    max-width: 400px;
+    background-color: #FFFFFF;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
-    // Estilos para el encabezado h2 dentro del contenedor
     h2 {
-        color: #003366;  // Color del texto
-        text-align: center;  // Alinear el texto al centro
+        color: #174288;
+        margin-bottom: 20px;
     }
 
-    // Estilos para el formulario
-    form {
-        display: flex;  // Usar flexbox para la disposición
-        flex-direction: column;  // Disposición en columna
-
-        // Estilos para los campos de entrada dentro del formulario
+    .form-group {
+        margin-bottom: 15px;
+        
         input {
-            margin-bottom: 10px;  // Margen inferior
-            padding: 10px;  // Relleno interno
-            border: 1px solid #dee2e6;  // Borde de los campos de entrada
-            border-radius: 5px;  // Bordes redondeados
-        }
+            font-family: 'Syne', sans-serif;
+            border: 1px solid #DEE2E6;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 16px;
 
-        // Estilos para el botón dentro del formulario
-        button {
-            padding: 10px;  // Relleno interno
-            background-color: #003366;  // Fondo del botón
-            color: white;  // Color del texto del botón
-            border: none;  // Sin borde
-            border-radius: 5px;  // Bordes redondeados
-            cursor: pointer;  // Cambia el cursor al pasar sobre el botón
-            font-weight: bold;  // Texto en negrita
-
-            // Estilos para el estado hover del botón
-            &:hover {
-                background-color: #0099CC;  // Cambio de color de fondo al pasar el cursor
+            &:focus {
+                border-color: #00A7E2;
+                box-shadow: 0 0 5px rgba(0, 167, 226, 0.5);
             }
         }
+    }
 
-        // Estilos para el mensaje de error dentro del formulario
-        .error {
-            color: red;  // Color del texto de error
-            text-align: center;  // Alinear el texto al centro
-            margin-top: 10px;  // Margen superior
+    .btn-primary {
+        background-color: #174288;
+        border-color: #174288;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 4px;
+
+        &:hover {
+            background-color: #00A7E2;
+            border-color: #00A7E2;
         }
+    }
+
+    .text-danger {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 767px) {
+    .login-container {
+        padding: 20px;
+    }
+
+    .btn-primary {
+        padding: 10px 15px;
     }
 }

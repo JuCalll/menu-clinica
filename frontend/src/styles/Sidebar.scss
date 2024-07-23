@@ -1,36 +1,29 @@
-// src/styles/Sidebar.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
 .sidebar {
-    // Use a variable for the sidebar width
-    $sidebar-width: 200px;
-  
-    width: $sidebar-width;
-    background-color: #343a40; // Use a variable for the dark gray color
-    color: ffffff;
-    height: 100vh;
-    padding-top: 20px;
-  
-    // Use a nested selector for the links
-    a {
-      display: block;
-      color:#ffffff;
-      padding: 10px 20px;
-      text-decoration: none;
-  
-      // Use a pseudo-class for the active link
-      &.active {
-        background-color: #007bff;
-      }
-  
-      // Use a pseudo-class for the hover effect
-      &:hover {
-        background-color: #495057;
-      }
+    font-family: 'Syne', sans-serif;
+    background-color: #174288;
+    color: #FFFFFF;
+    padding: 15px;
+
+    .nav-link {
+        color: #FFFFFF;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin: 5px 0;
+
+        &:hover {
+            background-color: #00A7E2;
+            color: #DEE2E6;
+        }
+
+        &.active {
+            background-color: #00A7E2;
+            color: #DEE2E6;
+        }
     }
-  }
-  
-  // Define the color variables at the top of the file
-  $dark-gray: #343a40;
-  $white: #ffffff;
-  $primary-color: #007bff;
-  $gray: #495057;
+
+    @media (max-width: 767px) {
+        display: none;
+    }
+}

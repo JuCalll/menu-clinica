@@ -1,22 +1,33 @@
-// src/styles/Layout.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-// Layout container styles
 .layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; // Use `100vh` to make the layout full height
-    max-height: 100vh; // Add `max-height` to prevent overflow
-  }
-  
-  // Main content styles
-  .main-content {
-    display: flex;
-    flex: 1; // Take up the remaining space
-  }
-  
-  // Content styles
-  .content {
-    flex: 1; // Take up the remaining space
-    padding: 20px; // Add some breathing room
-    box-sizing: border-box; // Make padding inclusive of width
-  }
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    background-color: #FFFFFF;
+
+    .main-content {
+        flex: 1;
+        display: flex;
+        background-color: #DEE2E6;
+
+        .content {
+            flex-grow: 1;
+            padding: 15px;
+            background-color: #FFFFFF;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .main-content {
+        flex-direction: column;
+
+        .content {
+            padding: 10px;
+        }
+    }
+
+    .sidebar {
+        display: none;
+    }
+}
