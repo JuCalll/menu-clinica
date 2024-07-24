@@ -10,8 +10,8 @@ const Pedidos = () => {
         const fetchPedidos = async () => {
             try {
                 const response = await api.get('/pedidos/');
-                setPedidos(response.data.filter(pedido => pedido.status === 'Pending'));
-                setHistoricalPedidos(response.data.filter(pedido => pedido.status === 'Completed'));
+                setPedidos(response.data.filter(pedido => pedido.status.toLowerCase() === 'pending'.toLowerCase()));
+                setHistoricalPedidos(response.data.filter(pedido => pedido.status.toLowerCase() === 'completed'.toLowerCase()));
             } catch (error) {
                 console.error('Error fetching pedidos:', error);
             }
@@ -23,29 +23,29 @@ const Pedidos = () => {
         try {
             await api.patch(`/pedidos/${id}/status/`, { status: 'Completed' });
             const response = await api.get('/pedidos/');
-            setPedidos(response.data.filter(pedido => pedido.status === 'Pending'));
-            setHistoricalPedidos(response.data.filter(pedido => pedido.status === 'Completed'));
+            setPedidos(response.data.filter(pedido => pedido.status.toLowerCase() === 'pending'.toLowerCase()));
+            setHistoricalPedidos(response.data.filter(pedido => pedido.status.toLowerCase() === 'completed'.toLowerCase()));
         } catch (error) {
             console.error('Error updating pedido status:', error);
         }
     };
 
     return (
-        <div className="pedidos container mt-5">
+        <div className="pedidos">
             <h2>Pedidos</h2>
-            <ul className="list-group mb-4">
+            <ul>
                 {pedidos.map((pedido) => (
-                    <li key={pedido.id} className="list-group-item d-flex justify-content-between align-items-center">
-                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name}
-                        <button className="btn btn-success" onClick={() => handleStatusUpdate(pedido.id)}>Marcar como Completado</button>
+                    <li key={pedido.id}>
+                        {pedido.status} - {pedido.menu ? pedido.menu.name : 'Menú Personalizado'} - {pedido.patient ? pedido.patient.name : 'Paciente Desconocido'}
+                        <button onClick={() => handleStatusUpdate(pedido.id)}>Marcar como Completado</button>
                     </li>
                 ))}
             </ul>
             <h2>Historial de Pedidos Completados</h2>
-            <ul className="list-group">
+            <ul>
                 {historicalPedidos.map((pedido) => (
-                    <li key={pedido.id} className="list-group-item">
-                        {pedido.status} - {pedido.menu.name} - {pedido.patient.name}
+                    <li key={pedido.id}>
+                        {pedido.status} - {pedido.menu ? pedido.menu.name : 'Menú Personalizado'} - {pedido.patient ? pedido.patient.name : 'Paciente Desconocido'}
                     </li>
                 ))}
             </ul>

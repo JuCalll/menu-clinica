@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'pacientes',  # Aplicación de pacientes
     'habitaciones', #Aplicación de habitaciones 
     'servicios', #Aplicación de servicios
+    'MenuPersonalizado',
 ]
 
 # Configuración de Django REST Framework

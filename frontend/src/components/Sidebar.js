@@ -7,10 +7,10 @@ const Sidebar = () => {
         <div className="sidebar vh-100">
             <nav className="nav flex-column">
                 <NavLink to="/" className="nav-link">
-                    Home
+                    Inicio
                 </NavLink>
                 <NavLink to="/menus" className="nav-link">
-                    Menus
+                    Menús
                 </NavLink>
                 <NavLink to="/pedidos" className="nav-link">
                     Pedidos
