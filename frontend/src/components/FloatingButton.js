@@ -19,7 +19,7 @@ const FloatingButton = () => {
                 <div className="floating-menu show">
                     <nav className="nav flex-column">
                         <NavLink to="/" className="nav-link" onClick={toggleMenu}>Home</NavLink>
-                        <NavLink to="/menus" className="nav-link" onClick={toggleMenu}>Menus</NavLink>
+                        <NavLink to="/menu_personalizado" className="nav-link" onClick={toggleMenu}>Menús Personalizados</NavLink>
                         <NavLink to="/pedidos" className="nav-link" onClick={toggleMenu}>Pedidos</NavLink>
                         <NavLink to="/pacientes" className="nav-link" onClick={toggleMenu}>Pacientes</NavLink>
                         <NavLink to="/servicios-habitaciones" className="nav-link" onClick={toggleMenu}>Servicios y Habitaciones</NavLink>

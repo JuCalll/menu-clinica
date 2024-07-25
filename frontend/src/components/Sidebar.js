@@ -9,8 +9,8 @@ const Sidebar = () => {
                 <NavLink to="/" className="nav-link">
                     Inicio
                 </NavLink>
-                <NavLink to="/menus" className="nav-link">
-                    Menús
+                <NavLink to="/menu_personalizado" className="nav-link">
+                    Menús Personalizados
                 </NavLink>
                 <NavLink to="/pedidos" className="nav-link">
                     Pedidos

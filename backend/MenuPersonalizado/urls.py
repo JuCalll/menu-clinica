@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MenuPersonalizadoListCreateView, MenuPersonalizadoDetailView
+from MenuPersonalizado.views import MenuPersonalizadoListCreateView, MenuPersonalizadoDetailView
 
 urlpatterns = [
     path('menu_personalizado/', MenuPersonalizadoListCreateView.as_view(), name='menu_personalizado-list-create'),

@@ -4,7 +4,7 @@
     font-family: 'Syne', sans-serif;
 
     h2 {
-        color: #174288;
+        color: #174288; // Color institucional
         margin-bottom: 20px;
     }
 
@@ -33,7 +33,7 @@
         }
 
         .btn-success {
-            background-color: #174288;
+            background-color: #174288; // Color institucional
             border-color: #174288;
             font-size: 16px;
             font-weight: bold;
@@ -41,7 +41,7 @@
             border-radius: 4px;
 
             &:hover {
-                background-color: #00A7E2;
+                background-color: #00A7E2; // Color institucional
                 border-color: #00A7E2;
             }
         }
@@ -57,7 +57,7 @@
                 .card-body {
                     .card-title {
                         font-size: 1.5rem;
-                        color: #174288;
+                        color: #174288; // Color institucional
                     }
 
                     .card-text {
@@ -71,11 +71,6 @@
                         font-size: 14px;
                         padding: 5px 10px;
                         border-radius: 4px;
-
-                        &:hover {
-                            background-color: #e0a800;
-                            border-color: #e0a800;
-                        }
                     }
 
                     .btn-danger {
@@ -84,11 +79,6 @@
                         font-size: 14px;
                         padding: 5px 10px;
                         border-radius: 4px;
-
-                        &:hover {
-                            background-color: #c82333;
-                            border-color: #c82333;
-                        }
                     }
                 }
             }
@@ -102,8 +92,20 @@
             padding: 15px;
         }
 
-        .btn-success {
-            padding: 10px 15px;
+        .menu-list {
+            .menu-item {
+                .card {
+                    .card-body {
+                        .card-title {
+                            font-size: 1.2rem;
+                        }
+
+                        .card-text {
+                            font-size: 0.9rem;
+                        }
+                    }
+                }
+            }
         }
     }
 }
