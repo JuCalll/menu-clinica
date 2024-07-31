@@ -1,111 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
-
-.menus {
-    font-family: 'Syne', sans-serif;
-
-    h2 {
-        color: #174288; // Color institucional
-        margin-bottom: 20px;
-    }
-
-    .menu-form {
-        background-color: #FFFFFF;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-
-        .form-group {
-            margin-bottom: 15px;
-
-            input, textarea {
-                font-family: 'Syne', sans-serif;
-                border: 1px solid #DEE2E6;
-                border-radius: 4px;
-                padding: 10px;
-                font-size: 16px;
-
-                &:focus {
-                    border-color: #00A7E2;
-                    box-shadow: 0 0 5px rgba(0, 167, 226, 0.5);
-                }
-            }
-        }
-
-        .btn-success {
-            background-color: #174288; // Color institucional
-            border-color: #174288;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 4px;
-
-            &:hover {
-                background-color: #00A7E2; // Color institucional
-                border-color: #00A7E2;
-            }
-        }
-    }
-
-    .menu-list {
-        .menu-item {
-            .card {
-                border: none;
-                border-radius: 8px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-
-                .card-body {
-                    .card-title {
-                        font-size: 1.5rem;
-                        color: #174288; // Color institucional
-                    }
-
-                    .card-text {
-                        font-size: 1rem;
-                        color: #6c757d;
-                    }
-
-                    .btn-warning {
-                        background-color: #ffc107;
-                        border-color: #ffc107;
-                        font-size: 14px;
-                        padding: 5px 10px;
-                        border-radius: 4px;
-                    }
-
-                    .btn-danger {
-                        background-color: #dc3545;
-                        border-color: #dc3545;
-                        font-size: 14px;
-                        padding: 5px 10px;
-                        border-radius: 4px;
-                    }
-                }
-            }
-        }
-    }
+.menu-page {
+  padding: 20px;
 }
 
-@media (max-width: 767px) {
-    .menus {
-        .menu-form {
-            padding: 15px;
-        }
+.custom-button {
+  margin-bottom: 10px;
+}
 
-        .menu-list {
-            .menu-item {
-                .card {
-                    .card-body {
-                        .card-title {
-                            font-size: 1.2rem;
-                        }
+.vertical-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;  // Añadir espacio entre botones
+}
 
-                        .card-text {
-                            font-size: 0.9rem;
-                        }
-                    }
-                }
-            }
-        }
-    }
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.ant-btn {
+  margin-right: 10px;
+  width: 100%;
+}
+
+.ant-collapse-content-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-details {
+  .ant-typography {
+    margin-top: 20px;
+  }
+}
+
+.menu-list {
+  margin-top: 20px;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 50px 0;
 }

@@ -1,3 +1,4 @@
+// frontend/src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -10,9 +11,8 @@ import Register from './pages/Register';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import ServiciosHabitaciones from './pages/ServiciosHabitaciones';
-import MenuPersonalizado from './pages/MenuPersonalizado'; 
+import MenuPage from './pages/MenuPage'; // Importación correcta
 import './styles/App.scss';
-import './styles/FloatingButton.scss';
 
 function App() {
     return (
@@ -22,7 +22,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
                     <Route path="/" element={<Home />} />
-                    <Route path="/menu_personalizado" element={<MenuPersonalizado />} />
+                    <Route path="/menus" element={<MenuPage />} /> {/* Ruta corregida */}
                     <Route path="/pedidos" element={<Pedidos />} />
                     <Route path="/pacientes" element={<Pacientes />} />
                     <Route path="/servicios-habitaciones" element={<ServiciosHabitaciones />} />

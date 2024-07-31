@@ -1,3 +1,4 @@
+// frontend/src/components/FloatingButton.js
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaBars } from 'react-icons/fa';
@@ -19,7 +20,7 @@ const FloatingButton = () => {
                 <div className="floating-menu show">
                     <nav className="nav flex-column">
                         <NavLink to="/" className="nav-link" onClick={toggleMenu}>Home</NavLink>
-                        <NavLink to="/menu_personalizado" className="nav-link" onClick={toggleMenu}>Menús Personalizados</NavLink>
+                        <NavLink to="/menu" className="nav-link" onClick={toggleMenu}>Menús</NavLink>
                         <NavLink to="/pedidos" className="nav-link" onClick={toggleMenu}>Pedidos</NavLink>
                         <NavLink to="/pacientes" className="nav-link" onClick={toggleMenu}>Pacientes</NavLink>
                         <NavLink to="/servicios-habitaciones" className="nav-link" onClick={toggleMenu}>Servicios y Habitaciones</NavLink>

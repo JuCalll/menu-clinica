@@ -1,33 +1,33 @@
+# authentication/tests/test_authentication.py
 import pytest
-from django.urls import reverse
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
-from .models import CustomUser
+
+User = get_user_model()
 
 @pytest.mark.django_db
 def test_register_user():
     client = APIClient()
-    url = reverse('register')
-    data = {
+    payload = {
         'username': 'testuser',
         'email': 'testuser@example.com',
-        'password': 'testpass123'
+        'password': 'testpassword'
     }
-    response = client.post(url, data, format='json')
+    response = client.post('/api/auth/register/', payload)
     assert response.status_code == status.HTTP_201_CREATED
-    assert CustomUser.objects.count() == 1
-    assert CustomUser.objects.get().username == 'testuser'
+    user = User.objects.get(username='testuser')
+    assert user.email == 'testuser@example.com'
 
 @pytest.mark.django_db
 def test_login_user():
-    user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='testpass123')
     client = APIClient()
-    url = reverse('login')
-    data = {
+    user = User.objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
+    payload = {
         'username': 'testuser',
-        'password': 'testpass123'
+        'password': 'testpassword'
     }
-    response = client.post(url, data, format='json')
+    response = client.post('/api/auth/login/', payload)
     assert response.status_code == status.HTTP_200_OK
     assert 'access' in response.data
     assert 'refresh' in response.data

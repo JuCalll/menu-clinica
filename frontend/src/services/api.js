@@ -1,28 +1,4 @@
-import axios from 'axios';
-
-// URL base de la API
-const API_URL = 'http://127.0.0.1:8000/api';
-
-// Crear una instancia de axios con la configuración base
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Interceptor de solicitudes para agregar el token de autenticación
-api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-}, error => {
-    return Promise.reject(error);
-});
-
-export default api;
+import api from '.././axiosConfig';
 
 // Función para registrar un usuario
 export const registerUser = async (userData) => {
@@ -45,6 +21,30 @@ export const getMenus = async () => {
 // Función para crear un nuevo menú
 export const createMenu = async (menuData) => {
     const response = await api.post('/menus/', menuData);
+    return response.data;
+};
+
+// Función para actualizar un menú
+export const updateMenu = async (id, menuData) => {
+    const response = await api.put(`/menus/${id}/`, menuData);
+    return response.data;
+};
+
+// Función para eliminar un menú
+export const deleteMenu = async (id) => {
+    const response = await api.delete(`/menus/${id}/`);
+    return response.data;
+};
+
+// Función para obtener todas las opciones de menú
+export const getMenuOptions = async () => {
+    const response = await api.get('/menus/options/');
+    return response.data;
+};
+
+// Función para crear una nueva opción de menú
+export const createMenuOption = async (optionData) => {
+    const response = await api.post('/menus/options/', optionData);
     return response.data;
 };
 
@@ -71,3 +71,5 @@ export const createPaciente = async (pacienteData) => {
     const response = await api.post('/pacientes/pacientes/', pacienteData);
     return response.data;
 };
+
+export default api;
