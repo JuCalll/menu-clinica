@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Input, notification, Spin, Alert, List, Typography, Collapse } from 'antd';
-import { PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Modal, Form, Input, notification, Spin, Alert, List, Typography, Collapse, Popconfirm } from 'antd';
+import { PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { createMenu, getMenus, deleteMenu, updateMenu } from '../services/api';
 import '../styles/Menus.scss';
 
 const { Title } = Typography;
 const { Panel } = Collapse;
+const { confirm } = Modal;
 
 const MenuPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,9 +14,9 @@ const MenuPage = () => {
   const [menuName, setMenuName] = useState('');
   const [currentMenu, setCurrentMenu] = useState(null);
   const [options, setOptions] = useState({
-    adicional: { opciones: [] },
-    algo: { opciones: [] },
-    onces: { opciones: [] },
+    adicional: { adicionales: [] },
+    algo: { adicionales: [], bebidas: [] },
+    onces: { adicionales: [] },
     desayuno: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
     almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
     cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
@@ -26,6 +27,16 @@ const MenuPage = () => {
 
   const showModal = () => {
     setIsModalOpen(true);
+    setCurrentMenu(null);
+    setMenuName('');
+    setOptions({
+      adicional: { adicionales: [] },
+      algo: { adicionales: [], bebidas: [] },
+      onces: { adicionales: [] },
+      desayuno: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+      almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+      cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+    });
   };
 
   const showDetailModal = (menu) => {
@@ -41,28 +52,51 @@ const MenuPage = () => {
 
     const payload = {
       nombre: menuName,
-      sections: Object.keys(options).map(key => ({
-        titulo: key.charAt(0).toUpperCase() + key.slice(1),
-        adicionales: options[key].adicionales || [],
-        platos_principales: options[key].platos_principales || [],
-        acompanantes: options[key].acompanantes || [],
-        bebidas: options[key].bebidas || [],
-      }))
+      sections: Object.keys(options).map(key => {
+        if (key === 'adicional') {
+          return {
+            titulo: key.charAt(0).toUpperCase() + key.slice(1),
+            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
+          };
+        } else if (key === 'algo') {
+          return {
+            titulo: key.charAt(0).toUpperCase() + key.slice(1),
+            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+            bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || []
+          };
+        } else if (key === 'onces') {
+          return {
+            titulo: key.charAt(0).toUpperCase() + key.slice(1),
+            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
+          };
+        } else {
+          return {
+            titulo: key.charAt(0).toUpperCase() + key.slice(1),
+            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+            platos_principales: options[key].platos_principales.map(({ id, ...rest }) => rest) || [],
+            acompanantes: options[key].acompanantes.map(({ id, ...rest }) => rest) || [],
+            bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || [],
+          };
+        }
+      })
     };
 
     console.log('Payload:', JSON.stringify(payload, null, 2));
 
     try {
+      let response;
       if (currentMenu) {
-        await updateMenu(currentMenu.id, payload);
+        response = await updateMenu(currentMenu.id, payload);
         notification.success({ message: 'Menú actualizado exitosamente' });
       } else {
-        await createMenu(payload);
+        response = await createMenu(payload);
         notification.success({ message: 'Menú creado exitosamente' });
       }
+      console.log('Response:', response);
       setIsModalOpen(false);
       fetchMenus();
     } catch (error) {
+      console.error('Error:', error.response?.data?.message || error.message);
       notification.error({ message: 'Error al crear/actualizar el menú', description: error.response?.data?.message || error.message });
     }
   };
@@ -73,9 +107,9 @@ const MenuPage = () => {
     setCurrentMenu(null);
     setMenuName('');
     setOptions({
-      adicional: { opciones: [] },
-      algo: { opciones: [] },
-      onces: { opciones: [] },
+      adicional: { adicionales: [] },
+      algo: { adicionales: [], bebidas: [] },
+      onces: { adicionales: [] },
       desayuno: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
       almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
       cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
@@ -83,23 +117,32 @@ const MenuPage = () => {
   };
 
   const addOption = (section, type) => {
-    const option = prompt("Ingrese la opción:");
-    if (option) {
-      setOptions(prev => {
-        const newOptions = { ...prev };
-        if (!newOptions[section][type]) {
-          newOptions[section][type] = [];
-        }
-        newOptions[section][type].push({ id: Date.now(), texto: option, tipo: type });
-        return newOptions;
-      });
-    }
+    Modal.confirm({
+      title: `Añadir ${type}`,
+      content: (
+        <Input
+          placeholder={`Ingrese ${type}`}
+          onChange={(e) => setOptions(prev => {
+            const newOptions = { ...prev };
+            if (!newOptions[section][type]) {
+              newOptions[section][type] = [];
+            }
+            newOptions[section][type].push({ texto: e.target.value, tipo: type });
+            return newOptions;
+          })}
+        />
+      ),
+      onOk() {
+        console.log(`Option added to ${section} - ${type}:`, options[section][type]);
+      }
+    });
   };
 
   const removeOption = (section, type, id) => {
     setOptions(prev => {
       const newOptions = { ...prev };
       newOptions[section][type] = newOptions[section][type].filter(opt => opt.id !== id);
+      console.log(`Option removed from ${section} - ${type}:`, newOptions[section][type]);
       return newOptions;
     });
   };
@@ -110,6 +153,7 @@ const MenuPage = () => {
     try {
       const data = await getMenus();
       setMenus(data);
+      console.log('Fetched menus:', data);
     } catch (error) {
       setError('Error fetching menus: ' + error.message);
     } finally {
@@ -117,7 +161,21 @@ const MenuPage = () => {
     }
   };
 
-  const handleDeleteMenu = async (id) => {
+  const confirmDeleteMenu = (id) => {
+    Modal.confirm({
+      title: '¿Está seguro de que desea eliminar este menú?',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Esta acción no se puede deshacer',
+      okText: 'Sí',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk() {
+        deleteMenuConfirmed(id);
+      }
+    });
+  };
+
+  const deleteMenuConfirmed = async (id) => {
     try {
       await deleteMenu(id);
       notification.success({ message: 'Menú eliminado exitosamente' });
@@ -140,6 +198,7 @@ const MenuPage = () => {
       return acc;
     }, {}));
     setIsModalOpen(true);
+    console.log('Editing menu:', menu);
   };
 
   useEffect(() => {
@@ -157,14 +216,16 @@ const MenuPage = () => {
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
-        footer={[
-          <Button key="back" className="custom-button" onClick={handleCancel}>
-            Cancelar
-          </Button>,
-          <Button key="submit" type="primary" className="custom-button" onClick={handleOk}>
-            {currentMenu ? "Actualizar Menú" : "Guardar Menú"}
-          </Button>,
-        ]}
+        footer={
+          <div className="modal-footer">
+            <Button key="back" className="custom-button save-button" onClick={handleCancel}>
+              Cancelar
+            </Button>
+            <Button key="submit" type="primary" className="custom-button save-button" onClick={handleOk}>
+              {currentMenu ? "Actualizar Menú" : "Guardar Menú"}
+            </Button>
+          </div>
+        }
       >
         <Form layout="vertical">
           <Form.Item label="Nombre del Menú">
@@ -174,20 +235,26 @@ const MenuPage = () => {
             {['adicional', 'algo', 'onces'].map(section => (
               <Panel header={section.charAt(0).toUpperCase() + section.slice(1)} key={section}>
                 <div className="button-group vertical-buttons">
-                  <Button className="custom-button" onClick={() => addOption(section, 'opciones')} icon={<PlusOutlined />}>
-                    Agregar Opción
+                  <Button className="custom-button" onClick={() => addOption(section, 'adicionales')} icon={<PlusOutlined />}>
+                    Agregar Adicional
                   </Button>
+                  {section === 'algo' && (
+                    <Button className="custom-button" onClick={() => addOption(section, 'bebidas')} icon={<PlusOutlined />}>
+                      Agregar Bebida
+                    </Button>
+                  )}
                 </div>
                 <List
+                  header={<div>Adicionales</div>}
                   bordered
-                  dataSource={options[section]?.opciones || []}
+                  dataSource={options[section]?.adicionales || []}
                   renderItem={opt => (
                     <List.Item
                       actions={[
                         <Button
                           type="link"
                           icon={<DeleteOutlined />}
-                          onClick={() => removeOption(section, 'opciones', opt.id)}
+                          onClick={() => removeOption(section, 'adicionales', opt.id)}
                         />
                       ]}
                     >
@@ -195,6 +262,26 @@ const MenuPage = () => {
                     </List.Item>
                   )}
                 />
+                {section === 'algo' && (
+                  <List
+                    header={<div>Bebidas</div>}
+                    bordered
+                    dataSource={options[section]?.bebidas || []}
+                    renderItem={opt => (
+                      <List.Item
+                        actions={[
+                          <Button
+                            type="link"
+                            icon={<DeleteOutlined />}
+                            onClick={() => removeOption(section, 'bebidas', opt.id)}
+                          />
+                        ]}
+                      >
+                        {opt.texto}
+                      </List.Item>
+                    )}
+                  />
+                )}
               </Panel>
             ))}
             {['desayuno', 'almuerzo', 'cena'].map(section => (
@@ -297,7 +384,7 @@ const MenuPage = () => {
         onOk={() => setIsDetailModalOpen(false)}
         onCancel={() => setIsDetailModalOpen(false)}
         footer={[
-          <Button key="back" className="custom-button" onClick={() => setIsDetailModalOpen(false)}>
+          <Button key="back" className="custom-button save-button" onClick={() => setIsDetailModalOpen(false)}>
             Cerrar
           </Button>,
         ]}
@@ -370,11 +457,12 @@ const MenuPage = () => {
                 actions={[
                   <Button type="link" icon={<EyeOutlined />} onClick={() => showDetailModal(menu)} />,
                   <Button type="link" icon={<EditOutlined />} onClick={() => handleEditMenu(menu)} />,
-                  <Button type="link" icon={<DeleteOutlined />} onClick={() => handleDeleteMenu(menu.id)} />
+                  <Button type="link" icon={<DeleteOutlined />} onClick={() => confirmDeleteMenu(menu.id)} />
                 ]}
               >
                 <List.Item.Meta
                   title={menu.nombre}
+                  className="menu-title"
                 />
               </List.Item>
             )}

@@ -9,7 +9,7 @@
 .vertical-buttons {
   display: flex;
   flex-direction: column;
-  gap: 10px;  // Añadir espacio entre botones
+  gap: 10px;
 }
 
 .button-group {
@@ -43,4 +43,24 @@
 .loading-container {
   text-align: center;
   padding: 50px 0;
+}
+
+.save-button {
+  width: calc(50% - 5px);  // Ajusta el tamaño del botón
+  margin-right: 10px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;  // Centrar los botones
+  gap: 10px;
+}
+
+.modal-footer .ant-btn {
+  width: 100px;
+  margin: 0 10px;
+}
+
+.menu-title {
+  font-weight: bold;
 }
