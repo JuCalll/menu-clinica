@@ -1,4 +1,4 @@
-import api from '.././axiosConfig';
+import api from '../axiosConfig';
 
 // Función para registrar un usuario
 export const registerUser = async (userData) => {
@@ -48,27 +48,36 @@ export const createMenuOption = async (optionData) => {
     return response.data;
 };
 
-// Función para obtener todos los pedidos
-export const getPedidos = async () => {
-    const response = await api.get('/pedidos/');
-    return response.data;
-};
-
-// Función para crear un nuevo pedido
-export const createPedido = async (pedidoData) => {
-    const response = await api.post('/pedidos/', pedidoData);
-    return response.data;
-};
-
 // Función para obtener todos los pacientes
 export const getPacientes = async () => {
-    const response = await api.get('/pacientes/pacientes/');
+    const response = await api.get('/pacientes/');
     return response.data;
 };
 
 // Función para crear un nuevo paciente
 export const createPaciente = async (pacienteData) => {
-    const response = await api.post('/pacientes/pacientes/', pacienteData);
+    const response = await api.post('/pacientes/', pacienteData);
+    return response.data;
+};
+
+// Funciones CRUD para pedidos
+export const getPedidos = async () => {
+    const response = await api.get('/pedidos/');
+    return response.data;
+};
+
+export const createPedido = async (pedidoData) => {
+    const response = await api.post('/pedidos/', pedidoData);
+    return response.data;
+};
+
+export const updatePedido = async (id, pedidoData) => {
+    const response = await api.put(`/pedidos/${id}/`, pedidoData);
+    return response.data;
+};
+
+export const deletePedido = async (id) => {
+    const response = await api.delete(`/pedidos/${id}/`);
     return response.data;
 };
 

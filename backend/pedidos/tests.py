@@ -1,40 +1,69 @@
 import pytest
 from rest_framework.test import APIClient
-from rest_framework import status
-from pedidos.models import Pedido
+from django.urls import reverse
+from .models import Pedido
 from pacientes.models import Paciente
 from habitaciones.models import Habitacion
 from servicios.models import Servicio
+from menus.models import Menu, MenuOption, MenuSection
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 
 @pytest.fixture
 def api_client():
-    user = get_user_model().objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
     client = APIClient()
-    refresh = RefreshToken.for_user(user)
-    client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+    user = get_user_model().objects.create_user(username='testuser', email='testuser@example.com', password='testpass')
+    client.force_authenticate(user=user)
     return client
 
-@pytest.mark.django_db
-def test_create_pedido(api_client):
-    client = api_client
-    servicio = Servicio.objects.create(nombre='Servicio de Prueba')
-    habitacion = Habitacion.objects.create(numero='101', servicio=servicio)
-    paciente = Paciente.objects.create(name='Paciente de Prueba', room=habitacion, recommended_diet='Dieta de Prueba')
-    payload = {
-        'status': 'pending',
-        'patient_id': paciente.id
-    }
-    response = client.post('/api/pedidos/', payload, format='json')
-    assert response.status_code == status.HTTP_201_CREATED
+@pytest.fixture
+def servicio():
+    return Servicio.objects.create(nombre="Test Servicio")
+
+@pytest.fixture
+def habitacion(servicio):
+    return Habitacion.objects.create(numero="101", servicio=servicio)
+
+@pytest.fixture
+def paciente(habitacion):
+    return Paciente.objects.create(name="Test Paciente", room=habitacion, recommended_diet="Diet Test")
+
+@pytest.fixture
+def menu():
+    return Menu.objects.create(nombre="Test Menu")
+
+@pytest.fixture
+def menu_section(menu):
+    return MenuSection.objects.create(menu=menu, titulo="Test Section")
+
+@pytest.fixture
+def menu_option(menu_section):
+    return MenuOption.objects.create(section=menu_section, texto="Option Test", tipo="adicional", selected=False)
 
 @pytest.mark.django_db
-def test_list_pedidos(api_client):
-    client = api_client
-    servicio = Servicio.objects.create(nombre='Servicio de Prueba')
-    habitacion = Habitacion.objects.create(numero='101', servicio=servicio)
-    paciente = Paciente.objects.create(name='Paciente de Prueba', room=habitacion, recommended_diet='Dieta de Prueba')
-    Pedido.objects.create(status='pending', patient=paciente)
-    response = client.get('/api/pedidos/')
-    assert response.status_code == status.HTTP_200_OK
+def test_create_pedido(api_client, paciente, menu, menu_option):
+    url = reverse('pedido-list-create')
+    data = {
+        "paciente": paciente.id,
+        "menu": menu.id,
+        "opciones": [menu_option.id],
+        "status": "pendiente"
+    }
+    response = api_client.post(url, data, format='json')
+    assert response.status_code == 201
+
+@pytest.mark.django_db
+def test_get_pedidos(api_client):
+    url = reverse('pedido-list-create')
+    response = api_client.get(url)
+    assert response.status_code == 200
+
+@pytest.mark.django_db
+def test_update_pedido_status(api_client, paciente, menu, menu_option):
+    pedido = Pedido.objects.create(paciente=paciente, menu=menu, status="pendiente")
+    pedido.opciones.add(menu_option)
+    url = reverse('pedido-status-update', args=[pedido.id])
+    data = {"status": "completado"}
+    response = api_client.patch(url, data, format='json')
+    assert response.status_code == 200
+    pedido.refresh_from_db()
+    assert pedido.status == "completado"

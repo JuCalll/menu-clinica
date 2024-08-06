@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Form, Input, notification, Spin, Alert, List, Typography, Collapse, Popconfirm } from 'antd';
+import { Button, Modal, Form, Input, notification, Spin, Alert, List, Typography, Collapse } from 'antd';
 import { PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { createMenu, getMenus, deleteMenu, updateMenu } from '../services/api';
 import '../styles/Menus.scss';
@@ -21,6 +21,9 @@ const MenuPage = () => {
     almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
     cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
   });
+  const [newOptionText, setNewOptionText] = useState('');
+  const [currentOptionType, setCurrentOptionType] = useState({});
+  const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,35 +53,57 @@ const MenuPage = () => {
       return;
     }
 
+    const sections = Object.keys(options).map(key => {
+      if (key === 'adicional') {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
+        };
+      } else if (key === 'algo') {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+          bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || []
+        };
+      } else if (key === 'onces') {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
+        };
+      } else {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+          platos_principales: options[key].platos_principales.map(({ id, ...rest }) => rest) || [],
+          acompanantes: options[key].acompanantes.map(({ id, ...rest }) => rest) || [],
+          bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || [],
+        };
+      }
+    });
+
+    // Verificación de al menos dos opciones por sección
+    for (let section of sections) {
+      if (section.adicionales && section.adicionales.length < 2) {
+        notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Adicionales` });
+        return;
+      }
+      if (section.platos_principales && section.platos_principales.length < 2) {
+        notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Platos Principales` });
+        return;
+      }
+      if (section.acompanantes && section.acompanantes.length < 2) {
+        notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Acompañantes` });
+        return;
+      }
+      if (section.bebidas && section.bebidas.length < 2) {
+        notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Bebidas` });
+        return;
+      }
+    }
+
     const payload = {
       nombre: menuName,
-      sections: Object.keys(options).map(key => {
-        if (key === 'adicional') {
-          return {
-            titulo: key.charAt(0).toUpperCase() + key.slice(1),
-            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
-          };
-        } else if (key === 'algo') {
-          return {
-            titulo: key.charAt(0).toUpperCase() + key.slice(1),
-            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
-            bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || []
-          };
-        } else if (key === 'onces') {
-          return {
-            titulo: key.charAt(0).toUpperCase() + key.slice(1),
-            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
-          };
-        } else {
-          return {
-            titulo: key.charAt(0).toUpperCase() + key.slice(1),
-            adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
-            platos_principales: options[key].platos_principales.map(({ id, ...rest }) => rest) || [],
-            acompanantes: options[key].acompanantes.map(({ id, ...rest }) => rest) || [],
-            bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || [],
-          };
-        }
-      })
+      sections
     };
 
     console.log('Payload:', JSON.stringify(payload, null, 2));
@@ -116,33 +141,31 @@ const MenuPage = () => {
     });
   };
 
-  const addOption = (section, type) => {
-    Modal.confirm({
-      title: `Añadir ${type}`,
-      content: (
-        <Input
-          placeholder={`Ingrese ${type}`}
-          onChange={(e) => setOptions(prev => {
-            const newOptions = { ...prev };
-            if (!newOptions[section][type]) {
-              newOptions[section][type] = [];
-            }
-            newOptions[section][type].push({ texto: e.target.value, tipo: type });
-            return newOptions;
-          })}
-        />
-      ),
-      onOk() {
-        console.log(`Option added to ${section} - ${type}:`, options[section][type]);
-      }
-    });
+  const openOptionModal = (section, type) => {
+    setCurrentOptionType({ section, type });
+    setNewOptionText('');
+    setIsOptionModalOpen(true);
   };
 
-  const removeOption = (section, type, id) => {
+  const handleAddOption = () => {
+    if (!newOptionText) {
+      notification.error({ message: 'Error', description: 'Debe ingresar un texto para la opción' });
+      return;
+    }
+
     setOptions(prev => {
       const newOptions = { ...prev };
-      newOptions[section][type] = newOptions[section][type].filter(opt => opt.id !== id);
-      console.log(`Option removed from ${section} - ${type}:`, newOptions[section][type]);
+      newOptions[currentOptionType.section][currentOptionType.type].push({ texto: newOptionText, tipo: currentOptionType.type });
+      return newOptions;
+    });
+
+    setIsOptionModalOpen(false);
+  };
+
+  const removeOption = (section, type, index) => {
+    setOptions(prev => {
+      const newOptions = { ...prev };
+      newOptions[section][type].splice(index, 1);
       return newOptions;
     });
   };
@@ -161,28 +184,24 @@ const MenuPage = () => {
     }
   };
 
-  const confirmDeleteMenu = (id) => {
-    Modal.confirm({
+  const handleDeleteMenu = async (id) => {
+    confirm({
       title: '¿Está seguro de que desea eliminar este menú?',
       icon: <ExclamationCircleOutlined />,
       content: 'Esta acción no se puede deshacer',
       okText: 'Sí',
       okType: 'danger',
       cancelText: 'No',
-      onOk() {
-        deleteMenuConfirmed(id);
-      }
+      onOk: async () => {
+        try {
+          await deleteMenu(id);
+          notification.success({ message: 'Menú eliminado exitosamente' });
+          fetchMenus();
+        } catch (error) {
+          notification.error({ message: 'Error al eliminar el menú', description: error.response?.data?.message || error.message });
+        }
+      },
     });
-  };
-
-  const deleteMenuConfirmed = async (id) => {
-    try {
-      await deleteMenu(id);
-      notification.success({ message: 'Menú eliminado exitosamente' });
-      fetchMenus();
-    } catch (error) {
-      notification.error({ message: 'Error al eliminar el menú', description: error.response?.data?.message || error.message });
-    }
   };
 
   const handleEditMenu = (menu) => {
@@ -235,11 +254,11 @@ const MenuPage = () => {
             {['adicional', 'algo', 'onces'].map(section => (
               <Panel header={section.charAt(0).toUpperCase() + section.slice(1)} key={section}>
                 <div className="button-group vertical-buttons">
-                  <Button className="custom-button" onClick={() => addOption(section, 'adicionales')} icon={<PlusOutlined />}>
+                  <Button className="custom-button" onClick={() => openOptionModal(section, 'adicionales')} icon={<PlusOutlined />}>
                     Agregar Adicional
                   </Button>
                   {section === 'algo' && (
-                    <Button className="custom-button" onClick={() => addOption(section, 'bebidas')} icon={<PlusOutlined />}>
+                    <Button className="custom-button" onClick={() => openOptionModal(section, 'bebidas')} icon={<PlusOutlined />}>
                       Agregar Bebida
                     </Button>
                   )}
@@ -248,13 +267,13 @@ const MenuPage = () => {
                   header={<div>Adicionales</div>}
                   bordered
                   dataSource={options[section]?.adicionales || []}
-                  renderItem={opt => (
+                  renderItem={(opt, index) => (
                     <List.Item
                       actions={[
                         <Button
                           type="link"
                           icon={<DeleteOutlined />}
-                          onClick={() => removeOption(section, 'adicionales', opt.id)}
+                          onClick={() => removeOption(section, 'adicionales', index)}
                         />
                       ]}
                     >
@@ -267,13 +286,13 @@ const MenuPage = () => {
                     header={<div>Bebidas</div>}
                     bordered
                     dataSource={options[section]?.bebidas || []}
-                    renderItem={opt => (
+                    renderItem={(opt, index) => (
                       <List.Item
                         actions={[
                           <Button
                             type="link"
                             icon={<DeleteOutlined />}
-                            onClick={() => removeOption(section, 'bebidas', opt.id)}
+                            onClick={() => removeOption(section, 'bebidas', index)}
                           />
                         ]}
                       >
@@ -287,16 +306,16 @@ const MenuPage = () => {
             {['desayuno', 'almuerzo', 'cena'].map(section => (
               <Panel header={section.charAt(0).toUpperCase() + section.slice(1)} key={section}>
                 <div className="button-group vertical-buttons">
-                  <Button className="custom-button" onClick={() => addOption(section, 'adicionales')} icon={<PlusOutlined />}>
+                  <Button className="custom-button" onClick={() => openOptionModal(section, 'adicionales')} icon={<PlusOutlined />}>
                     Agregar Adicional
                   </Button>
-                  <Button className="custom-button" onClick={() => addOption(section, 'platos_principales')} icon={<PlusOutlined />}>
+                  <Button className="custom-button" onClick={() => openOptionModal(section, 'platos_principales')} icon={<PlusOutlined />}>
                     Agregar Plato Principal
                   </Button>
-                  <Button className="custom-button" onClick={() => addOption(section, 'acompanantes')} icon={<PlusOutlined />}>
+                  <Button className="custom-button" onClick={() => openOptionModal(section, 'acompanantes')} icon={<PlusOutlined />}>
                     Agregar Acompañante
                   </Button>
-                  <Button className="custom-button" onClick={() => addOption(section, 'bebidas')} icon={<PlusOutlined />}>
+                  <Button className="custom-button" onClick={() => openOptionModal(section, 'bebidas')} icon={<PlusOutlined />}>
                     Agregar Bebida
                   </Button>
                 </div>
@@ -304,13 +323,13 @@ const MenuPage = () => {
                   header={<div>Adicionales</div>}
                   bordered
                   dataSource={options[section]?.adicionales || []}
-                  renderItem={opt => (
+                  renderItem={(opt, index) => (
                     <List.Item
                       actions={[
                         <Button
                           type="link"
                           icon={<DeleteOutlined />}
-                          onClick={() => removeOption(section, 'adicionales', opt.id)}
+                          onClick={() => removeOption(section, 'adicionales', index)}
                         />
                       ]}
                     >
@@ -322,13 +341,13 @@ const MenuPage = () => {
                   header={<div>Platos Principales</div>}
                   bordered
                   dataSource={options[section]?.platos_principales || []}
-                  renderItem={opt => (
+                  renderItem={(opt, index) => (
                     <List.Item
                       actions={[
                         <Button
                           type="link"
                           icon={<DeleteOutlined />}
-                          onClick={() => removeOption(section, 'platos_principales', opt.id)}
+                          onClick={() => removeOption(section, 'platos_principales', index)}
                         />
                       ]}
                     >
@@ -340,13 +359,13 @@ const MenuPage = () => {
                   header={<div>Acompañantes</div>}
                   bordered
                   dataSource={options[section]?.acompanantes || []}
-                  renderItem={opt => (
+                  renderItem={(opt, index) => (
                     <List.Item
                       actions={[
                         <Button
                           type="link"
                           icon={<DeleteOutlined />}
-                          onClick={() => removeOption(section, 'acompanantes', opt.id)}
+                          onClick={() => removeOption(section, 'acompanantes', index)}
                         />
                       ]}
                     >
@@ -358,13 +377,13 @@ const MenuPage = () => {
                   header={<div>Bebidas</div>}
                   bordered
                   dataSource={options[section]?.bebidas || []}
-                  renderItem={opt => (
+                  renderItem={(opt, index) => (
                     <List.Item
                       actions={[
                         <Button
                           type="link"
                           icon={<DeleteOutlined />}
-                          onClick={() => removeOption(section, 'bebidas', opt.id)}
+                          onClick={() => removeOption(section, 'bebidas', index)}
                         />
                       ]}
                     >
@@ -375,6 +394,29 @@ const MenuPage = () => {
               </Panel>
             ))}
           </Collapse>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Añadir opción"
+        open={isOptionModalOpen}
+        onOk={handleAddOption}
+        onCancel={() => setIsOptionModalOpen(false)}
+        footer={
+          <div className="modal-footer">
+            <Button key="back" className="custom-button save-button" onClick={() => setIsOptionModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button key="submit" type="primary" className="custom-button save-button" onClick={handleAddOption}>
+              OK
+            </Button>
+          </div>
+        }
+      >
+        <Form layout="vertical">
+          <Form.Item label={`Añadir ${currentOptionType.type}`}>
+            <Input value={newOptionText} onChange={e => setNewOptionText(e.target.value)} />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -457,12 +499,11 @@ const MenuPage = () => {
                 actions={[
                   <Button type="link" icon={<EyeOutlined />} onClick={() => showDetailModal(menu)} />,
                   <Button type="link" icon={<EditOutlined />} onClick={() => handleEditMenu(menu)} />,
-                  <Button type="link" icon={<DeleteOutlined />} onClick={() => confirmDeleteMenu(menu.id)} />
+                  <Button type="link" icon={<DeleteOutlined />} onClick={() => handleDeleteMenu(menu.id)} />
                 ]}
               >
                 <List.Item.Meta
-                  title={menu.nombre}
-                  className="menu-title"
+                  title={<span className="menu-title">{menu.nombre}</span>}
                 />
               </List.Item>
             )}
