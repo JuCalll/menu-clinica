@@ -14,6 +14,7 @@ class Pedido(models.Model):
     opciones = models.ManyToManyField(MenuOption, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendiente')
     fecha_pedido = models.DateTimeField(auto_now_add=True)
- 
+    adicionales = models.JSONField(default=dict, blank=True)  # Campo para opciones adicionales
+
     def __str__(self):
         return f"Pedido {self.id} - {self.paciente.name} - {self.status}"

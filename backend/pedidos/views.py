@@ -1,5 +1,5 @@
 from rest_framework import generics
-from rest_framework.response import Response  # Agregar esta línea
+from rest_framework.response import Response
 from .models import Pedido
 from .serializers import PedidoSerializer
 
