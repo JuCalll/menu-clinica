@@ -1,69 +1,95 @@
 import pytest
-from rest_framework.test import APIClient
 from django.urls import reverse
-from .models import Pedido
-from pacientes.models import Paciente
-from habitaciones.models import Habitacion
+from rest_framework.test import APIClient
+from rest_framework import status
+from pacientes.models import Paciente, Habitacion
 from servicios.models import Servicio
-from menus.models import Menu, MenuOption, MenuSection
-from django.contrib.auth import get_user_model
-
-@pytest.fixture
-def api_client():
-    client = APIClient()
-    user = get_user_model().objects.create_user(username='testuser', email='testuser@example.com', password='testpass')
-    client.force_authenticate(user=user)
-    return client
-
-@pytest.fixture
-def servicio():
-    return Servicio.objects.create(nombre="Test Servicio")
-
-@pytest.fixture
-def habitacion(servicio):
-    return Habitacion.objects.create(numero="101", servicio=servicio)
-
-@pytest.fixture
-def paciente(habitacion):
-    return Paciente.objects.create(name="Test Paciente", room=habitacion, recommended_diet="Diet Test")
-
-@pytest.fixture
-def menu():
-    return Menu.objects.create(nombre="Test Menu")
-
-@pytest.fixture
-def menu_section(menu):
-    return MenuSection.objects.create(menu=menu, titulo="Test Section")
-
-@pytest.fixture
-def menu_option(menu_section):
-    return MenuOption.objects.create(section=menu_section, texto="Option Test", tipo="adicional", selected=False)
+from menus.models import Menu, MenuSection, MenuOption
+from pedidos.models import Pedido
+from authentication.models import CustomUser
 
 @pytest.mark.django_db
-def test_create_pedido(api_client, paciente, menu, menu_option):
-    url = reverse('pedido-list-create')
-    data = {
+def test_pedido_creation():
+    client = APIClient()
+
+    # Autenticar el cliente con el modelo de usuario personalizado
+    user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
+    client.force_authenticate(user=user)
+
+    # Crear datos de prueba
+    servicio = Servicio.objects.create(nombre="SERVICIO TEST")
+    habitacion = Habitacion.objects.create(numero="101", servicio=servicio)
+    paciente = Paciente.objects.create(name="Juan Pérez", room=habitacion, recommended_diet="Diabetes")
+
+    menu = Menu.objects.create(nombre="Menú Preferencial Prueba")
+    section = MenuSection.objects.create(titulo="Adicional", menu=menu)
+    opcion1 = MenuOption.objects.create(texto="Jarra de Jugo Natural", tipo="adicionales", section=section)
+    opcion2 = MenuOption.objects.create(texto="Cereal", tipo="adicionales", section=section)
+    opcion3 = MenuOption.objects.create(texto="Café en Leche", tipo="bebidas", section=section)
+
+    pedido_data = {
         "paciente": paciente.id,
         "menu": menu.id,
-        "opciones": [menu_option.id],
-        "status": "pendiente"
+        "opciones": [
+            {"id": opcion1.id, "selected": True},
+            {"id": opcion2.id, "selected": False},
+            {"id": opcion3.id, "selected": True},
+        ],
+        "adicionales": {
+            "leche": "entera",
+            "bebida": "leche",
+            "azucarPanela": ["azucar", "panela"],
+            "vegetales": "crudos",
+            "golosina": True
+        }
     }
-    response = api_client.post(url, data, format='json')
-    assert response.status_code == 201
+
+    response = client.post(reverse('pedido-list-create'), data=pedido_data, format='json')
+    
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Pedido.objects.count() == 1
+    pedido = Pedido.objects.first()
+    assert pedido.opciones.count() == 2  # Verificamos que solo se seleccionaron 2 opciones
 
 @pytest.mark.django_db
-def test_get_pedidos(api_client):
-    url = reverse('pedido-list-create')
-    response = api_client.get(url)
-    assert response.status_code == 200
+def test_pedido_update():
+    client = APIClient()
 
-@pytest.mark.django_db
-def test_update_pedido_status(api_client, paciente, menu, menu_option):
-    pedido = Pedido.objects.create(paciente=paciente, menu=menu, status="pendiente")
-    pedido.opciones.add(menu_option)
-    url = reverse('pedido-status-update', args=[pedido.id])
-    data = {"status": "completado"}
-    response = api_client.patch(url, data, format='json')
-    assert response.status_code == 200
+    # Autenticar el cliente con el modelo de usuario personalizado
+    user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
+    client.force_authenticate(user=user)
+
+    # Crear datos de prueba
+    servicio = Servicio.objects.create(nombre="SERVICIO TEST")
+    habitacion = Habitacion.objects.create(numero="101", servicio=servicio)
+    paciente = Paciente.objects.create(name="Juan Pérez", room=habitacion, recommended_diet="Diabetes")
+
+    menu = Menu.objects.create(nombre="Menú Preferencial Prueba")
+    section = MenuSection.objects.create(titulo="Adicional", menu=menu)
+    opcion1 = MenuOption.objects.create(texto="Jarra de Jugo Natural", tipo="adicionales", section=section)
+    opcion2 = MenuOption.objects.create(texto="Cereal", tipo="adicionales", section=section)
+    opcion3 = MenuOption.objects.create(texto="Café en Leche", tipo="bebidas", section=section)
+
+    pedido = Pedido.objects.create(paciente=paciente, menu=menu, adicionales={"leche": "entera", "bebida": "leche"})
+
+    update_data = {
+        "opciones": [
+            {"id": opcion1.id, "selected": False},
+            {"id": opcion2.id, "selected": True},
+            {"id": opcion3.id, "selected": True},
+        ],
+        "adicionales": {
+            "leche": "deslactosada",
+            "bebida": "agua",
+            "azucarPanela": ["panela"],
+            "vegetales": "calientes",
+            "golosina": False
+        }
+    }
+    
+    response = client.patch(reverse('pedido-detail', args=[pedido.id]), data=update_data, format='json')
+
+    assert response.status_code == status.HTTP_200_OK
     pedido.refresh_from_db()
-    assert pedido.status == "completado"
+    assert pedido.opciones.count() == 2
+    assert pedido.adicionales['leche'] == "deslactosada"

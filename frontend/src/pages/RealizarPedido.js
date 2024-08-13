@@ -13,10 +13,10 @@ const RealizarPedido = () => {
     const [selectedMenu, setSelectedMenu] = useState(null);
     const [selectedOptions, setSelectedOptions] = useState({});
     const [additionalOptions, setAdditionalOptions] = useState({
-        leche: null,
-        bebida: null,
+        leche: '',
+        bebida: '',
         azucarPanela: [],
-        vegetales: null,
+        vegetales: '',
         golosina: false
     });
     const [loading, setLoading] = useState(true);
@@ -49,15 +49,6 @@ const RealizarPedido = () => {
     };
 
     const handleOptionChange = (sectionName, optionType, optionId, checked) => {
-        const sectionsValidation = {
-            Adicional: { adicionales: { max: 1 } },
-            Algo: { adicionales: { max: 1 }, bebidas: { max: 1 } },
-            Onces: { adicionales: { max: 1 } },
-            Desayuno: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { exact: 2 }, bebidas: { max: 1 } },
-            Almuerzo: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { exact: 2 }, bebidas: { max: 1 } },
-            Cena: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { exact: 2 }, bebidas: { max: 1 } },
-        };
-
         setSelectedOptions(prevOptions => {
             const newOptions = { ...prevOptions };
 
@@ -70,25 +61,18 @@ const RealizarPedido = () => {
             }
 
             if (checked) {
-                const selectedCount = newOptions[sectionName][optionType].length;
-
-                if (sectionsValidation[sectionName] && sectionsValidation[sectionName][optionType]) {
-                    const rule = sectionsValidation[sectionName][optionType];
-
-                    if (rule.max !== undefined && selectedCount >= rule.max) {
-                        return newOptions; // No permite seleccionar más de la cantidad máxima permitida
+                if (optionType === 'acompanantes') {
+                    if (newOptions[sectionName][optionType].length < 2) {
+                        newOptions[sectionName][optionType].push(optionId);
                     }
-
-                    if (rule.exact !== undefined && selectedCount >= rule.exact) {
-                        return newOptions; // No permite seleccionar más de la cantidad exacta permitida
-                    }
+                } else {
+                    newOptions[sectionName][optionType] = [optionId]; // Solo se permite una opción
                 }
-
-                newOptions[sectionName][optionType].push(optionId);
             } else {
                 newOptions[sectionName][optionType] = newOptions[sectionName][optionType].filter(id => id !== optionId);
             }
 
+            console.log('Updated options:', newOptions); // Log para verificar el estado actualizado
             return newOptions;
         });
     };
@@ -100,9 +84,9 @@ const RealizarPedido = () => {
             Adicional: { adicionales: { max: 1 } },
             Algo: { adicionales: { max: 1 }, bebidas: { max: 1 } },
             Onces: { adicionales: { max: 1 } },
-            Desayuno: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { exact: 2 }, bebidas: { max: 1 } },
-            Almuerzo: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { exact: 2 }, bebidas: { max: 1 } },
-            Cena: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { exact: 2 }, bebidas: { max: 1 } },
+            Desayuno: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+            Almuerzo: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+            Cena: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
         };
 
         for (const [sectionName, rules] of Object.entries(sectionsValidation)) {
@@ -111,9 +95,6 @@ const RealizarPedido = () => {
                 const selectedCount = (sectionOptions[optionType] || []).length;
                 if (rule.max !== undefined && selectedCount > rule.max) {
                     errors.push(`${sectionName} - ${optionType}: Máximo ${rule.max} opciones`);
-                }
-                if (rule.exact !== undefined && selectedCount !== rule.exact) {
-                    errors.push(`${sectionName} - ${optionType}: Debe seleccionar exactamente ${rule.exact} opciones`);
                 }
             }
         }
@@ -143,22 +124,48 @@ const RealizarPedido = () => {
         setConfirmVisible(false);
         try {
             const opciones = [];
-            for (const section in selectedOptions) {
-                for (const type in selectedOptions[section]) {
-                    opciones.push(...selectedOptions[section][type]);
+            for (const section of selectedMenu.sections) {
+                for (const key in section) {
+                    if (section[key] instanceof Array) {
+                        section[key].forEach(option => {
+                            opciones.push({
+                                id: option.id,
+                                selected: selectedOptions[section.titulo]?.[key]?.includes(option.id) || false
+                            });
+                        });
+                    }
                 }
             }
+            console.log('Datos a enviar al backend:', {
+                paciente: selectedPaciente,
+                menu: selectedMenu.id,
+                opciones: opciones,
+                adicionales: additionalOptions,
+            });
             const pedido = {
                 paciente: selectedPaciente,
                 menu: selectedMenu.id,
                 opciones: opciones,
-                adicionales: additionalOptions, // Agregar las opciones adicionales al pedido
+                adicionales: additionalOptions,
             };
             await createPedido(pedido);
-            // handle success (e.g., show a message or redirect)
+            resetForm();
         } catch (error) {
             console.error('Error creating pedido', error);
         }
+    };        
+
+    const resetForm = () => {
+        setSelectedPaciente(null);
+        setSelectedMenu(null);
+        setSelectedOptions({});
+        setAdditionalOptions({
+            leche: '',
+            bebida: '',
+            azucarPanela: [],
+            vegetales: '',
+            golosina: false
+        });
     };
 
     const handleCancel = () => {
@@ -181,6 +188,7 @@ const RealizarPedido = () => {
                 <Select
                     showSearch
                     filterOption={filterOption}
+                    value={selectedPaciente}
                     onChange={handlePacienteChange}
                     style={{ width: '100%' }}
                 >
@@ -193,7 +201,7 @@ const RealizarPedido = () => {
             </div>
             <div className="form-item">
                 <label>Menú</label>
-                <Select onChange={handleMenuChange} style={{ width: '100%' }}>
+                <Select value={selectedMenu?.id} onChange={handleMenuChange} style={{ width: '100%' }}>
                     {menus.map(menu => (
                         <Option key={menu.id} value={menu.id}>
                             {menu.nombre}
@@ -228,6 +236,7 @@ const RealizarPedido = () => {
                 <div className="form-item">
                     <label>Leche</label>
                     <Select
+                        value={additionalOptions.leche}
                         onChange={value => setAdditionalOptions(prev => ({ ...prev, leche: value }))}
                         style={{ width: '100%' }}
                     >
@@ -238,6 +247,7 @@ const RealizarPedido = () => {
                 <div className="form-item">
                     <label>Bebida</label>
                     <Select
+                        value={additionalOptions.bebida}
                         onChange={value => setAdditionalOptions(prev => ({ ...prev, bebida: value }))}
                         style={{ width: '100%' }}
                     >
@@ -248,6 +258,7 @@ const RealizarPedido = () => {
                 <div className="form-item">
                     <label>Azúcar y/o Panela</label>
                     <Checkbox.Group
+                        value={additionalOptions.azucarPanela}
                         onChange={checkedValues => setAdditionalOptions(prev => ({ ...prev, azucarPanela: checkedValues }))}
                     >
                         <Checkbox value="azucar">Azúcar</Checkbox>
@@ -257,6 +268,7 @@ const RealizarPedido = () => {
                 <div className="form-item">
                     <label>Vegetales</label>
                     <Select
+                        value={additionalOptions.vegetales}
                         onChange={value => setAdditionalOptions(prev => ({ ...prev, vegetales: value }))}
                         style={{ width: '100%' }}
                     >
@@ -267,6 +279,7 @@ const RealizarPedido = () => {
                 <div className="form-item">
                     <label>Golosina Opcional</label>
                     <Checkbox
+                        checked={additionalOptions.golosina}
                         onChange={e => setAdditionalOptions(prev => ({ ...prev, golosina: e.target.checked }))}
                     >
                         Golosina

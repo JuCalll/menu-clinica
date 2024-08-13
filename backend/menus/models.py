@@ -17,7 +17,6 @@ class MenuOption(models.Model):
     section = models.ForeignKey(MenuSection, on_delete=models.CASCADE, related_name='options')
     texto = models.CharField(max_length=255)
     tipo = models.CharField(max_length=50)  # Puede ser 'opciones', 'bebida', 'adicional'
-    selected = models.BooleanField(default=False)
 
     def __str__(self):
         return self.texto
