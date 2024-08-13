@@ -1,29 +1,47 @@
+/* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
+/* Estilos principales para la barra lateral (sidebar) */
 .sidebar {
+    /* Aplicamos la fuente 'Syne' a la barra lateral */
     font-family: 'Syne', sans-serif;
+    /* Color de fondo azul institucional para la barra lateral */
     background-color: #174288;
+    /* Color de texto blanco para el contenido de la barra lateral */
     color: #FFFFFF;
+    /* Padding interno para espaciar el contenido */
     padding: 15px;
 
+    /* Estilos para los enlaces de navegación dentro de la barra lateral */
     .nav-link {
+        /* Color blanco para los enlaces */
         color: #FFFFFF;
+        /* Padding interno para hacer los enlaces más grandes y accesibles */
         padding: 10px 15px;
+        /* Bordes redondeados para los enlaces */
         border-radius: 4px;
+        /* Margen superior e inferior para espaciar los enlaces entre sí */
         margin: 5px 0;
 
+        /* Estilos cuando se pasa el cursor sobre los enlaces */
         &:hover {
+            /* Cambiamos el color de fondo al azul secundario y el texto a gris claro */
             background-color: #00A7E2;
             color: #DEE2E6;
         }
 
+        /* Estilos para los enlaces activos */
         &.active {
+            /* Color de fondo azul secundario para el enlace activo */
             background-color: #00A7E2;
+            /* Color de texto gris claro para el enlace activo */
             color: #DEE2E6;
         }
     }
 
+    /* Estilos para pantallas pequeñas (ancho máximo de 767px) */
     @media (max-width: 767px) {
+        /* Ocultamos la barra lateral en dispositivos móviles */
         display: none;
     }
 }

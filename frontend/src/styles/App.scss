@@ -1,32 +1,54 @@
+/* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
+/* Estilos globales para el body */
 body {
+    /* Establecemos la fuente por defecto como 'Syne' con respaldo en sans-serif */
     font-family: 'Syne', sans-serif;
+    /* Eliminamos los márgenes y el padding por defecto */
     margin: 0;
     padding: 0;
+    /* Establecemos un color de fondo suave para todo el documento */
     background-color: #f8f9fa;
 }
 
+/* Estilos para los encabezados h1 */
 h1 {
-    color: #174288; /* Color institucional */
+    /* Aplicamos el color institucional al texto del encabezado */
+    color: #174288;
+    /* Centramos el texto */
     text-align: center;
+    /* Añadimos un margen superior para separar el encabezado del borde superior de la página */
     margin-top: 20px;
 }
 
+/* Estilos para las listas desordenadas */
 ul {
+    /* Eliminamos los estilos de lista predeterminados (puntos) */
     list-style-type: none;
+    /* Eliminamos el padding predeterminado de las listas */
     padding: 0;
 
+    /* Estilos para los elementos de la lista */
     li {
+        /* Establecemos un fondo blanco para los elementos de la lista */
         background-color: #fff;
+        /* Añadimos un borde alrededor de los elementos con un color gris claro */
         border: 1px solid #dee2e6;
+        /* Añadimos un margen alrededor de cada elemento de la lista */
         margin: 10px;
+        /* Añadimos un padding interno para separar el contenido del borde */
         padding: 10px;
+        /* Redondeamos las esquinas de los elementos */
         border-radius: 5px;
+        /* Añadimos una sombra suave para dar un efecto de elevación */
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
+        /* Estilos al pasar el cursor sobre los elementos de la lista */
         &:hover {
+            /* Cambiamos el color del borde al color institucional al hacer hover */
             border-color: #00A7E2;
+            /* Aumentamos la sombra y cambiamos su color para resaltar el elemento */
             box-shadow: 0 0 10px rgba(0, 167, 226, 0.5);
         }
     }

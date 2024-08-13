@@ -1,14 +1,22 @@
+// Importamos React y los hooks useState y useEffect para manejar el estado y efectos
 import React, { useState, useEffect } from 'react';
+// Importamos varios componentes y utilidades desde Ant Design
 import { Button, Modal, Form, Input, notification, Spin, Alert, List, Typography, Collapse } from 'antd';
+// Importamos varios íconos desde Ant Design
 import { PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+// Importamos funciones API para manejar las operaciones CRUD de menús
 import { createMenu, getMenus, deleteMenu, updateMenu } from '../services/api';
+// Importamos los estilos SCSS para este componente
 import '../styles/Menus.scss';
 
+// Desestructuramos componentes desde Ant Design para un acceso más limpio
 const { Title } = Typography;
 const { Panel } = Collapse;
 const { confirm } = Modal;
 
+// Definimos el componente MenuPage
 const MenuPage = () => {
+    // Estados para manejar la visibilidad de modales, el nombre del menú, el menú actual, y las opciones del menú
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [menuName, setMenuName] = useState('');
@@ -28,6 +36,7 @@ const MenuPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Función para mostrar el modal de creación/edición de menús
     const showModal = () => {
         setIsModalOpen(true);
         setCurrentMenu(null);
@@ -42,11 +51,13 @@ const MenuPage = () => {
         });
     };
 
+    // Función para mostrar el modal de detalles del menú
     const showDetailModal = (menu) => {
         setCurrentMenu(menu);
         setIsDetailModalOpen(true);
     };
 
+    // Función para manejar la creación o actualización de un menú
     const handleOk = async () => {
         if (!menuName) {
             notification.error({ message: 'Error', description: 'El nombre del menú es obligatorio' });
@@ -126,6 +137,7 @@ const MenuPage = () => {
         }
     };
 
+    // Función para cancelar el modal y limpiar los estados
     const handleCancel = () => {
         setIsModalOpen(false);
         setIsDetailModalOpen(false);
@@ -141,12 +153,14 @@ const MenuPage = () => {
         });
     };
 
+    // Función para abrir el modal de opciones para una sección específica
     const openOptionModal = (section, type) => {
         setCurrentOptionType({ section, type });
         setNewOptionText('');
         setIsOptionModalOpen(true);
     };
 
+    // Función para agregar una nueva opción a una sección
     const handleAddOption = () => {
         if (!newOptionText) {
             notification.error({ message: 'Error', description: 'Debe ingresar un texto para la opción' });
@@ -162,6 +176,7 @@ const MenuPage = () => {
         setIsOptionModalOpen(false);
     };
 
+    // Función para eliminar una opción de una sección específica
     const removeOption = (section, type, index) => {
         setOptions(prev => {
             const newOptions = { ...prev };
@@ -170,6 +185,7 @@ const MenuPage = () => {
         });
     };
 
+    // Función para obtener los menús desde el servidor
     const fetchMenus = async () => {
         setLoading(true);
         setError(null);
@@ -184,6 +200,7 @@ const MenuPage = () => {
         }
     };
 
+    // Función para manejar la eliminación de un menú
     const handleDeleteMenu = async (id) => {
         confirm({
             title: '¿Está seguro de que desea eliminar este menú?',
@@ -204,6 +221,7 @@ const MenuPage = () => {
         });
     };
 
+    // Función para manejar la edición de un menú existente
     const handleEditMenu = (menu) => {
         setCurrentMenu(menu);
         setMenuName(menu.nombre);
@@ -220,6 +238,7 @@ const MenuPage = () => {
         console.log('Editing menu:', menu);
     };
 
+    // Efecto para obtener los menús al cargar el componente
     useEffect(() => {
         fetchMenus();
     }, []);

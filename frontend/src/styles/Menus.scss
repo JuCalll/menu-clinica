@@ -1,66 +1,89 @@
 .menu-page {
+  /* Padding para espaciar el contenido dentro de la página */
   padding: 20px;
 }
 
 .custom-button {
+  /* Margen inferior para separar el botón de otros elementos */
   margin-bottom: 10px;
 }
 
 .vertical-buttons {
+  /* Flexbox en dirección columna para apilar los botones verticalmente */
   display: flex;
   flex-direction: column;
+  /* Espacio entre los botones */
   gap: 10px;
 }
 
 .button-group {
+  /* Flexbox en dirección columna para apilar los botones verticalmente */
   display: flex;
   flex-direction: column;
+  /* Espacio entre los botones */
   gap: 10px;
+  /* Margen inferior para separar el grupo de botones de otros elementos */
   margin-bottom: 20px;
 }
 
 .ant-btn {
+  /* Margen derecho para separar los botones en una fila */
   margin-right: 10px;
+  /* Asegura que los botones ocupen todo el ancho disponible */
   width: 100%;
 }
 
 .ant-collapse-content-box {
+  /* Flexbox en dirección columna para apilar el contenido verticalmente */
   display: flex;
   flex-direction: column;
+  /* Espacio entre los elementos dentro del contenido colapsado */
   gap: 10px;
 }
 
 .menu-details {
+  /* Estilos específicos para la tipografía dentro de los detalles del menú */
   .ant-typography {
+    /* Margen superior para separar la tipografía de otros elementos */
     margin-top: 20px;
   }
 }
 
 .menu-list {
+  /* Margen superior para separar la lista de menús de otros elementos */
   margin-top: 20px;
 }
 
 .loading-container {
+  /* Centrar el texto de carga */
   text-align: center;
+  /* Padding superior e inferior para espaciar el contenido de carga */
   padding: 50px 0;
 }
 
 .save-button {
-  width: calc(50% - 5px);  // Ajusta el tamaño del botón
+  /* Ajusta el ancho del botón a la mitad del contenedor menos 5px */
+  width: calc(50% - 5px);
+  /* Margen derecho para separar el botón de otros elementos */
   margin-right: 10px;
 }
 
 .modal-footer {
+  /* Flexbox para centrar los botones en la barra de pie de la ventana modal */
   display: flex;
-  justify-content: center;  // Centrar los botones
+  justify-content: center;
+  /* Espacio entre los botones */
   gap: 10px;
 }
 
 .modal-footer .ant-btn {
+  /* Ancho fijo para los botones dentro de la ventana modal */
   width: 100px;
+  /* Margen izquierdo y derecho para espaciar los botones entre sí */
   margin: 0 10px;
 }
 
 .menu-title {
+  /* Negrita para resaltar el título del menú */
   font-weight: bold;
 }

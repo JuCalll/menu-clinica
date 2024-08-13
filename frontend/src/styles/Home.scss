@@ -1,19 +1,31 @@
+/* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
+/* Estilos para el contenedor principal de la página de inicio */
 .home {
+    /* Aplicamos la fuente 'Syne' a todo el contenedor */
     font-family: 'Syne', sans-serif;
+    /* Establecemos un color de fondo gris claro */
     background-color: #DEE2E6;
+    /* Color de texto institucional azul */
     color: #174288;
+    /* Padding interno para espaciar el contenido */
     padding: 50px 20px;
 
+    /* Estilos para los encabezados h1 dentro del contenedor .home */
     h1 {
+        /* Tamaño de fuente grande para el encabezado principal */
         font-size: 2.5rem;
+        /* Color de texto institucional azul */
         color: #174288;
     }
 
+    /* Media query para dispositivos con un ancho máximo de 767px (dispositivos móviles) */
     @media (max-width: 767px) {
+        /* Reducimos el padding en dispositivos móviles para mejor ajuste */
         padding: 30px 10px;
 
+        /* Ajustamos el tamaño de fuente del h1 en dispositivos móviles */
         h1 {
             font-size: 2rem;
         }

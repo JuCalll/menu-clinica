@@ -1,57 +1,85 @@
-/* Menus.scss */
-
+/* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
+/* Aplicamos la fuente 'Syne' a todo el documento */
 body {
   font-family: 'Syne', sans-serif;
 }
 
+/* Estilos para la página de menús */
 .menu-page {
+  /* Padding para espaciar el contenido dentro de la página */
   padding: 20px;
+  /* Color de fondo suave para la página */
   background-color: #f0f2f5;
 }
 
+/* Estilos para botones personalizados */
 .custom-button {
+  /* Color de fondo verde para los botones */
   background-color: #4caf50;
+  /* Color de borde que coincide con el fondo */
   border-color: #4caf50;
+  /* Color de texto blanco */
   color: white;
+  /* Aplicamos la fuente 'Syne' a los botones */
   font-family: 'Syne', sans-serif;
 }
 
+/* Estilos para botones al hacer hover o focus */
 .custom-button:hover,
 .custom-button:focus {
+  /* Cambiamos el color de fondo y borde al verde más oscuro */
   background-color: #45a049;
   border-color: #45a049;
 }
 
+/* Estilos para agrupar botones */
 .button-group {
+  /* Utilizamos flexbox para alinear los botones en fila */
   display: flex;
+  /* Espacio entre los botones */
   gap: 10px;
 }
 
+/* Estilos para el contenedor de carga */
 .loading-container {
+  /* Centrar el contenido de carga horizontal y verticalmente */
   display: flex;
   justify-content: center;
   align-items: center;
+  /* Ocupamos toda la altura de la ventana para centrar el contenido */
   height: 100vh;
 }
 
+/* Estilos para cada elemento de menú */
 .menu-item {
+  /* Margen inferior para separar los elementos de menú */
   margin-bottom: 20px;
+  /* Padding interno para separar el contenido del borde */
   padding: 20px;
+  /* Fondo blanco para los elementos de menú */
   background-color: white;
+  /* Bordes redondeados */
   border-radius: 8px;
+  /* Sombra suave para darle un efecto de elevación */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Estilos para los encabezados h3 dentro de .menu-item */
 .menu-item h3 {
+  /* Margen inferior para separar el encabezado del contenido siguiente */
   margin-bottom: 10px;
 }
 
+/* Estilos para los encabezados h4 dentro de .menu-item */
 .menu-item h4 {
+  /* Margen superior para separar el encabezado del contenido anterior */
   margin-top: 20px;
 }
 
+/* Estilos específicos para botones personalizados dentro de modales de Ant Design */
 .ant-modal-footer .custom-button {
+  /* Margen derecho para separar los botones en la fila */
   margin-right: 8px;
 }

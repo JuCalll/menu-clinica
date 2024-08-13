@@ -1,67 +1,105 @@
+/* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
+/* Estilos principales para el contenedor de servicios y habitaciones */
 .servicios-habitaciones {
+    /* Aplicamos la fuente 'Syne' a todo el contenedor */
     font-family: 'Syne', sans-serif;
 
+    /* Estilos para los encabezados h2 y h3 */
     h2, h3 {
+        /* Color azul institucional para los encabezados */
         color: #174288;
+        /* Margen inferior para separar los encabezados del contenido siguiente */
         margin-bottom: 20px;
     }
 
+    /* Estilos para los grupos de formularios */
     .form-group {
+        /* Margen inferior para espaciar los elementos del formulario */
         margin-bottom: 15px;
 
+        /* Estilos para los elementos de entrada y selección dentro de .form-group */
         input, select {
+            /* Aplicamos la fuente 'Syne' a los campos de entrada */
             font-family: 'Syne', sans-serif;
+            /* Borde gris claro para los campos de entrada */
             border: 1px solid #DEE2E6;
+            /* Bordes redondeados */
             border-radius: 4px;
+            /* Padding interno para los campos de entrada */
             padding: 10px;
+            /* Tamaño de fuente estándar para el texto dentro de los campos */
             font-size: 16px;
 
+            /* Estilos para los campos cuando están enfocados */
             &:focus {
+                /* Cambiamos el color del borde al azul secundario cuando se enfoca */
                 border-color: #00A7E2;
+                /* Añadimos una sombra alrededor del campo enfocado */
                 box-shadow: 0 0 5px rgba(0, 167, 226, 0.5);
             }
         }
     }
 
+    /* Estilos para el botón principal (btn-primary) */
     .btn-primary {
+        /* Color de fondo y borde azul institucional */
         background-color: #174288;
         border-color: #174288;
+        /* Tamaño de fuente y peso de texto para el botón */
         font-size: 16px;
         font-weight: bold;
+        /* Padding interno del botón */
         padding: 10px 20px;
+        /* Bordes redondeados */
         border-radius: 4px;
 
+        /* Estilos cuando se pasa el cursor sobre el botón */
         &:hover {
+            /* Cambiamos el color de fondo y borde al azul secundario */
             background-color: #00A7E2;
             border-color: #00A7E2;
         }
     }
 
+    /* Estilos para los elementos de lista */
     .list-group-item {
+        /* Fondo blanco para los elementos de la lista */
         background-color: #FFFFFF;
+        /* Borde gris claro para los elementos de la lista */
         border: 1px solid #DEE2E6;
+        /* Bordes redondeados */
         border-radius: 8px;
+        /* Margen inferior para espaciar los elementos de la lista */
         margin-bottom: 10px;
+        /* Padding interno para espaciar el contenido dentro de los elementos */
         padding: 15px;
+        /* Sombra suave para dar un efecto de elevación */
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 }
 
+/* Estilos para pantallas pequeñas (ancho máximo de 767px) */
 @media (max-width: 767px) {
     .servicios-habitaciones {
+        /* Estilos ajustados para .form-group en pantallas pequeñas */
         .form-group {
+            /* Reducimos el padding para los campos de entrada en pantallas pequeñas */
             input, select {
                 padding: 8px;
             }
         }
 
+        /* Estilos ajustados para el botón en pantallas pequeñas */
         .btn-primary {
+            /* Ajustamos el padding del botón para pantallas pequeñas */
             padding: 10px 15px;
         }
 
+        /* Estilos ajustados para los elementos de lista en pantallas pequeñas */
         .list-group-item {
+            /* Mantiene el padding de los elementos de lista en pantallas pequeñas */
             padding: 15px;
         }
     }

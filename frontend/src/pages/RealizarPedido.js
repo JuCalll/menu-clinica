@@ -1,12 +1,18 @@
+// Importamos React y los hooks useState y useEffect para manejar estado y efectos
 import React, { useState, useEffect } from 'react';
+// Importamos componentes y funciones desde Ant Design y la API personalizada
 import { Select, Button, Checkbox, Spin, Collapse, Modal } from 'antd';
 import { getPacientes, getMenus, createPedido } from '../services/api';
+// Importamos el archivo de estilos SCSS específico para este componente
 import '../styles/RealizarPedido.scss';
 
+// Desestructuramos algunos componentes para un acceso más limpio
 const { Option } = Select;
 const { Panel } = Collapse;
 
+// Definimos el componente RealizarPedido
 const RealizarPedido = () => {
+    // Estado para manejar los pacientes, menús, opciones seleccionadas, etc.
     const [pacientes, setPacientes] = useState([]);
     const [menus, setMenus] = useState([]);
     const [selectedPaciente, setSelectedPaciente] = useState(null);
@@ -22,6 +28,7 @@ const RealizarPedido = () => {
     const [loading, setLoading] = useState(true);
     const [confirmVisible, setConfirmVisible] = useState(false);
 
+    // Efecto para obtener pacientes y menús al montar el componente
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -36,18 +43,21 @@ const RealizarPedido = () => {
             }
         };
         fetchData();
-    }, []);
+    }, []); // El array vacío asegura que el efecto se ejecute solo una vez al montar
 
+    // Función para manejar el cambio de selección del paciente
     const handlePacienteChange = value => {
         setSelectedPaciente(value);
     };
 
+    // Función para manejar el cambio de selección del menú
     const handleMenuChange = value => {
         const menu = menus.find(menu => menu.id === value);
         setSelectedMenu(menu);
         setSelectedOptions({});
     };
 
+    // Función para manejar el cambio de selección de opciones
     const handleOptionChange = (sectionName, optionType, optionId, checked) => {
         setSelectedOptions(prevOptions => {
             const newOptions = { ...prevOptions };
@@ -77,6 +87,7 @@ const RealizarPedido = () => {
         });
     };
 
+    // Función para validar las selecciones hechas por el usuario
     const validateSelections = () => {
         const errors = [];
 
@@ -102,6 +113,7 @@ const RealizarPedido = () => {
         return errors;
     };
 
+    // Función para mostrar el modal de confirmación
     const showConfirmModal = () => {
         const validationErrors = validateSelections();
         if (validationErrors.length > 0) {
@@ -120,6 +132,7 @@ const RealizarPedido = () => {
         }
     };
 
+    // Función para manejar la confirmación y creación del pedido
     const handleOk = async () => {
         setConfirmVisible(false);
         try {
@@ -153,8 +166,9 @@ const RealizarPedido = () => {
         } catch (error) {
             console.error('Error creating pedido', error);
         }
-    };        
+    };
 
+    // Función para resetear el formulario después de enviar el pedido
     const resetForm = () => {
         setSelectedPaciente(null);
         setSelectedMenu(null);
@@ -168,14 +182,17 @@ const RealizarPedido = () => {
         });
     };
 
+    // Función para cancelar el modal de confirmación
     const handleCancel = () => {
         setConfirmVisible(false);
     };
 
+    // Función para filtrar las opciones de los select
     const filterOption = (input, option) => {
         return option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0;
     };
 
+    // Mostrar un spinner de carga mientras se obtienen los datos
     if (loading) {
         return <Spin />;
     }
