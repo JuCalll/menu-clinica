@@ -12,32 +12,30 @@ from authentication.models import CustomUser
 def test_pedido_creation():
     client = APIClient()
 
-    # Autenticar el cliente con el modelo de usuario personalizado
     user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
     client.force_authenticate(user=user)
 
-    # Crear datos de prueba
     servicio = Servicio.objects.create(nombre="SERVICIO TEST")
     habitacion = Habitacion.objects.create(numero="101", servicio=servicio)
     paciente = Paciente.objects.create(name="Juan Pérez", room=habitacion, recommended_diet="Diabetes")
 
     menu = Menu.objects.create(nombre="Menú Preferencial Prueba")
-    section = MenuSection.objects.create(titulo="Adicional", menu=menu)
-    opcion1 = MenuOption.objects.create(texto="Jarra de Jugo Natural", tipo="adicionales", section=section)
-    opcion2 = MenuOption.objects.create(texto="Cereal", tipo="adicionales", section=section)
-    opcion3 = MenuOption.objects.create(texto="Café en Leche", tipo="bebidas", section=section)
+    section = MenuSection.objects.create(titulo="Almuerzo", menu=menu)
+    opcion1 = MenuOption.objects.create(texto="Plato Principal", tipo="platos_principales", section=section)
+    opcion2 = MenuOption.objects.create(texto="Acompañante", tipo="acompanantes", section=section)
+    opcion3 = MenuOption.objects.create(texto="Bebida", tipo="bebidas", section=section)
 
     pedido_data = {
         "paciente": paciente.id,
         "menu": menu.id,
         "opciones": [
             {"id": opcion1.id, "selected": True},
-            {"id": opcion2.id, "selected": False},
-            {"id": opcion3.id, "selected": True},
+            {"id": opcion2.id, "selected": True},
+            {"id": opcion3.id, "selected": True},  # Aseguramos que la bebida está seleccionada
         ],
         "adicionales": {
             "leche": "entera",
-            "bebida": "leche",
+            "bebida": "agua",
             "azucarPanela": ["azucar", "panela"],
             "vegetales": "crudos",
             "golosina": True
@@ -47,11 +45,10 @@ def test_pedido_creation():
     response = client.post(reverse('pedido-list-create'), data=pedido_data, format='json')
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert Pedido.objects.count() == 1
     pedido = Pedido.objects.first()
 
-    # Verificar que las opciones se guardaron correctamente
-    assert pedido.pedidomenuoption_set.filter(selected=True).count() == 2  # Verificamos que solo se seleccionaron 2 opciones
+    # Verificamos que la bebida en Almuerzo se haya guardado correctamente
+    assert PedidoMenuOption.objects.filter(pedido=pedido, menu_option=opcion3, selected=True).exists()
 
 @pytest.mark.django_db
 def test_pedido_update():

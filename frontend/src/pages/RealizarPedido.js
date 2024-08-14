@@ -5,6 +5,9 @@ import { Select, Button, Checkbox, Spin, Collapse, Modal } from 'antd';
 import { getPacientes, getMenus, createPedido } from '../services/api';
 // Importamos el archivo de estilos SCSS específico para este componente
 import '../styles/RealizarPedido.scss';
+// Importamos el componente de PedidosPendientes
+import PedidosPendientes from '../components/PedidosPendientes';
+import HistorialPedidos from '../components/HistorialPedidos';
 
 // Desestructuramos algunos componentes para un acceso más limpio
 const { Option } = Select;
@@ -132,7 +135,6 @@ const RealizarPedido = () => {
         }
     };
 
-    // Función para manejar la confirmación y creación del pedido
     const handleOk = async () => {
         setConfirmVisible(false);
         try {
@@ -141,32 +143,37 @@ const RealizarPedido = () => {
                 for (const key in section) {
                     if (section[key] instanceof Array) {
                         section[key].forEach(option => {
+                            const selected = selectedOptions[section.titulo]?.[key]?.includes(option.id) || false;
                             opciones.push({
                                 id: option.id,
-                                selected: selectedOptions[section.titulo]?.[key]?.includes(option.id) || false
+                                selected: selected,
                             });
                         });
                     }
                 }
             }
+    
             console.log('Datos a enviar al backend:', {
                 paciente: selectedPaciente,
                 menu: selectedMenu.id,
                 opciones: opciones,
                 adicionales: additionalOptions,
             });
+    
             const pedido = {
                 paciente: selectedPaciente,
                 menu: selectedMenu.id,
                 opciones: opciones,
                 adicionales: additionalOptions,
             };
+    
             await createPedido(pedido);
             resetForm();
         } catch (error) {
             console.error('Error creating pedido', error);
         }
-    };
+    };    
+        
 
     // Función para resetear el formulario después de enviar el pedido
     const resetForm = () => {
@@ -322,8 +329,16 @@ const RealizarPedido = () => {
                     Asegúrese de los elementos seleccionados según las restricciones del paciente.
                 </p>
             </Modal>
+            
+            {/* Aquí se añade el componente PedidosPendientes */}
+            <PedidosPendientes />
+            {/* Aquí se añade el componente HistorialPedidos */}
+            <HistorialPedidos />
         </div>
     );
 };
 
 export default RealizarPedido;
+
+
+

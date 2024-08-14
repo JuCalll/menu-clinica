@@ -1,0 +1,38 @@
+// src/components/PedidosPendientes.scss
+.pedidos-pendientes {
+    .pedido {
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+        padding: 20px;
+        background-color: #f9f9f9;
+
+        .section {
+            margin-bottom: 10px;
+
+            h4 {
+                color: #333;
+            }
+
+            ul {
+                padding-left: 20px;
+
+                li {
+                    list-style-type: disc;
+                }
+            }
+
+            button {
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+
+                &:disabled {
+                    background-color: #6c757d;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
+}

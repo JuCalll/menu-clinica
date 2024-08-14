@@ -110,5 +110,10 @@ export const deletePedido = async (id) => {
     return response.data;
 };
 
+export const getPedidosCompletados = async (searchTerm = '') => {
+    const response = await api.get(`/pedidos/completados/?paciente=${searchTerm}`);
+    return response.data;
+};
+
 // Exportamos la configuración de Axios por defecto
 export default api;
