@@ -35,8 +35,7 @@ const FloatingButton = () => {
                         <NavLink to="/menus" className="nav-link" onClick={toggleMenu}>Menús</NavLink>
                         <NavLink to="/realizar-pedido" className="nav-link" onClick={toggleMenu}>Realizar Pedido</NavLink>
                         <NavLink to="/pedidos" className="nav-link" onClick={toggleMenu}>Pedidos</NavLink>
-                        <NavLink to="/pacientes" className="nav-link" onClick={toggleMenu}>Pacientes</NavLink>
-                        <NavLink to="/servicios-habitaciones" className="nav-link" onClick={toggleMenu}>Servicios y Habitaciones</NavLink>
+                        <NavLink to="/gestion-datos" className="nav-link" onClick={toggleMenu}>Gestión de Datos</NavLink> {/* Nueva ruta */}
                     </nav>
                 </div>
             )}

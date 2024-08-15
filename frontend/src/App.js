@@ -10,9 +10,8 @@ import 'bootstrap/dist/js/bootstrap.bundle.min';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import RealizarPedido from './pages/RealizarPedido';
-import Pacientes from './pages/Pacientes';
+import DataManagement from './pages/DataManagement'; // Nuevo componente unificado
 import Register from './pages/Register';
-import ServiciosHabitaciones from './pages/ServiciosHabitaciones';
 import MenuPage from './pages/MenuPage';
 
 // Importamos los componentes de la aplicación
@@ -45,11 +44,8 @@ function App() {
           {/* Ruta para la página de realización de pedidos */}
           <Route path="/realizar-pedido" element={<RealizarPedido />} />
           
-          {/* Ruta para la página de gestión de pacientes */}
-          <Route path="/pacientes" element={<Pacientes />} />
-          
-          {/* Ruta para la página de gestión de servicios y habitaciones */}
-          <Route path="/servicios-habitaciones" element={<ServiciosHabitaciones />} />
+          {/* Ruta para la página de gestión de servicios, habitaciones y pacientes */}
+          <Route path="/gestion-datos" element={<DataManagement />} />
         </Route>
       </Routes>
     </Router>

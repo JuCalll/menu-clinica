@@ -16,8 +16,7 @@ const Sidebar = () => {
         <NavLink to="/" className="nav-link">Inicio</NavLink>
         <NavLink to="/menus" className="nav-link">Menús</NavLink>
         <NavLink to="/realizar-pedido" className="nav-link">Realizar Pedido</NavLink>
-        <NavLink to="/pacientes" className="nav-link">Pacientes</NavLink>
-        <NavLink to="/servicios-habitaciones" className="nav-link">Servicios y Habitaciones</NavLink>
+        <NavLink to="/gestion-datos" className="nav-link">Gestión de Datos</NavLink> {/* Nueva ruta */}
       </nav>
     </div>
   );
