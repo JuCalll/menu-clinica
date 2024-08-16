@@ -1,24 +1,17 @@
-// Importamos React y los hooks useEffect y useState para manejar efectos y estado
 import React, { useEffect, useState } from 'react';
-// Importamos el servicio API para hacer solicitudes HTTP al backend
+import { Button, Drawer, Tabs, Switch, Table } from 'antd';
 import api from '../services/api';
-// Importamos el archivo de estilos SCSS específico para este componente
 import '../styles/DataManagement.scss';
 
+const { TabPane } = Tabs;
+
 const DataManagement = () => {
-    // Estados para manejar pacientes, servicios, y habitaciones
     const [pacientes, setPacientes] = useState([]);
     const [servicios, setServicios] = useState([]);
     const [habitaciones, setHabitaciones] = useState([]);
-
-    // Estados para manejar los formularios de nuevos servicios y habitaciones
-    const [newServicio, setNewServicio] = useState('');
-    const [newHabitacion, setNewHabitacion] = useState({ numero: '', servicio_id: '' });
-
-    // Estado de carga
     const [loading, setLoading] = useState(true);
+    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
-    // useEffect para cargar los datos al montar el componente
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -27,10 +20,6 @@ const DataManagement = () => {
                     api.get('/servicios/'),
                     api.get('/habitaciones/')
                 ]);
-
-                console.log('Pacientes:', pacientesResponse.data);
-                console.log('Servicios:', serviciosResponse.data);
-                console.log('Habitaciones:', habitacionesResponse.data);
 
                 setPacientes(pacientesResponse.data);
                 setServicios(serviciosResponse.data);
@@ -44,50 +33,31 @@ const DataManagement = () => {
         fetchData();
     }, []);
 
-    // Manejo del formulario de nuevos servicios
-    const handleServicioSubmit = async (e) => {
-        e.preventDefault();
+    const showDrawer = () => setIsDrawerVisible(true);
+    const closeDrawer = () => setIsDrawerVisible(false);
+
+    const toggleActivo = async (item, type) => {
         try {
-            const response = await api.post('/servicios/', { nombre: newServicio });
-            setServicios([...servicios, response.data]);
-            setNewServicio('');
-            console.log('Nuevo servicio agregado:', response.data);
+            const updatedItem = { ...item, activo: !item.activo };
+            if (type === 'servicio') {
+                await api.put(`/servicios/${item.id}/`, updatedItem);
+                setServicios(servicios.map(s => (s.id === item.id ? updatedItem : s)));
+            } else if (type === 'habitacion') {
+                await api.put(`/habitaciones/${item.id}/`, updatedItem);
+                setHabitaciones(habitaciones.map(h => (h.id === item.id ? updatedItem : h)));
+            } else if (type === 'paciente') {
+                await api.put(`/pacientes/${item.id}/`, updatedItem);
+                setPacientes(pacientes.map(p => (p.id === item.id ? updatedItem : p)));
+            }
         } catch (error) {
-            console.error('Error creating servicio:', error);
+            console.error('Error toggling activo:', error);
         }
     };
 
-    // Manejo del formulario de nuevas habitaciones
-    const handleHabitacionSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await api.post('/habitaciones/', newHabitacion);
-            const nuevaHabitacion = {
-                ...response.data,
-                servicio: servicios.find(servicio => servicio.id === newHabitacion.servicio_id)
-            };
-            setHabitaciones([...habitaciones, nuevaHabitacion]);
-            setNewHabitacion({ numero: '', servicio_id: '' });
-            console.log('Nueva habitación agregada:', nuevaHabitacion);
-        } catch (error) {
-            console.error('Error creating habitacion:', error);
-        }
-    };
+    const serviciosActivos = servicios.filter(servicio => servicio.activo);
+    const habitacionesActivas = habitaciones.filter(habitacion => habitacion.activo);
+    const pacientesActivos = pacientes.filter(paciente => paciente.activo);
 
-    // Agrupar habitaciones por servicio
-    const habitacionesPorServicio = servicios.map(servicio => {
-        const habitacionesFiltradas = habitaciones.filter(habitacion => {
-            // Comparamos si el servicio en la habitación es el mismo que el actual
-            return habitacion.servicio && habitacion.servicio === servicio.nombre;
-        });
-        console.log(`Servicio: ${servicio.nombre}, Habitaciones:`, habitacionesFiltradas);
-        return {
-            ...servicio,
-            habitaciones: habitacionesFiltradas,
-        };
-    });
-
-    // Renderizado del componente
     if (loading) {
         return <div>Cargando...</div>;
     }
@@ -95,85 +65,124 @@ const DataManagement = () => {
     return (
         <div className="data-management container mt-5">
             <h2>Gestión de Pacientes, Servicios y Habitaciones</h2>
-            
-            <div className="section">
-                <h3>Pacientes</h3>
+
+            <Button type="primary" onClick={showDrawer}>
+                Panel de Gestión
+            </Button>
+
+            <div className="active-data mt-4">
+                <h3>Servicios Activos</h3>
+                <ul className="list-group mb-4">
+                    {serviciosActivos.length > 0 ? (
+                        serviciosActivos.map(servicio => (
+                            <li key={servicio.id} className="list-group-item">
+                                {servicio.nombre}
+                            </li>
+                        ))
+                    ) : (
+                        <li className="list-group-item">No hay servicios activos</li>
+                    )}
+                </ul>
+
+                <h3>Habitaciones Activas</h3>
+                <ul className="list-group mb-4">
+                    {habitacionesActivas.length > 0 ? (
+                        habitacionesActivas.map(habitacion => (
+                            <li key={habitacion.id} className="list-group-item">
+                                {habitacion.numero} - {habitacion.servicio}
+                            </li>
+                        ))
+                    ) : (
+                        <li className="list-group-item">No hay habitaciones activas</li>
+                    )}
+                </ul>
+
+                <h3>Pacientes Activos</h3>
                 <ul className="list-group">
-                    {pacientes.map((paciente) => (
-                        <li key={paciente.id} className="list-group-item">
-                            <h4>{paciente.name}</h4>
-                            <p>Habitación: {paciente.room.numero}</p>
-                            <p>Servicio: {paciente.room.servicio.nombre}</p>
-                            <p>Restricciones: {paciente.recommended_diet}</p>
-                        </li>
-                    ))}
+                    {pacientesActivos.length > 0 ? (
+                        pacientesActivos.map(paciente => (
+                            <li key={paciente.id} className="list-group-item">
+                                {paciente.name} - Habitación: {paciente.room.numero} - Servicio: {paciente.room.servicio.nombre}
+                            </li>
+                        ))
+                    ) : (
+                        <li className="list-group-item">No hay pacientes activos</li>
+                    )}
                 </ul>
             </div>
 
-            <div className="section">
-                <h3>Servicios y Habitaciones</h3>
-                <form onSubmit={handleServicioSubmit} className="mb-3">
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            placeholder="Nombre del Servicio"
-                            value={newServicio}
-                            onChange={(e) => setNewServicio(e.target.value)}
-                            className="form-control"
-                            required
+            <Drawer
+                title="Gestión de Datos"
+                placement="right"
+                onClose={closeDrawer}
+                visible={isDrawerVisible}
+                width={600}
+            >
+                <Tabs defaultActiveKey="1">
+                    <TabPane tab="Servicios" key="1">
+                        <Table
+                            dataSource={servicios}
+                            columns={[
+                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                {
+                                    title: 'Activo',
+                                    dataIndex: 'activo',
+                                    key: 'activo',
+                                    render: (_, servicio) => (
+                                        <Switch
+                                            checked={servicio.activo}
+                                            onChange={() => toggleActivo(servicio, 'servicio')}
+                                        />
+                                    ),
+                                },
+                            ]}
+                            rowKey="id"
                         />
-                    </div>
-                    <button type="submit" className="btn btn-primary">Agregar Servicio</button>
-                </form>
-                {habitacionesPorServicio.map(servicio => (
-                    <div key={servicio.id} className="mb-4">
-                        <h4>{servicio.nombre}</h4>
-                        <ul className="list-group">
-                            {servicio.habitaciones.length > 0 ? (
-                                servicio.habitaciones.map(habitacion => (
-                                    <li key={habitacion.id} className="list-group-item">
-                                        Habitación {habitacion.numero}
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="list-group-item">No hay habitaciones asignadas</li>
-                            )}
-                        </ul>
-                    </div>
-                ))}
-            </div>
-
-            <div className="section">
-                <h3>Agregar Habitación</h3>
-                <form onSubmit={handleHabitacionSubmit} className="mb-3">
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            placeholder="Número de la Habitación"
-                            value={newHabitacion.numero}
-                            onChange={(e) => setNewHabitacion({ ...newHabitacion, numero: e.target.value })}
-                            className="form-control"
-                            required
+                    </TabPane>
+                    <TabPane tab="Habitaciones" key="2">
+                        <Table
+                            dataSource={habitaciones}
+                            columns={[
+                                { title: 'Número', dataIndex: 'numero', key: 'numero' },
+                                { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
+                                {
+                                    title: 'Activo',
+                                    dataIndex: 'activo',
+                                    key: 'activo',
+                                    render: (_, habitacion) => (
+                                        <Switch
+                                            checked={habitacion.activo}
+                                            onChange={() => toggleActivo(habitacion, 'habitacion')}
+                                        />
+                                    ),
+                                },
+                            ]}
+                            rowKey="id"
                         />
-                    </div>
-                    <div className="form-group">
-                        <select
-                            value={newHabitacion.servicio_id}
-                            onChange={(e) => setNewHabitacion({ ...newHabitacion, servicio_id: e.target.value })}
-                            className="form-control"
-                            required
-                        >
-                            <option value="">Seleccione un Servicio</option>
-                            {servicios.map((servicio) => (
-                                <option key={servicio.id} value={servicio.id}>
-                                    {servicio.nombre}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <button type="submit" className="btn btn-primary">Agregar Habitación</button>
-                </form>
-            </div>
+                    </TabPane>
+                    <TabPane tab="Pacientes" key="3">
+                        <Table
+                            dataSource={pacientes}
+                            columns={[
+                                { title: 'Nombre', dataIndex: 'name', key: 'name' },
+                                { title: 'Habitación', dataIndex: ['room', 'numero'], key: 'habitacion' },
+                                {
+                                    title: 'Activo',
+                                    dataIndex: 'activo',
+                                    key: 'activo',
+                                    render: (_, paciente) => (
+                                        <Switch
+                                            checked={paciente.activo}
+                                            onChange={() => toggleActivo(paciente, 'paciente')}
+                                        />
+                                    ),
+                                },
+                            ]}
+                            rowKey="id"
+                        />
+                    </TabPane>
+                </Tabs>
+            </Drawer>
         </div>
     );
 };

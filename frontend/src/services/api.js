@@ -115,5 +115,23 @@ export const getPedidosCompletados = async (searchTerm = '') => {
     return response.data;
 };
 
+// Función para actualizar un servicio existente (activar/desactivar)
+export const updateServicio = async (id, servicioData) => {
+    const response = await api.put(`/servicios/${id}/`, servicioData);
+    return response.data;
+};
+
+// Función para actualizar una habitación existente (activar/desactivar)
+export const updateHabitacion = async (id, habitacionData) => {
+    const response = await api.put(`/habitaciones/${id}/`, habitacionData);
+    return response.data;
+};
+
+// Función para actualizar un paciente existente (activar/desactivar)
+export const updatePaciente = async (id, pacienteData) => {
+    const response = await api.put(`/pacientes/${id}/`, pacienteData);
+    return response.data;
+};
+
 // Exportamos la configuración de Axios por defecto
 export default api;

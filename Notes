@@ -1,0 +1,9 @@
+Ahora vamos a realizar cierto cambio en la funcionalidad 
+de la gestión de servicios, habitaciones y pacientes. En la página
+principal solo aparecerán los servicios, habitaciones y pacientes
+que se encuentran en el estado "activo". En la parte de arriba tendremos 
+un botón que abrirá un menú de gestión para estas 3 secciones. Donde podremos 
+crear, editar, y habilitar e inhabilitar (La eliminación solo se podrá 
+realizar desde la base de datos) cada una de las opciones de las diferentes secciones, aplicando la
+lógica de jerarquías que ya habíamos pensado. Discutamos la idea para pensar en su correcta 
+implementación  
