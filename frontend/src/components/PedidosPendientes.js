@@ -13,7 +13,6 @@ const PedidosPendientes = () => {
         const fetchPedidos = async () => {
             try {
                 const response = await getPedidos();
-                console.log('Fetched Pedidos:', response);
                 setPedidos(response.filter(pedido => pedido.status !== 'completado'));
                 setLoading(false);
             } catch (error) {
@@ -28,34 +27,26 @@ const PedidosPendientes = () => {
     const handleSectionStatusChange = async (pedidoId, sectionTitle) => {
         try {
             const pedido = pedidos.find(p => p.id === pedidoId);
-            console.log('SectionStatus antes de la actualización:', pedido.sectionStatus);
 
-            // Actualizar el estado de la sección específica a 'completado'
             const updatedSections = { ...pedido.sectionStatus, [sectionTitle]: 'completado' };
-            console.log('Updated Sections:', updatedSections);
 
-            // Verificar si todas las secciones están completadas
-            const allSectionsCompleted = Object.values(updatedSections).length === Object.keys(pedido.menu.sections).length &&
+            const allSectionsCompleted = Object.values(updatedSections).length === pedido.menu.sections.length &&
                                          Object.values(updatedSections).every(status => status === 'completado');
 
-            // Actualizar el estado del pedido solo si todas las secciones están completadas
             const updatedPedido = {
                 ...pedido,
-                status: allSectionsCompleted ? 'completado' : 'en_proceso', // Asegurar que el estado solo cambie si todo está completado
+                status: allSectionsCompleted ? 'completado' : 'en_proceso',
                 sectionStatus: updatedSections,
             };
 
-            console.log('Pedido a enviar al backend:', updatedPedido);
-
             await updatePedido(pedidoId, updatedPedido);
 
-            // Actualizar el estado local de los pedidos
             setPedidos(prevPedidos =>
                 prevPedidos.map(p =>
                     p.id === pedidoId
                         ? { ...p, sectionStatus: updatedSections, status: updatedPedido.status }
                         : p
-                ).filter(p => p.status !== 'completado') // Filtrar el pedido si se completó
+                ).filter(p => p.status !== 'completado')
             );
 
         } catch (error) {
@@ -66,18 +57,6 @@ const PedidosPendientes = () => {
     if (loading) {
         return <Spin />;
     }
-
-    const renderSelectedOptions = (section, optionsType, pedido) => {
-        return section[optionsType]
-            .filter(option => 
-                pedido.opciones.some(o => o.menu_option.id === option.id && o.selected)
-            )
-            .map(option => (
-                <div key={option.id}>
-                    {option.texto}
-                </div>
-            ));
-    };
 
     const renderSections = (pedido) => {
         const sectionsToShow = {
@@ -91,7 +70,6 @@ const PedidosPendientes = () => {
 
         return pedido.menu.sections.map(section => {
             const optionsToRender = sectionsToShow[section.titulo];
-            console.log('Rendering section:', section.titulo, 'Options to render:', optionsToRender);
 
             return optionsToRender && optionsToRender.length > 0 ? (
                 <div key={section.id}>
@@ -99,7 +77,11 @@ const PedidosPendientes = () => {
                     {optionsToRender.map(optionType => (
                         <div key={optionType}>
                             <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
-                            {renderSelectedOptions(section, optionType, pedido)}
+                            {section[optionType].map(option => (
+                                <div key={option.id}>
+                                    {option.texto}
+                                </div>
+                            ))}
                         </div>
                     ))}
                     <Button

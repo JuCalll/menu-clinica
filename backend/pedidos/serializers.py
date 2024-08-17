@@ -5,36 +5,10 @@ from pacientes.serializers import PacienteSerializer
 from menus.models import Menu, MenuOption
 from menus.serializers import MenuSerializer, MenuOptionSerializer
 
-class AdicionalesSerializer(serializers.Serializer):
-    leche = serializers.CharField(required=False, allow_null=True)
-    bebida = serializers.CharField(required=False, allow_null=True)
-    azucarPanela = serializers.ListField(
-        child=serializers.CharField(), required=False, allow_null=True
-    )
-    vegetales = serializers.CharField(required=False, allow_null=True)
-    golosina = serializers.BooleanField(required=False, allow_null=True)
-
-    def to_representation(self, instance):
-        return {
-            'leche': instance.get('leche', None),
-            'bebida': instance.get('bebida', None),
-            'azucarPanela': instance.get('azucarPanela', []),
-            'vegetales': instance.get('vegetales', None),
-            'golosina': instance.get('golosina', None),
-        }
-
-class PedidoMenuOptionSerializer(serializers.ModelSerializer):
-    menu_option = MenuOptionSerializer()
-
-    class Meta:
-        model = PedidoMenuOption
-        fields = ['menu_option', 'selected']
-
 class PedidoSerializer(serializers.ModelSerializer):
     paciente = PacienteSerializer(read_only=True)
     menu = MenuSerializer(read_only=True)
-    opciones = PedidoMenuOptionSerializer(source='pedidomenuoption_set', many=True, read_only=True)
-    adicionales = AdicionalesSerializer()
+    opciones = MenuOptionSerializer(source='pedidomenuoption_set', many=True, read_only=True)
 
     class Meta:
         model = Pedido
@@ -43,12 +17,16 @@ class PedidoSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         opciones_data = self.initial_data.get('opciones', [])
         adicionales_data = validated_data.pop('adicionales')
-        section_status_data = validated_data.pop('sectionStatus', {})  # Manejo de sectionStatus
+        section_status_data = validated_data.pop('sectionStatus', {})
         paciente_id = self.initial_data.get('paciente')
         menu_id = self.initial_data.get('menu')
 
         paciente = Paciente.objects.get(id=paciente_id)
         menu = Menu.objects.get(id=menu_id)
+
+        # Validamos que el paciente esté activo
+        if not paciente.activo:
+            raise serializers.ValidationError("El paciente seleccionado no está activo.")
 
         pedido = Pedido.objects.create(paciente=paciente, menu=menu, sectionStatus=section_status_data, **validated_data)
 
@@ -66,13 +44,13 @@ class PedidoSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         opciones_data = self.initial_data.get('opciones', [])
         adicionales_data = validated_data.pop('adicionales', instance.adicionales)
-        section_status_data = validated_data.pop('sectionStatus', instance.sectionStatus)  # Manejo de sectionStatus
+        section_status_data = validated_data.pop('sectionStatus', instance.sectionStatus)
 
         instance.paciente = validated_data.get('paciente', instance.paciente)
         instance.menu = validated_data.get('menu', instance.menu)
         instance.status = validated_data.get('status', instance.status)
         instance.adicionales = adicionales_data
-        instance.sectionStatus = section_status_data  # Aseguramos que se actualice sectionStatus
+        instance.sectionStatus = section_status_data
         instance.save()
 
         if opciones_data:

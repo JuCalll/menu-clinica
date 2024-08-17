@@ -2,9 +2,9 @@ from django.db import models
 from servicios.models import Servicio
 
 class Habitacion(models.Model):
-    numero = models.CharField(max_length=10)
+    nombre = models.CharField(max_length=255, unique=True)
     servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
-    activo = models.BooleanField(default=True)  # Nuevo campo para controlar el estado de habilitación
+    activo = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.numero
+        return self.nombre

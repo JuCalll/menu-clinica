@@ -19,4 +19,6 @@ urlpatterns = [
     path('api/menus/', include('menus.urls')),
     # Rutas relacionadas con la gestión de pedidos, incluyendo las definidas en pedidos.urls
     path('api/pedidos/', include('pedidos.urls')),
+    # Rutas relacionadas con la gestión de camas, incluyendo las definidas en camas.urls
+    path('api/camas/', include('camas.urls')),
 ]

@@ -6,8 +6,7 @@ class PacienteListCreateView(generics.ListCreateAPIView):
     serializer_class = PacienteSerializer
 
     def get_queryset(self):
-        # Filtramos solo los pacientes que están activos
-        return Paciente.objects.filter(activo=True)
+        return Paciente.objects.all()
 
 class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Paciente.objects.all()

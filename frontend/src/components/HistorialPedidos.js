@@ -49,7 +49,6 @@ const HistorialPedidos = () => {
         setSelectedPaciente(value);
     };
 
-    // Función para filtrar las opciones de los select
     const filterOption = (input, option) => {
         return option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0;
     };
@@ -57,18 +56,6 @@ const HistorialPedidos = () => {
     if (loading) {
         return <Spin />;
     }
-
-    const renderSelectedOptions = (section, optionsType, pedido) => {
-        return section[optionsType]
-            .filter(option => 
-                pedido.opciones.some(o => o.menu_option.id === option.id && o.selected)
-            )
-            .map(option => (
-                <div key={option.id}>
-                    {option.texto}
-                </div>
-            ));
-    };
 
     const renderSections = (pedido) => {
         const sectionsToShow = {
@@ -88,7 +75,11 @@ const HistorialPedidos = () => {
                     {optionsToRender.map(optionType => (
                         <div key={optionType}>
                             <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
-                            {renderSelectedOptions(section, optionType, pedido)}
+                            {section[optionType].map(option => (
+                                <div key={option.id}>
+                                    {option.texto}
+                                </div>
+                            ))}
                         </div>
                     ))}
                 </div>
@@ -108,8 +99,8 @@ const HistorialPedidos = () => {
                 filterOption={filterOption}
             >
                 {pacientes.map(paciente => (
-                    <Option key={paciente.id} value={paciente.name}>
-                        {paciente.name} (Hab: {paciente.room.numero}, Serv: {paciente.room.servicio.nombre})
+                    <Option key={paciente.id} value={paciente.id}>
+                        {paciente.name} (Cama: {paciente.cama.nombre}, Hab: {paciente.cama.habitacion.nombre}, Serv: {paciente.cama.habitacion.servicio.nombre})
                     </Option>
                 ))}
             </Select>

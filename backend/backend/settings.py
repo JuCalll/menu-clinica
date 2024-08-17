@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'authentication',  # Aplicación de autenticación personalizada
     'pedidos',  # Aplicación de gestión de pedidos
     'pacientes',  # Aplicación de gestión de pacientes
+    'camas',
     'habitaciones',  # Aplicación de gestión de habitaciones
     'servicios',  # Aplicación de gestión de servicios
     'menus',  # Aplicación de gestión de menús

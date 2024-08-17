@@ -6,8 +6,7 @@ class HabitacionListCreateView(generics.ListCreateAPIView):
     serializer_class = HabitacionSerializer
 
     def get_queryset(self):
-        # Filtramos solo las habitaciones que están activas
-        return Habitacion.objects.filter(activo=True)
+        return Habitacion.objects.all()
 
 class HabitacionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Habitacion.objects.all()
