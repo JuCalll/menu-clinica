@@ -42,13 +42,41 @@ const DataManagement = () => {
 
     const toggleActivo = async (item, type) => {
         try {
+            console.log("Datos antes de actualizar:", item);
+    
             const updatedItem = { ...item, activo: !item.activo };
-            await api.put(`/${type}/${item.id}/`, updatedItem);
+    
+            if (type === 'habitaciones') {
+                // Si item.servicio es un string (el nombre del servicio), buscar su id
+                let servicioId = item.servicio_id;
+                if (!servicioId) {
+                    const servicio = servicios.find(s => s.nombre === item.servicio);
+                    if (servicio) {
+                        servicioId = servicio.id;
+                    }
+                }
+                updatedItem.servicio_id = servicioId;
+                console.log("Servicio ID extraído:", updatedItem.servicio_id);
+            }
+    
+            if (type === 'camas') {
+                updatedItem.habitacion_id = item.habitacion?.id || item.habitacion_id;
+                console.log("Habitación ID extraído:", updatedItem.habitacion_id);
+            }
+    
+            console.log(`Datos enviados al backend para actualizar ${type}:`, updatedItem);
+            const response = await api.put(`/${type}/${item.id}/`, updatedItem);
+            console.log("Respuesta del backend:", response.data);
             refreshData();
         } catch (error) {
-            console.error('Error toggling activo:', error);
+            if (error.response && error.response.status === 400) {
+                alert("No se puede activar el elemento debido a restricciones en la lógica de activación.");
+            } else {
+                console.error('Error toggling activo:', error.response ? error.response.data : error);
+            }
         }
     };
+    
 
     const refreshData = async () => {
         setLoading(true);

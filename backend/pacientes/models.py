@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
-from camas.models import Cama  # Actualizamos la importación de Cama desde la nueva aplicación
+from camas.models import Cama
 
 class Paciente(models.Model):
     id = models.CharField(max_length=20, primary_key=True)  # Número de cédula
@@ -10,8 +10,9 @@ class Paciente(models.Model):
     activo = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        if Paciente.objects.filter(cama=self.cama, activo=True).exists():
-            raise ValidationError('No se puede asignar más de un paciente activo a la misma cama.')
+        if self.activo:
+            if not self.cama.activo or not self.cama.habitacion.activo or not self.cama.habitacion.servicio.activo:
+                raise ValidationError('No se puede activar un paciente si su cama, habitación, o servicio no están activos.')
         super(Paciente, self).save(*args, **kwargs)
 
     def __str__(self):
