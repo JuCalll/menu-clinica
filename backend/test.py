@@ -1,82 +1,79 @@
 import pytest
 from django.core.exceptions import ValidationError
-from servicios.models import Servicio
-from habitaciones.models import Habitacion
 from camas.models import Cama
+from habitaciones.models import Habitacion
+from servicios.models import Servicio
+from pacientes.models import Paciente
 
 @pytest.mark.django_db
-def test_habitacion_desactiva_camas():
-    # Crear servicio activo
+def test_paciente_no_puede_activarse_con_cama_desactivada():
+    # Crear un servicio y una habitación activa
     servicio = Servicio.objects.create(nombre="Cardiología", activo=True)
-    
-    # Crear habitación activa
     habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=True)
     
-    # Crear camas activas asociadas a la habitación
-    cama1 = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
-    cama2 = Cama.objects.create(nombre="Cama 2", habitacion=habitacion, activo=True)
-    
-    # Desactivar la habitación
-    habitacion.activo = False
-    habitacion.save()
-    
-    # Verificar que las camas asociadas se desactivan
-    cama1.refresh_from_db()
-    cama2.refresh_from_db()
-    assert not cama1.activo
-    assert not cama2.activo
-
-@pytest.mark.django_db
-def test_no_activar_cama_si_habitacion_desactivada():
-    # Crear servicio activo
-    servicio = Servicio.objects.create(nombre="Neurología", activo=True)
-    
-    # Crear habitación desactivada
-    habitacion = Habitacion.objects.create(nombre="Habitación 202", servicio=servicio, activo=False)
-    
-    # Crear cama asociada a la habitación
+    # Crear una cama desactivada
     cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=False)
     
-    # Intentar activar la cama
-    cama.activo = True
+    # Crear un paciente que intenta activarse
+    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
+    
+    # Intentar activar el paciente
+    paciente.activo = True
+    
     with pytest.raises(ValidationError):
-        cama.save()
+        paciente.save()
 
 @pytest.mark.django_db
-def test_no_activar_habitacion_si_servicio_desactivado():
-    # Crear servicio desactivado
-    servicio = Servicio.objects.create(nombre="Oncología", activo=False)
+def test_paciente_no_puede_activarse_con_habitacion_desactivada():
+    # Crear un servicio activo y una habitación desactivada
+    servicio = Servicio.objects.create(nombre="Cardiología", activo=True)
+    habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=False)
     
-    # Crear habitación asociada al servicio
-    habitacion = Habitacion.objects.create(nombre="Habitación 303", servicio=servicio, activo=False)
+    # Crear una cama activa en la habitación desactivada
+    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
     
-    # Intentar activar la habitación
-    habitacion.activo = True
+    # Crear un paciente que intenta activarse
+    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
+    
+    # Intentar activar el paciente
+    paciente.activo = True
+    
     with pytest.raises(ValidationError):
-        habitacion.save()
+        paciente.save()
 
 @pytest.mark.django_db
-def test_activar_habitacion_reactiva_camas():
-    # Crear servicio activo
-    servicio = Servicio.objects.create(nombre="Pediatría", activo=True)
+def test_paciente_no_puede_activarse_con_servicio_desactivado():
+    # Crear un servicio desactivado y una habitación
+    servicio = Servicio.objects.create(nombre="Cardiología", activo=False)
+    habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=True)
     
-    # Crear habitación y camas desactivadas
-    habitacion = Habitacion.objects.create(nombre="Habitación 404", servicio=servicio, activo=False)
-    cama1 = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=False)
-    cama2 = Cama.objects.create(nombre="Cama 2", habitacion=habitacion, activo=False)
+    # Crear una cama activa en la habitación activa
+    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
     
-    # Activar la habitación
-    habitacion.activo = True
-    habitacion.save()
+    # Crear un paciente que intenta activarse
+    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
+    
+    # Intentar activar el paciente
+    paciente.activo = True
+    
+    with pytest.raises(ValidationError):
+        paciente.save()
 
-    # Activar las camas
-    cama1.activo = True
-    cama1.save()
-    cama2.activo = True
-    cama2.save()
+@pytest.mark.django_db
+def test_paciente_puede_activarse_correctamente():
+    # Crear un servicio, habitación y cama activos
+    servicio = Servicio.objects.create(nombre="Cardiología", activo=True)
+    habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=True)
+    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
+    
+    # Crear un paciente que se puede activar
+    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
+    
+    # Activar el paciente
+    paciente.activo = True
+    paciente.save()
+    
+    # Verificar que el paciente se haya activado correctamente
+    paciente.refresh_from_db()
+    assert paciente.activo is True
 
-    # Verificar que las camas se reactivan solo si la habitación está activa
-    cama1.refresh_from_db()
-    cama2.refresh_from_db()
-    assert cama1.activo
-    assert cama2.activo

@@ -47,7 +47,6 @@ const DataManagement = () => {
             const updatedItem = { ...item, activo: !item.activo };
     
             if (type === 'habitaciones') {
-                // Si item.servicio es un string (el nombre del servicio), buscar su id
                 let servicioId = item.servicio_id;
                 if (!servicioId) {
                     const servicio = servicios.find(s => s.nombre === item.servicio);
@@ -60,8 +59,63 @@ const DataManagement = () => {
             }
     
             if (type === 'camas') {
-                updatedItem.habitacion_id = item.habitacion?.id || item.habitacion_id;
+                const habitacion = habitaciones.find(h => h.id === item.habitacion);
+                console.log("Habitación encontrada:", habitacion);
+                if (!habitacion || !habitacion.activo) {
+                    alert("No se puede activar la cama porque la habitación no está activa.");
+                    return;
+                }
+    
+                updatedItem.habitacion_id = habitacion.id;
                 console.log("Habitación ID extraído:", updatedItem.habitacion_id);
+            }
+    
+            if (type === 'pacientes') {
+                const cama = item.cama ? item.cama : null;
+                console.log("Cama obtenida:", cama);
+    
+                if (!cama) {
+                    console.error("Error: No se encontró la cama asociada al paciente.");
+                    return;
+                }
+    
+                const habitacion = cama.habitacion ? cama.habitacion : null;
+                console.log("Habitación obtenida desde cama:", habitacion);
+    
+                if (!habitacion) {
+                    console.error("Error: No se encontró la habitación asociada a la cama.");
+                    return;
+                }
+    
+                const servicio = habitacion.servicio ? habitacion.servicio : null;
+                console.log("Servicio obtenido desde habitación:", servicio);
+    
+                if (!servicio) {
+                    console.error("Error: No se encontró el servicio asociado a la habitación.");
+                    return;
+                }
+    
+                // Verificación de estados
+                const camaActiva = cama.activo !== undefined ? cama.activo : "no definido";
+                const habitacionActiva = habitacion.activo !== undefined ? habitacion.activo : "no definido";
+                const servicioActivo = servicio.activo !== undefined ? servicio.activo : "no definido";
+    
+                console.log("Estado de cama:", camaActiva);
+                console.log("Estado de habitación:", habitacionActiva);
+                console.log("Estado de servicio:", servicioActivo);
+    
+                if (camaActiva === null || habitacionActiva === null || servicioActivo === null) {
+                    console.error("Error: Estado indefinido para cama, habitación o servicio.");
+                    return;
+                }
+    
+                if (!camaActiva || !habitacionActiva || !servicioActivo) {
+                    alert("No se puede activar el paciente porque la cama, habitación o servicio no están activos.");
+                    return;
+                }
+    
+                updatedItem.cama_id = cama.id;
+                console.log("Cama ID extraído:", updatedItem.cama_id);
             }
     
             console.log(`Datos enviados al backend para actualizar ${type}:`, updatedItem);
@@ -75,9 +129,8 @@ const DataManagement = () => {
                 console.error('Error toggling activo:', error.response ? error.response.data : error);
             }
         }
-    };
+    };    
     
-
     const refreshData = async () => {
         setLoading(true);
         try {
