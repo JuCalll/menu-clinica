@@ -124,12 +124,13 @@ const DataManagement = () => {
             refreshData();
         } catch (error) {
             if (error.response && error.response.status === 400) {
-                alert("No se puede activar el elemento debido a restricciones en la lógica de activación.");
+                const errorMessage = error.response.data.detail || "No se puede activar el paciente debido a restricciones en la lógica de activación.";
+                alert(`Error: ${errorMessage}`);
             } else {
                 console.error('Error toggling activo:', error.response ? error.response.data : error);
             }
         }
-    };    
+    };      
     
     const refreshData = async () => {
         setLoading(true);

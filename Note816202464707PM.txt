@@ -1,3 +1,12 @@
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'authentication'
+class AuthenticationConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'authentication'
 # Importamos el modelo AbstractUser y BaseUserManager desde django.contrib.auth.models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 # Importamos el módulo models de Django
@@ -142,210 +151,65 @@ class LoginView(generics.GenericAPIView):
             })
         # Si la autenticación falla, devolvemos un error
         return Response({"error": "Credenciales inválidas"}, status=400)
-# Importamos el módulo os para interactuar con las variables de entorno del sistema operativo
-import os
+from django.apps import AppConfig
 
-# Importamos la función get_asgi_application de django.core.asgi para configurar la aplicación ASGI
-from django.core.asgi import get_asgi_application
 
-# Establecemos la variable de entorno 'DJANGO_SETTINGS_MODULE' con el valor 'backend.settings'
-# Esto indica a Django qué archivo de configuración debe usar
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+class CamasConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'camas'
+from django.db import models
+from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save  # Importación de post_save
+from django.dispatch import receiver  # Importación de receiver
+from habitaciones.models import Habitacion
 
-# Llamamos a get_asgi_application para obtener la aplicación ASGI que Django utilizará
-application = get_asgi_application()
-# Importamos Path de pathlib para manejar rutas de archivos
-from pathlib import Path
-# Importamos timedelta de datetime para manejar intervalos de tiempo
-from datetime import timedelta
-# Importamos os para interactuar con variables de entorno y el sistema operativo
-import os
-# Importamos load_dotenv de dotenv para cargar variables de entorno desde un archivo .env
-from dotenv import load_dotenv
+class Cama(models.Model):
+    nombre = models.CharField(max_length=50)
+    habitacion = models.ForeignKey(Habitacion, related_name='camas', on_delete=models.CASCADE)
+    activo = models.BooleanField(default=True)
 
-# Cargar variables de entorno desde el archivo .env
-load_dotenv()
+    class Meta:
+        unique_together = ('nombre', 'habitacion')
 
-# Definimos la ruta base del proyecto, es decir, la carpeta principal que contiene todos los archivos del proyecto
-BASE_DIR = Path(__file__).resolve().parent.parent
+    def __str__(self):
+        return f'{self.nombre} - {self.habitacion.nombre}'
 
-# Obtener las variables de entorno
+@receiver(post_save, sender=Cama)
+def desactivar_paciente(sender, instance, **kwargs):
+    if not instance.activo:  # Si la cama se desactiva
+        from pacientes.models import Paciente  # Importación dentro de la función para evitar ciclo
+        # Desactivar el paciente asociado
+        Paciente.objects.filter(cama=instance).update(activo=False)
 
-# Se obtiene la clave secreta de Django desde una variable de entorno, si no se encuentra, se usa un valor por defecto (esto no es seguro para producción)
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'ZOM50YBnVo12HpKqySoeXS9M621bNTB0JJ-mqFYpzUbnTFcMWfEh_7y2iB9ZUvVz6fg')
+@receiver(post_save, sender=Cama)
+def validar_activacion_cama(sender, instance, **kwargs):
+    if instance.activo and not instance.habitacion.activo:
+        raise ValidationError('No se puede activar una cama si la habitación no está activa.')
+from rest_framework import serializers
+from .models import Cama
 
-# Se establece si el modo debug está activado o no, basado en una variable de entorno
-DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+class CamaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cama
+        fields = ['id', 'nombre', 'habitacion', 'activo']
+from django.urls import path
+from .views import CamaListCreateView, CamaDetailView
 
-# Lista de hosts permitidos, se separa en una lista desde una cadena en la variable de entorno
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
-
-# Definimos las aplicaciones instaladas en el proyecto
-INSTALLED_APPS = [
-    'django.contrib.admin',  # Admin de Django
-    'django.contrib.auth',  # Autenticación de Django
-    'django.contrib.contenttypes',  # Tipos de contenido de Django
-    'django.contrib.sessions',  # Manejo de sesiones en Django
-    'django.contrib.messages',  # Manejo de mensajes en Django
-    'django.contrib.staticfiles',  # Archivos estáticos en Django
-    'rest_framework',  # Django REST framework
-    'corsheaders',  # Manejo de CORS (Cross-Origin Resource Sharing)
-    'authentication',  # Aplicación de autenticación personalizada
-    'pedidos',  # Aplicación de gestión de pedidos
-    'pacientes',  # Aplicación de gestión de pacientes
-    'habitaciones',  # Aplicación de gestión de habitaciones
-    'servicios',  # Aplicación de gestión de servicios
-    'menus',  # Aplicación de gestión de menús
-]
-
-# Configuraciones para Django REST framework
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        # Autenticación basada en tokens JWT
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        # Solo usuarios autenticados pueden acceder a las vistas
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-}
-
-# Configuraciones para JWT (JSON Web Tokens)
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Tiempo de vida del token de acceso
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Tiempo de vida del token de refresco
-    'BLACKLIST_AFTER_ROTATION': True,  # Poner en lista negra el token anterior después de refrescar
-    'UPDATE_LAST_LOGIN': False,  # No actualizar el último inicio de sesión automáticamente
-    'ALGORITHM': 'HS256',  # Algoritmo de cifrado para los tokens
-    'SIGNING_KEY': SECRET_KEY,  # Clave secreta para firmar los tokens
-    'VERIFYING_KEY': None,  # Clave para verificar los tokens (no utilizada aquí)
-    'AUDIENCE': None,  # Audiencia (no utilizada aquí)
-    'ISSUER': None,  # Emisor (no utilizado aquí)
-    'AUTH_HEADER_TYPES': ('Bearer',),  # Tipo de cabecera para el token
-    'USER_ID_FIELD': 'id',  # Campo que identifica al usuario en el token
-    'USER_ID_CLAIM': 'user_id',  # Reclamación que identifica al usuario en el token
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),  # Clases de tokens utilizados
-    'TOKEN_TYPE_CLAIM': 'token_type',  # Tipo de token en la reclamación
-    'JTI_CLAIM': 'jti',  # Identificador único de token
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',  # Reclamación de expiración del token de refresco deslizante
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=10),  # Tiempo de vida del token deslizante
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),  # Tiempo de vida del refresco deslizante
-}
-
-# Especificamos que el modelo de usuario personalizado se utilizará en lugar del modelo de usuario predeterminado de Django
-AUTH_USER_MODEL = 'authentication.CustomUser'
-
-# Definimos el middleware utilizado en el proyecto
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Middleware para manejar CORS
-    'django.middleware.common.CommonMiddleware',  # Middleware común de Django
-    'django.middleware.security.SecurityMiddleware',  # Middleware de seguridad de Django
-    'django.contrib.sessions.middleware.SessionMiddleware',  # Middleware de manejo de sesiones
-    'django.middleware.csrf.CsrfViewMiddleware',  # Middleware de protección contra CSRF
-    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Middleware de autenticación
-    'django.contrib.messages.middleware.MessageMiddleware',  # Middleware de manejo de mensajes
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',  # Protección contra clickjacking
-]
-
-# Configuración para permitir todas las fuentes de CORS y permitir credenciales
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
-# Especificamos el archivo de configuración de URLs raíz para el proyecto
-ROOT_URLCONF = 'backend.urls'
-
-# Configuraciones de plantillas de Django
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # Backend de plantillas
-        'DIRS': [],  # Directorios adicionales para buscar plantillas
-        'APP_DIRS': True,  # Buscar plantillas en los directorios de las aplicaciones
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',  # Contexto de depuración
-                'django.template.context_processors.request',  # Contexto de la solicitud
-                'django.contrib.auth.context_processors.auth',  # Contexto de autenticación
-                'django.contrib.messages.context_processors.messages',  # Contexto de mensajes
-            ],
-        },
-    },
-]
-
-# Especificamos la configuración de la aplicación WSGI
-WSGI_APPLICATION = 'backend.wsgi.application'
-
-# Configuración de la base de datos, utilizando SQLite para desarrollo
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Motor de base de datos SQLite
-        'NAME': BASE_DIR / 'db.sqlite3',  # Nombre del archivo de base de datos
-    }
-}
-
-# Validadores de contraseñas para la autenticación
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-# Configuración del idioma del proyecto
-LANGUAGE_CODE = 'en-us'
-# Configuración de la zona horaria
-TIME_ZONE = 'America/Bogota'
-# Habilitar la internacionalización
-USE_I18N = True
-# Habilitar el uso de zonas horarias
-USE_TZ = True
-
-# URL para servir archivos estáticos
-STATIC_URL = 'static/'
-
-# Especificar el tipo de campo auto incremental predeterminado para los modelos
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# Importamos el módulo admin de django.contrib para la administración del sitio
-from django.contrib import admin
-# Importamos las funciones path e include desde django.urls para definir rutas
-from django.urls import path, include
-
-# Definimos las rutas principales del proyecto
 urlpatterns = [
-    # Ruta para acceder a la interfaz de administración de Django
-    path('admin/', admin.site.urls),
-    # Rutas relacionadas con la autenticación, incluyendo las definidas en authentication.urls
-    path('api/auth/', include('authentication.urls')),
-    # Rutas relacionadas con la gestión de pacientes, incluyendo las definidas en pacientes.urls
-    path('api/pacientes/', include('pacientes.urls')),
-    # Rutas relacionadas con la gestión de habitaciones, incluyendo las definidas en habitaciones.urls
-    path('api/habitaciones/', include('habitaciones.urls')),
-    # Rutas relacionadas con la gestión de servicios, incluyendo las definidas en servicios.urls
-    path('api/servicios/', include('servicios.urls')),
-    # Rutas relacionadas con la gestión de menús, incluyendo las definidas en menus.urls
-    path('api/menus/', include('menus.urls')),
-    # Rutas relacionadas con la gestión de pedidos, incluyendo las definidas en pedidos.urls
-    path('api/pedidos/', include('pedidos.urls')),
+    path('', CamaListCreateView.as_view(), name='cama-list-create'),
+    path('<int:pk>/', CamaDetailView.as_view(), name='cama-detail'),
 ]
-# Importamos el módulo os para interactuar con variables de entorno del sistema operativo
-import os
+from rest_framework import generics
+from .models import Cama
+from .serializers import CamaSerializer
 
-# Importamos la función get_wsgi_application de django.core.wsgi para configurar la aplicación WSGI
-from django.core.wsgi import get_wsgi_application
+class CamaListCreateView(generics.ListCreateAPIView):
+    queryset = Cama.objects.all()
+    serializer_class = CamaSerializer
 
-# Establecemos la variable de entorno 'DJANGO_SETTINGS_MODULE' con el valor 'backend.settings'
-# Esto indica a Django qué archivo de configuración debe usar
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-
-# Llamamos a get_wsgi_application para obtener la aplicación WSGI que Django utilizará
-application = get_wsgi_application()
+class CamaDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Cama.objects.all()
+    serializer_class = CamaSerializer
 # Importamos el módulo AppConfig de Django
 from django.apps import AppConfig
 
@@ -356,34 +220,36 @@ class HabitacionesConfig(AppConfig):
     # Especificamos el nombre de la aplicación
     name = 'habitaciones'
 from django.db import models
-from servicios.models import Servicio
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from servicios.models import Servicio  # Esto puede quedarse igual porque no crea un ciclo
+from django.core.exceptions import ValidationError
 
 class Habitacion(models.Model):
-    nombre = models.CharField(max_length=255, unique=True)  # Cambiar de numero a nombre único
+    nombre = models.CharField(max_length=255, unique=True)
     servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
     activo = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre
 
-class Cama(models.Model):
-    nombre = models.CharField(max_length=50)
-    habitacion = models.ForeignKey(Habitacion, related_name='camas', on_delete=models.CASCADE)
-    activo = models.BooleanField(default=True)
+    def save(self, *args, **kwargs):
+        if self.activo and not self.servicio.activo:
+            raise ValidationError('No se puede activar una habitación si el servicio no está activo.')
+        super().save(*args, **kwargs)
 
-    class Meta:
-        unique_together = ('nombre', 'habitacion')  # El nombre de la cama debe ser único en la habitación
+@receiver(post_save, sender=Habitacion)
+def desactivar_camas_y_pacientes(sender, instance, **kwargs):
+    if not instance.activo:
+        from camas.models import Cama  # Importación dentro de la función para evitar ciclo
+        from pacientes.models import Paciente  # Importación dentro de la función para evitar ciclo
 
-    def __str__(self):
-        return f'{self.nombre} - {self.habitacion.nombre}'
+        instance.camas.update(activo=False)
+        Paciente.objects.filter(cama__habitacion=instance).update(activo=False)
 from rest_framework import serializers
-from .models import Habitacion, Cama
+from .models import Habitacion
 from servicios.models import Servicio
-
-class CamaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cama
-        fields = ['id', 'nombre', 'activo']
+from camas.serializers import CamaSerializer
 
 class HabitacionSerializer(serializers.ModelSerializer):
     servicio_id = serializers.PrimaryKeyRelatedField(queryset=Servicio.objects.all(), source='servicio', write_only=True)
@@ -395,13 +261,24 @@ class HabitacionSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'servicio_id', 'servicio', 'activo', 'camas']
 
     def create(self, validated_data):
-        return Habitacion.objects.create(**validated_data)
+        habitacion = Habitacion.objects.create(**validated_data)
+        return habitacion
 
     def update(self, instance, validated_data):
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.servicio = validated_data.get('servicio', instance.servicio)
         instance.activo = validated_data.get('activo', instance.activo)
+
+        # Validación para asegurar que no se active la habitación si el servicio está desactivado
+        if instance.activo and not instance.servicio.activo:
+            raise serializers.ValidationError("No se puede activar la habitación porque el servicio está inactivo.")
+
         instance.save()
+
+        # Desactivación de las camas si la habitación se desactiva
+        if not instance.activo:
+            instance.camas.update(activo=False)
+
         return instance
 from django.urls import path
 from .views import HabitacionListCreateView, HabitacionDetailView
@@ -418,7 +295,7 @@ class HabitacionListCreateView(generics.ListCreateAPIView):
     serializer_class = HabitacionSerializer
 
     def get_queryset(self):
-        return Habitacion.objects.filter(activo=True)
+        return Habitacion.objects.all()
 
 class HabitacionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Habitacion.objects.all()
@@ -647,7 +524,7 @@ class PacientesConfig(AppConfig):
     name = 'pacientes'
 from django.db import models
 from django.core.exceptions import ValidationError
-from habitaciones.models import Cama
+from camas.models import Cama
 
 class Paciente(models.Model):
     id = models.CharField(max_length=20, primary_key=True)  # Número de cédula
@@ -657,17 +534,40 @@ class Paciente(models.Model):
     activo = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        if Paciente.objects.filter(cama=self.cama, activo=True).exists():
-            raise ValidationError('No se puede asignar más de un paciente activo a la misma cama.')
+        if self.activo:
+            if not self.cama.activo:
+                raise ValidationError('No se puede activar un paciente porque la cama no está activa.')
+            if not self.cama.habitacion.activo:
+                raise ValidationError('No se puede activar un paciente porque la habitación no está activa.')
+            if not self.cama.habitacion.servicio.activo:
+                raise ValidationError('No se puede activar un paciente porque el servicio no está activo.')
         super(Paciente, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from django.core.exceptions import ValidationError
 from .models import Paciente
-from habitaciones.models import Cama
+from camas.models import Cama
+from habitaciones.models import Habitacion
+from servicios.models import Servicio
+
+class ServicioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Servicio
+        fields = ['id', 'nombre']
+
+class HabitacionSerializer(serializers.ModelSerializer):
+    servicio = ServicioSerializer(read_only=True)
+
+    class Meta:
+        model = Habitacion
+        fields = ['id', 'nombre', 'servicio']
 
 class CamaSerializer(serializers.ModelSerializer):
+    habitacion = HabitacionSerializer(read_only=True)
+
     class Meta:
         model = Cama
         fields = ['id', 'nombre', 'habitacion']
@@ -688,9 +588,14 @@ class PacienteSerializer(serializers.ModelSerializer):
         instance.cama = validated_data.get('cama', instance.cama)
         instance.recommended_diet = validated_data.get('recommended_diet', instance.recommended_diet)
         instance.activo = validated_data.get('activo', instance.activo)
-        instance.save()
+        
+        try:
+            instance.save()
+        except ValidationError as e:
+            raise DRFValidationError({"detail": e.messages})  # Se lanza el mensaje específico como una excepción de DRF
+
         return instance
-from django.urls import path
+ from django.urls import path
 from .views import PacienteListCreateView, PacienteDetailView
 
 urlpatterns = [
@@ -705,7 +610,7 @@ class PacienteListCreateView(generics.ListCreateAPIView):
     serializer_class = PacienteSerializer
 
     def get_queryset(self):
-        return Paciente.objects.filter(activo=True)
+        return Paciente.objects.all()
 
 class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Paciente.objects.all()
@@ -880,14 +785,33 @@ class ServiciosConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     # Especificamos el nombre de la aplicación
     name = 'servicios'
+# servicios/models.py
 from django.db import models
 
 class Servicio(models.Model):
     nombre = models.CharField(max_length=255)
-    activo = models.BooleanField(default=True)  # Nuevo campo para controlar el estado de habilitación
+    activo = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if not is_new and not self.activo:
+            # Importaciones dentro de la función para evitar ciclos
+            from habitaciones.models import Habitacion
+            from camas.models import Cama
+            from pacientes.models import Paciente
+
+            habitaciones = self.habitacion_set.all()
+            habitaciones.update(activo=False)
+
+            camas = Cama.objects.filter(habitacion__in=habitaciones)
+            camas.update(activo=False)
+
+            Paciente.objects.filter(cama__in=camas).update(activo=False)
 from rest_framework import serializers
 from .models import Servicio
 
@@ -910,13 +834,219 @@ class ServicioListCreateView(generics.ListCreateAPIView):
     serializer_class = ServicioSerializer
 
     def get_queryset(self):
-        # Filtramos solo los servicios que están activos
-        return Servicio.objects.filter(activo=True)
+        return Servicio.objects.all()
 
 class ServicioDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Servicio.objects.all()
     serializer_class = ServicioSerializer
-# Clave secreta utilizada por Django para varias operaciones criptográficas
+# Importamos el módulo os para interactuar con las variables de entorno del sistema operativo
+import os
+
+# Importamos la función get_asgi_application de django.core.asgi para configurar la aplicación ASGI
+from django.core.asgi import get_asgi_application
+
+# Establecemos la variable de entorno 'DJANGO_SETTINGS_MODULE' con el valor 'backend.settings'
+# Esto indica a Django qué archivo de configuración debe usar
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+
+# Llamamos a get_asgi_application para obtener la aplicación ASGI que Django utilizará
+application = get_asgi_application()
+# Importamos Path de pathlib para manejar rutas de archivos
+from pathlib import Path
+# Importamos timedelta de datetime para manejar intervalos de tiempo
+from datetime import timedelta
+# Importamos os para interactuar con variables de entorno y el sistema operativo
+import os
+# Importamos load_dotenv de dotenv para cargar variables de entorno desde un archivo .env
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
+
+# Definimos la ruta base del proyecto, es decir, la carpeta principal que contiene todos los archivos del proyecto
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Obtener las variables de entorno
+
+# Se obtiene la clave secreta de Django desde una variable de entorno, si no se encuentra, se usa un valor por defecto (esto no es seguro para producción)
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'ZOM50YBnVo12HpKqySoeXS9M621bNTB0JJ-mqFYpzUbnTFcMWfEh_7y2iB9ZUvVz6fg')
+
+# Se establece si el modo debug está activado o no, basado en una variable de entorno
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+
+# Lista de hosts permitidos, se separa en una lista desde una cadena en la variable de entorno
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+
+# Definimos las aplicaciones instaladas en el proyecto
+INSTALLED_APPS = [
+    'django.contrib.admin',  # Admin de Django
+    'django.contrib.auth',  # Autenticación de Django
+    'django.contrib.contenttypes',  # Tipos de contenido de Django
+    'django.contrib.sessions',  # Manejo de sesiones en Django
+    'django.contrib.messages',  # Manejo de mensajes en Django
+    'django.contrib.staticfiles',  # Archivos estáticos en Django
+    'rest_framework',  # Django REST framework
+    'corsheaders',  # Manejo de CORS (Cross-Origin Resource Sharing)
+    'authentication',  # Aplicación de autenticación personalizada
+    'pedidos',  # Aplicación de gestión de pedidos
+    'pacientes',  # Aplicación de gestión de pacientes
+    'camas',
+    'habitaciones',  # Aplicación de gestión de habitaciones
+    'servicios',  # Aplicación de gestión de servicios
+    'menus',  # Aplicación de gestión de menús
+]
+
+# Configuraciones para Django REST framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # Autenticación basada en tokens JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        # Solo usuarios autenticados pueden acceder a las vistas
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# Configuraciones para JWT (JSON Web Tokens)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Tiempo de vida del token de acceso
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Tiempo de vida del token de refresco
+    'BLACKLIST_AFTER_ROTATION': True,  # Poner en lista negra el token anterior después de refrescar
+    'UPDATE_LAST_LOGIN': False,  # No actualizar el último inicio de sesión automáticamente
+    'ALGORITHM': 'HS256',  # Algoritmo de cifrado para los tokens
+    'SIGNING_KEY': SECRET_KEY,  # Clave secreta para firmar los tokens
+    'VERIFYING_KEY': None,  # Clave para verificar los tokens (no utilizada aquí)
+    'AUDIENCE': None,  # Audiencia (no utilizada aquí)
+    'ISSUER': None,  # Emisor (no utilizado aquí)
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Tipo de cabecera para el token
+    'USER_ID_FIELD': 'id',  # Campo que identifica al usuario en el token
+    'USER_ID_CLAIM': 'user_id',  # Reclamación que identifica al usuario en el token
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),  # Clases de tokens utilizados
+    'TOKEN_TYPE_CLAIM': 'token_type',  # Tipo de token en la reclamación
+    'JTI_CLAIM': 'jti',  # Identificador único de token
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',  # Reclamación de expiración del token de refresco deslizante
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=10),  # Tiempo de vida del token deslizante
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),  # Tiempo de vida del refresco deslizante
+}
+
+# Especificamos que el modelo de usuario personalizado se utilizará en lugar del modelo de usuario predeterminado de Django
+AUTH_USER_MODEL = 'authentication.CustomUser'
+
+# Definimos el middleware utilizado en el proyecto
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Middleware para manejar CORS
+    'django.middleware.common.CommonMiddleware',  # Middleware común de Django
+    'django.middleware.security.SecurityMiddleware',  # Middleware de seguridad de Django
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Middleware de manejo de sesiones
+    'django.middleware.csrf.CsrfViewMiddleware',  # Middleware de protección contra CSRF
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Middleware de autenticación
+    'django.contrib.messages.middleware.MessageMiddleware',  # Middleware de manejo de mensajes
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',  # Protección contra clickjacking
+]
+
+# Configuración para permitir todas las fuentes de CORS y permitir credenciales
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# Especificamos el archivo de configuración de URLs raíz para el proyecto
+ROOT_URLCONF = 'backend.urls'
+
+# Configuraciones de plantillas de Django
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # Backend de plantillas
+        'DIRS': [],  # Directorios adicionales para buscar plantillas
+        'APP_DIRS': True,  # Buscar plantillas en los directorios de las aplicaciones
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',  # Contexto de depuración
+                'django.template.context_processors.request',  # Contexto de la solicitud
+                'django.contrib.auth.context_processors.auth',  # Contexto de autenticación
+                'django.contrib.messages.context_processors.messages',  # Contexto de mensajes
+            ],
+        },
+    },
+]
+
+# Especificamos la configuración de la aplicación WSGI
+WSGI_APPLICATION = 'backend.wsgi.application'
+
+# Configuración de la base de datos, utilizando SQLite para desarrollo
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # Motor de base de datos SQLite
+        'NAME': BASE_DIR / 'db.sqlite3',  # Nombre del archivo de base de datos
+    }
+}
+
+# Validadores de contraseñas para la autenticación
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# Configuración del idioma del proyecto
+LANGUAGE_CODE = 'en-us'
+# Configuración de la zona horaria
+TIME_ZONE = 'America/Bogota'
+# Habilitar la internacionalización
+USE_I18N = True
+# Habilitar el uso de zonas horarias
+USE_TZ = True
+
+# URL para servir archivos estáticos
+STATIC_URL = 'static/'
+
+# Especificar el tipo de campo auto incremental predeterminado para los modelos
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Importamos el módulo admin de django.contrib para la administración del sitio
+from django.contrib import admin
+# Importamos las funciones path e include desde django.urls para definir rutas
+from django.urls import path, include
+
+# Definimos las rutas principales del proyecto
+urlpatterns = [
+    # Ruta para acceder a la interfaz de administración de Django
+    path('admin/', admin.site.urls),
+    # Rutas relacionadas con la autenticación, incluyendo las definidas en authentication.urls
+    path('api/auth/', include('authentication.urls')),
+    # Rutas relacionadas con la gestión de pacientes, incluyendo las definidas en pacientes.urls
+    path('api/pacientes/', include('pacientes.urls')),
+    # Rutas relacionadas con la gestión de habitaciones, incluyendo las definidas en habitaciones.urls
+    path('api/habitaciones/', include('habitaciones.urls')),
+    # Rutas relacionadas con la gestión de servicios, incluyendo las definidas en servicios.urls
+    path('api/servicios/', include('servicios.urls')),
+    # Rutas relacionadas con la gestión de menús, incluyendo las definidas en menus.urls
+    path('api/menus/', include('menus.urls')),
+    # Rutas relacionadas con la gestión de pedidos, incluyendo las definidas en pedidos.urls
+    path('api/pedidos/', include('pedidos.urls')),
+    # Rutas relacionadas con la gestión de camas, incluyendo las definidas en camas.urls
+    path('api/camas/', include('camas.urls')),
+]
+# Importamos el módulo os para interactuar con variables de entorno del sistema operativo
+import os
+
+# Importamos la función get_wsgi_application de django.core.wsgi para configurar la aplicación WSGI
+from django.core.wsgi import get_wsgi_application
+
+# Establecemos la variable de entorno 'DJANGO_SETTINGS_MODULE' con el valor 'backend.settings'
+# Esto indica a Django qué archivo de configuración debe usar
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+
+# Llamamos a get_wsgi_application para obtener la aplicación WSGI que Django utilizará
+application = get_wsgi_application()
+.env: # Clave secreta utilizada por Django para varias operaciones criptográficas
 DJANGO_SECRET_KEY=ZOM50YBnVo12HpKqySoeXS9M621bNTB0JJ-mqFYpzUbnTFcMWfEh_7y2iB9ZUvVz6fg
 
 # Modo de depuración. Si se establece en True, Django mostrará más información en caso de errores. Esto no debe ser usado en producción.

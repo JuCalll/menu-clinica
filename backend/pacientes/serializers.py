@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError as DRFValidationError  # Importamos la excepción de DRF
-from django.core.exceptions import ValidationError  # Importamos la excepción de Django
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from django.core.exceptions import ValidationError
 from .models import Paciente
 from camas.models import Cama
 from habitaciones.models import Habitacion
@@ -44,7 +44,8 @@ class PacienteSerializer(serializers.ModelSerializer):
         
         try:
             instance.save()
-        except ValidationError as e:  # Se captura la excepción de Django
-            raise DRFValidationError(e.messages)  # Se lanza como una excepción de DRF
+        except ValidationError as e:
+            raise DRFValidationError({"detail": e.messages})  # Se lanza el mensaje específico como una excepción de DRF
 
         return instance
+ 

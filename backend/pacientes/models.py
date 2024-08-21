@@ -11,8 +11,12 @@ class Paciente(models.Model):
 
     def save(self, *args, **kwargs):
         if self.activo:
-            if not self.cama.activo or not self.cama.habitacion.activo or not self.cama.habitacion.servicio.activo:
-                raise ValidationError('No se puede activar un paciente si su cama, habitación, o servicio no están activos.')
+            if not self.cama.activo:
+                raise ValidationError('No se puede activar un paciente porque la cama no está activa.')
+            if not self.cama.habitacion.activo:
+                raise ValidationError('No se puede activar un paciente porque la habitación no está activa.')
+            if not self.cama.habitacion.servicio.activo:
+                raise ValidationError('No se puede activar un paciente porque el servicio no está activo.')
         super(Paciente, self).save(*args, **kwargs)
 
     def __str__(self):

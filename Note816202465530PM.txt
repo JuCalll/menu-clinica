@@ -395,6 +395,23 @@ const PrivateRoute = ({ children }) => {
 export default PrivateRoute;
 // Importamos React para crear componentes
 import React from 'react';
+// Importamos Navigate desde react-router-dom para redirigir al usuario
+import { Navigate } from 'react-router-dom';
+
+// Definimos el componente PrivateRoute para manejar rutas privadas
+const PrivateRoute = ({ children }) => {
+    // Obtenemos el token de autenticación desde el almacenamiento local (localStorage)
+    const token = localStorage.getItem('token');
+    
+    // Si el token existe, renderizamos los componentes hijos (children)
+    // Si no existe, redirigimos al usuario a la página de inicio de sesión ("/login")
+    return token ? children : <Navigate to="/login" />;
+};
+
+// Exportamos el componente PrivateRoute para que pueda ser utilizado en otras partes de la aplicación
+export default PrivateRoute;
+// Importamos React para crear componentes
+import React from 'react';
 // Importamos NavLink desde react-router-dom para manejar la navegación entre páginas
 import { NavLink } from 'react-router-dom';
 // Importamos el archivo de estilos SCSS para este componente
@@ -420,12 +437,11 @@ const Sidebar = () => {
 // Exportamos el componente Sidebar para que pueda ser utilizado en otras partes de la aplicación
 export default Sidebar;
 import React, { useState, useEffect } from 'react';
-import { Button, Drawer, Tabs, Table, Switch, Modal, Form, Input, Select } from 'antd';
+import { Button, Drawer, Tabs, Table, Switch } from 'antd';
 import api from '../services/api';
 import '../styles/DataManagement.scss';
 
 const { TabPane } = Tabs;
-const { Option } = Select;
 
 const DataManagement = () => {
     const [pacientes, setPacientes] = useState([]);
@@ -433,10 +449,6 @@ const DataManagement = () => {
     const [habitaciones, setHabitaciones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentEntity, setCurrentEntity] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [form] = Form.useForm();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -446,6 +458,10 @@ const DataManagement = () => {
                     api.get('/servicios/'),
                     api.get('/habitaciones/')
                 ]);
+
+                console.log("Pacientes desde el backend:", pacientesResponse.data);
+                console.log("Servicios desde el backend:", serviciosResponse.data);
+                console.log("Habitaciones desde el backend:", habitacionesResponse.data);
 
                 setPacientes(pacientesResponse.data);
                 setServicios(serviciosResponse.data);
@@ -462,47 +478,98 @@ const DataManagement = () => {
     const openDrawer = () => setIsDrawerOpen(true);
     const closeDrawer = () => setIsDrawerOpen(false);
 
-    const openModal = (entity = null) => {
-        setCurrentEntity(entity);
-        form.resetFields();
-        if (entity) {
-            setIsEditing(true);
-            form.setFieldsValue(entity);
-        } else {
-            setIsEditing(false);
-        }
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => setIsModalOpen(false);
-
-    const handleSave = async () => {
-        try {
-            const values = await form.validateFields();
-            if (isEditing && currentEntity) {
-                // Editar la entidad existente
-                await api.put(`/${currentEntity.type}/${currentEntity.id}/`, values);
-            } else {
-                // Crear una nueva entidad
-                await api.post(`/${values.type}/`, values);
-            }
-            closeModal();
-            refreshData();
-        } catch (error) {
-            console.error('Error saving data:', error);
-        }
-    };
-
     const toggleActivo = async (item, type) => {
         try {
+            console.log("Datos antes de actualizar:", item);
+    
             const updatedItem = { ...item, activo: !item.activo };
-            await api.put(`/${type}/${item.id}/`, updatedItem);
+    
+            if (type === 'habitaciones') {
+                let servicioId = item.servicio_id;
+                if (!servicioId) {
+                    const servicio = servicios.find(s => s.nombre === item.servicio);
+                    if (servicio) {
+                        servicioId = servicio.id;
+                    }
+                }
+                updatedItem.servicio_id = servicioId;
+                console.log("Servicio ID extraído:", updatedItem.servicio_id);
+            }
+    
+            if (type === 'camas') {
+                const habitacion = habitaciones.find(h => h.id === item.habitacion);
+                console.log("Habitación encontrada:", habitacion);
+                if (!habitacion || !habitacion.activo) {
+                    alert("No se puede activar la cama porque la habitación no está activa.");
+                    return;
+                }
+    
+                updatedItem.habitacion_id = habitacion.id;
+                console.log("Habitación ID extraído:", updatedItem.habitacion_id);
+            }
+    
+            if (type === 'pacientes') {
+                const cama = item.cama ? item.cama : null;
+                console.log("Cama obtenida:", cama);
+    
+                if (!cama) {
+                    console.error("Error: No se encontró la cama asociada al paciente.");
+                    return;
+                }
+    
+                const habitacion = cama.habitacion ? cama.habitacion : null;
+                console.log("Habitación obtenida desde cama:", habitacion);
+    
+                if (!habitacion) {
+                    console.error("Error: No se encontró la habitación asociada a la cama.");
+                    return;
+                }
+    
+                const servicio = habitacion.servicio ? habitacion.servicio : null;
+                console.log("Servicio obtenido desde habitación:", servicio);
+    
+                if (!servicio) {
+                    console.error("Error: No se encontró el servicio asociado a la habitación.");
+                    return;
+                }
+    
+                // Verificación de estados
+                const camaActiva = cama.activo !== undefined ? cama.activo : "no definido";
+                const habitacionActiva = habitacion.activo !== undefined ? habitacion.activo : "no definido";
+                const servicioActivo = servicio.activo !== undefined ? servicio.activo : "no definido";
+    
+                console.log("Estado de cama:", camaActiva);
+                console.log("Estado de habitación:", habitacionActiva);
+                console.log("Estado de servicio:", servicioActivo);
+    
+                if (camaActiva === null || habitacionActiva === null || servicioActivo === null) {
+                    console.error("Error: Estado indefinido para cama, habitación o servicio.");
+                    return;
+                }
+    
+                if (!camaActiva || !habitacionActiva || !servicioActivo) {
+                    alert("No se puede activar el paciente porque la cama, habitación o servicio no están activos.");
+                    return;
+                }
+    
+                updatedItem.cama_id = cama.id;
+                console.log("Cama ID extraído:", updatedItem.cama_id);
+            }
+    
+            console.log(`Datos enviados al backend para actualizar ${type}:`, updatedItem);
+            const response = await api.put(`/${type}/${item.id}/`, updatedItem);
+            console.log("Respuesta del backend:", response.data);
             refreshData();
         } catch (error) {
-            console.error('Error toggling activo:', error);
+            if (error.response && error.response.status === 400) {
+                const errorMessage = error.response.data.detail || "No se puede activar el paciente debido a restricciones en la lógica de activación.";
+                alert(`Error: ${errorMessage}`);
+            } else {
+                console.error('Error toggling activo:', error.response ? error.response.data : error);
+            }
         }
-    };
-
+    };      
+    
     const refreshData = async () => {
         setLoading(true);
         try {
@@ -511,6 +578,10 @@ const DataManagement = () => {
                 api.get('/servicios/'),
                 api.get('/habitaciones/')
             ]);
+
+            console.log("Pacientes actualizados:", pacientesResponse.data);
+            console.log("Servicios actualizados:", serviciosResponse.data);
+            console.log("Habitaciones actualizadas:", habitacionesResponse.data);
 
             setPacientes(pacientesResponse.data);
             setServicios(serviciosResponse.data);
@@ -526,16 +597,9 @@ const DataManagement = () => {
         return <div>Cargando...</div>;
     }
 
-    const renderActions = (record, type) => (
-        <>
-            <Button onClick={() => openModal({ ...record, type })}>Editar</Button>
-            <Switch
-                checked={record.activo}
-                onChange={() => toggleActivo(record, type)}
-                style={{ marginLeft: 8 }}
-            />
-        </>
-    );
+    console.log("Servicios que se están pasando al Table:", servicios);
+    console.log("Habitaciones que se están pasando al Table:", habitaciones);
+    console.log("Pacientes que se están pasando al Table:", pacientes);
 
     return (
         <div className="data-management container mt-5">
@@ -560,6 +624,15 @@ const DataManagement = () => {
                     {habitaciones.filter(h => h.activo).map(habitacion => (
                         <li key={habitacion.id} className="list-group-item">
                             {habitacion.nombre} - {habitacion.servicio}
+                            <ul>
+                                {habitacion.camas.map(cama => (
+                                    cama.activo && (
+                                        <li key={cama.id}>
+                                            {cama.nombre}
+                                        </li>
+                                    )
+                                ))}
+                            </ul>
                         </li>
                     ))}
                 </ul>
@@ -583,11 +656,8 @@ const DataManagement = () => {
             >
                 <Tabs defaultActiveKey="1">
                     <TabPane tab="Servicios" key="1">
-                        <Button type="primary" onClick={() => openModal({ type: 'servicios' })} style={{ marginBottom: 16 }}>
-                            Agregar Servicio
-                        </Button>
                         <Table
-                            dataSource={servicios} // Mostrar todos los servicios en el Panel de Gestión
+                            dataSource={servicios}
                             columns={[
                                 { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
                                 {
@@ -599,25 +669,35 @@ const DataManagement = () => {
                                             onChange={() => toggleActivo(record, 'servicios')}
                                         />
                                     ),
-                                },
-                                {
-                                    title: 'Acciones',
-                                    key: 'acciones',
-                                    render: (_, record) => renderActions(record, 'servicios'),
-                                },
+                                }
                             ]}
                             rowKey="id"
                         />
                     </TabPane>
                     <TabPane tab="Habitaciones" key="2">
-                        <Button type="primary" onClick={() => openModal({ type: 'habitaciones' })} style={{ marginBottom: 16 }}>
-                            Agregar Habitación
-                        </Button>
                         <Table
-                            dataSource={habitaciones} // Mostrar todas las habitaciones en el Panel de Gestión
+                            dataSource={habitaciones}
                             columns={[
                                 { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
                                 { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
+                                {
+                                    title: 'Camas',
+                                    key: 'camas',
+                                    render: (_, habitacion) => (
+                                        <ul>
+                                            {habitacion.camas.map(cama => (
+                                                <li key={cama.id}>
+                                                    {cama.nombre}
+                                                    <Switch
+                                                        checked={cama.activo}
+                                                        onChange={() => toggleActivo(cama, 'camas')}
+                                                        style={{ marginLeft: 8 }}
+                                                    />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )
+                                },
                                 {
                                     title: 'Activo',
                                     key: 'activo',
@@ -627,22 +707,14 @@ const DataManagement = () => {
                                             onChange={() => toggleActivo(record, 'habitaciones')}
                                         />
                                     ),
-                                },
-                                {
-                                    title: 'Acciones',
-                                    key: 'acciones',
-                                    render: (_, record) => renderActions(record, 'habitaciones'),
-                                },
+                                }
                             ]}
                             rowKey="id"
                         />
                     </TabPane>
                     <TabPane tab="Pacientes" key="3">
-                        <Button type="primary" onClick={() => openModal({ type: 'pacientes' })} style={{ marginBottom: 16 }}>
-                            Agregar Paciente
-                        </Button>
                         <Table
-                            dataSource={pacientes} // Mostrar todos los pacientes en el Panel de Gestión
+                            dataSource={pacientes}
                             columns={[
                                 { title: 'Nombre', dataIndex: 'name', key: 'name' },
                                 { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
@@ -656,58 +728,13 @@ const DataManagement = () => {
                                             onChange={() => toggleActivo(record, 'pacientes')}
                                         />
                                     ),
-                                },
-                                {
-                                    title: 'Acciones',
-                                    key: 'acciones',
-                                    render: (_, record) => renderActions(record, 'pacientes'),
-                                },
+                                }
                             ]}
                             rowKey="id"
                         />
                     </TabPane>
                 </Tabs>
             </Drawer>
-
-            <Modal
-                title={isEditing ? `Editar ${currentEntity?.type}` : `Agregar ${form.getFieldValue('type')}`}
-                open={isModalOpen}
-                onCancel={closeModal}
-                onOk={handleSave}
-            >
-                <Form form={form} layout="vertical">
-                    <Form.Item name="type" hidden>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="nombre" label="Nombre" rules={[{ required: true, message: 'El nombre es requerido' }]}>
-                        <Input />
-                    </Form.Item>
-                    {currentEntity?.type === 'habitaciones' && (
-                        <Form.Item name="servicio_id" label="Servicio" rules={[{ required: true, message: 'El servicio es requerido' }]}>
-                            <Select>
-                                {servicios.map(servicio => (
-                                    <Option key={servicio.id} value={servicio.id}>
-                                        {servicio.nombre}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    )}
-                    {currentEntity?.type === 'pacientes' && (
-                        <Form.Item name="cama_id" label="Cama" rules={[{ required: true, message: 'La cama es requerida' }]}>
-                            <Select>
-                                {habitaciones.flatMap(habitacion =>
-                                    habitacion.camas.map(cama => (
-                                        <Option key={cama.id} value={cama.id}>
-                                            {cama.nombre} - Habitación: {habitacion.nombre}
-                                        </Option>
-                                    ))
-                                )}
-                            </Select>
-                        </Form.Item>
-                    )}
-                </Form>
-            </Modal>
         </div>
     );
 };
@@ -1822,36 +1849,45 @@ export const updateServicio = async (id, servicioData) => {
     return response.data;
 };
 
-// Función para actualizar una habitación existente (activar/desactivar)
+// Función para crear una nueva habitación con camas
+export const createHabitacion = async (habitacionData) => {
+    const response = await api.post('/habitaciones/', habitacionData);
+    return response.data;
+};
+
+// Función para actualizar una habitación existente (con camas)
 export const updateHabitacion = async (id, habitacionData) => {
     const response = await api.put(`/habitaciones/${id}/`, habitacionData);
+    return response.data;
+};
+
+// Función para obtener todas las camas
+export const getCamas = async () => {
+    const response = await api.get('/camas/');
+    return response.data;
+};
+
+// Función para crear una nueva cama
+export const createCama = async (camaData) => {
+    const response = await api.post('/camas/', camaData);
+    return response.data;
+};
+
+// Función para actualizar una cama existente
+export const updateCama = async (id, camaData) => {
+    const response = await api.put(`/camas/${id}/`, camaData);
+    return response.data;
+};
+
+// Función para eliminar una cama
+export const deleteCama = async (id) => {
+    const response = await api.delete(`/camas/${id}/`);
     return response.data;
 };
 
 // Función para actualizar un paciente existente (activar/desactivar)
 export const updatePaciente = async (id, pacienteData) => {
     const response = await api.put(`/pacientes/${id}/`, pacienteData);
-    return response.data;
-};
-
-// Funciones CRUD para camas
-export const getCamas = async () => {
-    const response = await api.get('/camas/');
-    return response.data;
-};
-
-export const createCama = async (camaData) => {
-    const response = await api.post('/camas/', camaData);
-    return response.data;
-};
-
-export const updateCama = async (id, camaData) => {
-    const response = await api.put(`/camas/${id}/`, camaData);
-    return response.data;
-};
-
-export const deleteCama = async (id) => {
-    const response = await api.delete(`/camas/${id}/`);
     return response.data;
 };
 
@@ -2177,38 +2213,6 @@ p {
         margin-bottom: 15px;
     }
 }
-.historial-pedidos {
-    margin-top: 40px;
-
-    h2 {
-        font-size: 20px;
-        margin-bottom: 20px;
-    }
-
-    .ant-collapse-header {
-        font-weight: bold;
-    }
-
-    .option-group {
-        margin-bottom: 15px;
-    }
-}
-.historial-pedidos {
-    margin-top: 40px;
-
-    h2 {
-        font-size: 20px;
-        margin-bottom: 20px;
-    }
-
-    .ant-collapse-header {
-        font-weight: bold;
-    }
-
-    .option-group {
-        margin-bottom: 15px;
-    }
-}
 /* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
@@ -2379,94 +2383,94 @@ body {
   margin-right: 8px;
 }
 .menu-page {
-    /* Padding para espaciar el contenido dentro de la página */
-    padding: 20px;
-  }
-  
-  .custom-button {
-    /* Margen inferior para separar el botón de otros elementos */
-    margin-bottom: 10px;
-  }
-  
-  .vertical-buttons {
-    /* Flexbox en dirección columna para apilar los botones verticalmente */
-    display: flex;
-    flex-direction: column;
-    /* Espacio entre los botones */
-    gap: 10px;
-  }
-  
-  .button-group {
-    /* Flexbox en dirección columna para apilar los botones verticalmente */
-    display: flex;
-    flex-direction: column;
-    /* Espacio entre los botones */
-    gap: 10px;
-    /* Margen inferior para separar el grupo de botones de otros elementos */
-    margin-bottom: 20px;
-  }
-  
-  .ant-btn {
-    /* Margen derecho para separar los botones en una fila */
-    margin-right: 10px;
-    /* Asegura que los botones ocupen todo el ancho disponible */
-    width: 100%;
-  }
-  
-  .ant-collapse-content-box {
-    /* Flexbox en dirección columna para apilar el contenido verticalmente */
-    display: flex;
-    flex-direction: column;
-    /* Espacio entre los elementos dentro del contenido colapsado */
-    gap: 10px;
-  }
-  
-  .menu-details {
-    /* Estilos específicos para la tipografía dentro de los detalles del menú */
-    .ant-typography {
-      /* Margen superior para separar la tipografía de otros elementos */
-      margin-top: 20px;
-    }
-  }
-  
-  .menu-list {
-    /* Margen superior para separar la lista de menús de otros elementos */
+  /* Padding para espaciar el contenido dentro de la página */
+  padding: 20px;
+}
+
+.custom-button {
+  /* Margen inferior para separar el botón de otros elementos */
+  margin-bottom: 10px;
+}
+
+.vertical-buttons {
+  /* Flexbox en dirección columna para apilar los botones verticalmente */
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre los botones */
+  gap: 10px;
+}
+
+.button-group {
+  /* Flexbox en dirección columna para apilar los botones verticalmente */
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre los botones */
+  gap: 10px;
+  /* Margen inferior para separar el grupo de botones de otros elementos */
+  margin-bottom: 20px;
+}
+
+.ant-btn {
+  /* Margen derecho para separar los botones en una fila */
+  margin-right: 10px;
+  /* Asegura que los botones ocupen todo el ancho disponible */
+  width: 100%;
+}
+
+.ant-collapse-content-box {
+  /* Flexbox en dirección columna para apilar el contenido verticalmente */
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre los elementos dentro del contenido colapsado */
+  gap: 10px;
+}
+
+.menu-details {
+  /* Estilos específicos para la tipografía dentro de los detalles del menú */
+  .ant-typography {
+    /* Margen superior para separar la tipografía de otros elementos */
     margin-top: 20px;
   }
-  
-  .loading-container {
-    /* Centrar el texto de carga */
-    text-align: center;
-    /* Padding superior e inferior para espaciar el contenido de carga */
-    padding: 50px 0;
-  }
-  
-  .save-button {
-    /* Ajusta el ancho del botón a la mitad del contenedor menos 5px */
-    width: calc(50% - 5px);
-    /* Margen derecho para separar el botón de otros elementos */
-    margin-right: 10px;
-  }
-  
-  .modal-footer {
-    /* Flexbox para centrar los botones en la barra de pie de la ventana modal */
-    display: flex;
-    justify-content: center;
-    /* Espacio entre los botones */
-    gap: 10px;
-  }
-  
-  .modal-footer .ant-btn {
-    /* Ancho fijo para los botones dentro de la ventana modal */
-    width: 100px;
-    /* Margen izquierdo y derecho para espaciar los botones entre sí */
-    margin: 0 10px;
-  }
-  
-  .menu-title {
-    /* Negrita para resaltar el título del menú */
-    font-weight: bold;
-  }
+}
+
+.menu-list {
+  /* Margen superior para separar la lista de menús de otros elementos */
+  margin-top: 20px;
+}
+
+.loading-container {
+  /* Centrar el texto de carga */
+  text-align: center;
+  /* Padding superior e inferior para espaciar el contenido de carga */
+  padding: 50px 0;
+}
+
+.save-button {
+  /* Ajusta el ancho del botón a la mitad del contenedor menos 5px */
+  width: calc(50% - 5px);
+  /* Margen derecho para separar el botón de otros elementos */
+  margin-right: 10px;
+}
+
+.modal-footer {
+  /* Flexbox para centrar los botones en la barra de pie de la ventana modal */
+  display: flex;
+  justify-content: center;
+  /* Espacio entre los botones */
+  gap: 10px;
+}
+
+.modal-footer .ant-btn {
+  /* Ancho fijo para los botones dentro de la ventana modal */
+  width: 100px;
+  /* Margen izquierdo y derecho para espaciar los botones entre sí */
+  margin: 0 10px;
+}
+
+.menu-title {
+  /* Negrita para resaltar el título del menú */
+  font-weight: bold;
+}
 // src/components/PedidosPendientes.scss
 .pedidos-pendientes {
     .pedido {
@@ -2506,77 +2510,77 @@ body {
     }
 }
 .realizar-pedido {
-    /* Establece un ancho máximo de 600px y centra el contenedor */
-    max-width: 600px;
-    margin: 0 auto;
-    /* Padding interno para espaciar el contenido */
-    padding: 20px;
-    /* Fondo blanco para el contenedor */
-    background: #fff;
-    /* Bordes redondeados */
-    border-radius: 8px;
-    /* Sombra suave para darle un efecto de elevación */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  
-    h2 {
-      /* Centra el texto del encabezado */
-      text-align: center;
-      /* Margen inferior para separar el encabezado del contenido siguiente */
-      margin-bottom: 20px;
+  /* Establece un ancho máximo de 600px y centra el contenedor */
+  max-width: 600px;
+  margin: 0 auto;
+  /* Padding interno para espaciar el contenido */
+  padding: 20px;
+  /* Fondo blanco para el contenedor */
+  background: #fff;
+  /* Bordes redondeados */
+  border-radius: 8px;
+  /* Sombra suave para darle un efecto de elevación */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    /* Centra el texto del encabezado */
+    text-align: center;
+    /* Margen inferior para separar el encabezado del contenido siguiente */
+    margin-bottom: 20px;
+    /* Color del texto en azul institucional */
+    color: #174288;
+  }
+
+  .form-item {
+    /* Margen inferior para separar los elementos del formulario */
+    margin-bottom: 20px;
+  }
+
+  .ant-select {
+    /* Asegura que el selector ocupe todo el ancho disponible */
+    width: 100%;
+  }
+
+  .section-collapse {
+    /* Margen inferior para separar las secciones colapsables */
+    margin-bottom: 20px;
+  }
+
+  .option-group {
+    /* Utiliza flexbox en dirección columna para apilar los elementos verticalmente */
+    display: flex;
+    flex-direction: column;
+    /* Margen izquierdo para dar sangría al grupo de opciones */
+    margin-left: 20px;
+
+    h4 {
+      /* Margen inferior para separar el título del contenido siguiente */
+      margin-bottom: 10px;
       /* Color del texto en azul institucional */
       color: #174288;
     }
-  
-    .form-item {
-      /* Margen inferior para separar los elementos del formulario */
-      margin-bottom: 20px;
-    }
-  
-    .ant-select {
-      /* Asegura que el selector ocupe todo el ancho disponible */
-      width: 100%;
-    }
-  
-    .section-collapse {
-      /* Margen inferior para separar las secciones colapsables */
-      margin-bottom: 20px;
-    }
-  
-    .option-group {
-      /* Utiliza flexbox en dirección columna para apilar los elementos verticalmente */
-      display: flex;
-      flex-direction: column;
-      /* Margen izquierdo para dar sangría al grupo de opciones */
-      margin-left: 20px;
-  
-      h4 {
-        /* Margen inferior para separar el título del contenido siguiente */
-        margin-bottom: 10px;
-        /* Color del texto en azul institucional */
-        color: #174288;
-      }
-  
-      .ant-checkbox-wrapper {
-        /* Margen inferior para separar las opciones de checkbox */
-        margin-bottom: 5px;
-      }
-    }
-  
-    .additional-options {
-      /* Margen superior para separar las opciones adicionales del contenido anterior */
-      margin-top: 20px;
-  
-      .form-item {
-        /* Margen inferior más pequeño para separar los elementos de las opciones adicionales */
-        margin-bottom: 10px;
-      }
-    }
-  
-    .submit-button {
-      /* Asegura que el botón de envío ocupe todo el ancho disponible */
-      width: 100%;
+
+    .ant-checkbox-wrapper {
+      /* Margen inferior para separar las opciones de checkbox */
+      margin-bottom: 5px;
     }
   }
+
+  .additional-options {
+    /* Margen superior para separar las opciones adicionales del contenido anterior */
+    margin-top: 20px;
+
+    .form-item {
+      /* Margen inferior más pequeño para separar los elementos de las opciones adicionales */
+      margin-bottom: 10px;
+    }
+  }
+
+  .submit-button {
+    /* Asegura que el botón de envío ocupe todo el ancho disponible */
+    width: 100%;
+  }
+}
 /* Importamos la fuente 'Syne' desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
@@ -2708,4 +2712,47 @@ api.interceptors.request.use(
 
 // Exportamos la instancia de axios configurada
 export default api;
-    
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Node.js dependencies
+node_modules/
+
+# Python bytecode files
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Django database file
+db.sqlite3
+
+# Frontend build directory
+build/
+
+# macOS metadata files
+.DS_Store
+
+# Windows metadata files
+Thumbs.db
