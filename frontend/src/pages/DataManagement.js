@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Drawer, Tabs, Table, Switch } from 'antd';
-import api from '../services/api';
+import { Button, Drawer, Tabs, Table, Switch, Modal, Form, Input, notification, Select } from 'antd';
+import api, { createServicio, createHabitacion, createCama, createPaciente } from '../services/api';  // Importamos las nuevas funciones
 import '../styles/DataManagement.scss';
 
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 const DataManagement = () => {
     const [pacientes, setPacientes] = useState([]);
@@ -11,6 +12,19 @@ const DataManagement = () => {
     const [habitaciones, setHabitaciones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Estado para el modal de creación de servicios
+    const [isHabitacionModalOpen, setIsHabitacionModalOpen] = useState(false); // Estado para el modal de creación de habitaciones
+    const [isCamaModalOpen, setIsCamaModalOpen] = useState(false); // Estado para el modal de creación de camas
+    const [isPacienteModalOpen, setIsPacienteModalOpen] = useState(false); // Estado para el modal de creación de pacientes
+    const [newServicioName, setNewServicioName] = useState(''); // Estado para el nombre del nuevo servicio
+    const [newHabitacionName, setNewHabitacionName] = useState(''); // Estado para el nombre de la nueva habitación
+    const [newCamaName, setNewCamaName] = useState(''); // Estado para el nombre de la nueva cama
+    const [newPacienteID, setNewPacienteID] = useState(''); // Estado para la cédula del nuevo paciente
+    const [newPacienteName, setNewPacienteName] = useState(''); // Estado para el nombre del nuevo paciente
+    const [newRecommendedDiet, setNewRecommendedDiet] = useState(''); // Estado para la dieta recomendada del nuevo paciente
+    const [selectedServicio, setSelectedServicio] = useState(null); // Estado para el servicio seleccionado al crear una habitación
+    const [selectedHabitacion, setSelectedHabitacion] = useState(null); // Estado para la habitación seleccionada al crear una cama
+    const [selectedCama, setSelectedCama] = useState(null); // Estado para la cama seleccionada al crear un paciente
 
     useEffect(() => {
         const fetchData = async () => {
@@ -20,10 +34,6 @@ const DataManagement = () => {
                     api.get('/servicios/'),
                     api.get('/habitaciones/')
                 ]);
-
-                console.log("Pacientes desde el backend:", pacientesResponse.data);
-                console.log("Servicios desde el backend:", serviciosResponse.data);
-                console.log("Habitaciones desde el backend:", habitacionesResponse.data);
 
                 setPacientes(pacientesResponse.data);
                 setServicios(serviciosResponse.data);
@@ -130,8 +140,8 @@ const DataManagement = () => {
                 console.error('Error toggling activo:', error.response ? error.response.data : error);
             }
         }
-    };      
-    
+    };
+
     const refreshData = async () => {
         setLoading(true);
         try {
@@ -140,10 +150,6 @@ const DataManagement = () => {
                 api.get('/servicios/'),
                 api.get('/habitaciones/')
             ]);
-
-            console.log("Pacientes actualizados:", pacientesResponse.data);
-            console.log("Servicios actualizados:", serviciosResponse.data);
-            console.log("Habitaciones actualizadas:", habitacionesResponse.data);
 
             setPacientes(pacientesResponse.data);
             setServicios(serviciosResponse.data);
@@ -155,13 +161,172 @@ const DataManagement = () => {
         }
     };
 
+    // Nueva función para manejar la creación de un servicio
+    const handleCreateServicio = async () => {
+        if (!newServicioName) {
+            notification.error({ message: 'Error', description: 'El nombre del servicio es obligatorio' });
+            return;
+        }
+
+        try {
+            await createServicio({ nombre: newServicioName });
+            notification.success({ message: 'Servicio creado exitosamente' });
+            setIsModalOpen(false);
+            setNewServicioName('');
+            refreshData(); // Refrescamos la lista de servicios
+        } catch (error) {
+            notification.error({ message: 'Error al crear el servicio', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para manejar la creación de una habitación
+    const handleCreateHabitacion = async () => {
+        if (!newHabitacionName || !selectedServicio) {
+            notification.error({ message: 'Error', description: 'El nombre de la habitación y la selección de un servicio son obligatorios' });
+            return;
+        }
+
+        try {
+            const payload = {
+                nombre: newHabitacionName,
+                servicio_id: selectedServicio,
+                activo: false,
+                camas: []
+            };
+
+            await createHabitacion(payload);
+            notification.success({ message: 'Habitación creada exitosamente' });
+            setIsHabitacionModalOpen(false);
+            setNewHabitacionName('');
+            setSelectedServicio(null);
+            refreshData();
+        } catch (error) {
+            notification.error({ message: 'Error al crear la habitación', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para manejar la creación de una cama
+    const handleCreateCama = async () => {
+        if (!newCamaName || !selectedHabitacion) {
+            notification.error({ message: 'Error', description: 'El nombre de la cama y la selección de una habitación son obligatorios' });
+            return;
+        }
+
+        try {
+            const payload = {
+                nombre: newCamaName,
+                habitacion: selectedHabitacion,
+                activo: false
+            };
+
+            await createCama(payload);
+            notification.success({ message: 'Cama creada exitosamente' });
+            setIsCamaModalOpen(false);
+            setNewCamaName('');
+            setSelectedHabitacion(null);
+            refreshData();
+        } catch (error) {
+            notification.error({ message: 'Error al crear la cama', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para manejar la creación de un paciente
+    const handleCreatePaciente = async () => {
+        if (!newPacienteID || !newPacienteName || !selectedCama || !newRecommendedDiet) {
+            notification.error({ message: 'Error', description: 'Todos los campos son obligatorios para crear un paciente' });
+            return;
+        }
+
+        try {
+            const payload = {
+                id: newPacienteID,
+                name: newPacienteName,
+                cama_id: selectedCama,  // Cambiamos "cama" a "cama_id"
+                recommended_diet: newRecommendedDiet,
+                activo: true // Por defecto, el paciente se crea como activo
+            };
+
+            await createPaciente(payload);
+            notification.success({ message: 'Paciente creado exitosamente' });
+            setIsPacienteModalOpen(false);
+            setNewPacienteID('');
+            setNewPacienteName('');
+            setNewRecommendedDiet('');
+            setSelectedCama(null);
+            refreshData();
+        } catch (error) {
+            notification.error({ message: 'Error al crear el paciente', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para abrir el modal de creación de servicios
+    const openCreateServicioModal = () => {
+        setIsModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de servicios
+    const closeCreateServicioModal = () => {
+        setIsModalOpen(false);
+        setNewServicioName('');
+    };
+
+    // Nueva función para abrir el modal de creación de habitaciones
+    const openCreateHabitacionModal = () => {
+        const activeServices = servicios.filter(s => s.activo);
+        if (activeServices.length === 0) {
+            notification.warning({ message: 'Advertencia', description: 'No se pueden crear habitaciones porque no hay servicios activos' });
+            return;
+        }
+        setIsHabitacionModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de habitaciones
+    const closeCreateHabitacionModal = () => {
+        setIsHabitacionModalOpen(false);
+        setNewHabitacionName('');
+        setSelectedServicio(null);
+    };
+
+    // Nueva función para abrir el modal de creación de camas
+    const openCreateCamaModal = () => {
+        const activeHabitaciones = habitaciones.filter(h => h.activo);
+        if (activeHabitaciones.length === 0) {
+            notification.warning({ message: 'Advertencia', description: 'No se pueden crear camas porque no hay habitaciones activas' });
+            return;
+        }
+        setIsCamaModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de camas
+    const closeCreateCamaModal = () => {
+        setIsCamaModalOpen(false);
+        setNewCamaName('');
+        setSelectedHabitacion(null);
+    };
+
+    // Nueva función para abrir el modal de creación de pacientes
+    const openCreatePacienteModal = () => {
+        // Filtrar camas activas que no tengan un paciente asociado
+        const activeCamas = habitaciones.flatMap(h => h.camas.filter(c => c.activo && !pacientes.some(p => p.cama.id === c.id)));
+        if (activeCamas.length === 0) {
+            notification.warning({ message: 'Advertencia', description: 'No se pueden crear pacientes porque no hay camas disponibles sin pacientes' });
+            return;
+        }
+        setIsPacienteModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de pacientes
+    const closeCreatePacienteModal = () => {
+        setIsPacienteModalOpen(false);
+        setNewPacienteID('');
+        setNewPacienteName('');
+        setNewRecommendedDiet('');
+        setSelectedCama(null);
+    };
+
     if (loading) {
         return <div>Cargando...</div>;
     }
-
-    console.log("Servicios que se están pasando al Table:", servicios);
-    console.log("Habitaciones que se están pasando al Table:", habitaciones);
-    console.log("Pacientes que se están pasando al Table:", pacientes);
 
     return (
         <div className="data-management container mt-5">
@@ -171,6 +336,248 @@ const DataManagement = () => {
                 Panel de Gestión
             </Button>
 
+            <Drawer
+                title="Gestión de Datos"
+                placement="right"
+                onClose={closeDrawer}
+                open={isDrawerOpen}
+                width={600}
+            >
+                <Tabs defaultActiveKey="1">
+                    <TabPane tab="Servicios" key="1">
+                        <Button type="primary" onClick={openCreateServicioModal} style={{ marginBottom: '20px' }}>
+                            Crear Servicio
+                        </Button>
+                        <Table
+                            dataSource={servicios}
+                            columns={[
+                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                {
+                                    title: 'Activo',
+                                    key: 'activo',
+                                    render: (_, record) => (
+                                        <Switch
+                                            checked={record.activo}
+                                            onChange={() => toggleActivo(record, 'servicios')}
+                                        />
+                                    ),
+                                }
+                            ]}
+                            rowKey="id"
+                            scroll={{ x: 10 }} // Añadir scroll lateral
+                        />
+
+                        {/* Modal para crear un nuevo servicio */}
+                        <Modal
+                            title="Crear Nuevo Servicio"
+                            open={isModalOpen}
+                            onOk={handleCreateServicio}
+                            onCancel={closeCreateServicioModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Nombre del Servicio">
+                                    <Input
+                                        value={newServicioName}
+                                        onChange={e => setNewServicioName(e.target.value)}
+                                        placeholder="Ingrese el nombre del servicio"
+                                    />
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    </TabPane>
+                    <TabPane tab="Habitaciones" key="2">
+                        <Button type="primary" onClick={openCreateHabitacionModal} style={{ marginBottom: '20px' }}>
+                            Crear Habitación
+                        </Button>
+                        <Button type="primary" onClick={openCreateCamaModal} style={{ marginBottom: '20px' }}>
+                            Crear Cama
+                        </Button>
+                        <Table
+                            dataSource={habitaciones}
+                            columns={[
+                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
+                                {
+                                    title: 'Camas',
+                                    key: 'camas',
+                                    render: (_, habitacion) => (
+                                        <ul>
+                                            {habitacion.camas.map(cama => (
+                                                <li key={cama.id}>
+                                                    {cama.nombre}
+                                                    <Switch
+                                                        checked={cama.activo}
+                                                        onChange={() => toggleActivo(cama, 'camas')}
+                                                        style={{ marginLeft: 8 }}
+                                                    />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )
+                                },
+                                {
+                                    title: 'Activo',
+                                    key: 'activo',
+                                    render: (_, record) => (
+                                        <Switch
+                                            checked={record.activo}
+                                            onChange={() => toggleActivo(record, 'habitaciones')}
+                                        />
+                                    ),
+                                }
+                            ]}
+                            rowKey="id"
+                            scroll={{ x: 10 }} // Añadir scroll lateral
+                        />
+
+                        {/* Modal para crear una nueva habitación */}
+                        <Modal
+                            title="Crear Nueva Habitación"
+                            open={isHabitacionModalOpen}
+                            onOk={handleCreateHabitacion}
+                            onCancel={closeCreateHabitacionModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Nombre de la Habitación">
+                                    <Input
+                                        value={newHabitacionName}
+                                        onChange={e => setNewHabitacionName(e.target.value)}
+                                        placeholder="Ingrese el nombre de la habitación"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Servicio">
+                                    <Select
+                                        value={selectedServicio}
+                                        onChange={value => setSelectedServicio(value)}
+                                        placeholder="Seleccione un servicio"
+                                    >
+                                        {servicios.filter(s => s.activo).map(servicio => (
+                                            <Option key={servicio.id} value={servicio.id}>
+                                                {servicio.nombre}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+
+                        {/* Modal para crear una nueva cama */}
+                        <Modal
+                            title="Crear Nueva Cama"
+                            open={isCamaModalOpen}
+                            onOk={handleCreateCama}
+                            onCancel={closeCreateCamaModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Nombre de la Cama">
+                                    <Input
+                                        value={newCamaName}
+                                        onChange={e => setNewCamaName(e.target.value)}
+                                        placeholder="Ingrese el nombre de la cama"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Habitación">
+                                    <Select
+                                        value={selectedHabitacion}
+                                        onChange={value => setSelectedHabitacion(value)}
+                                        placeholder="Seleccione una habitación"
+                                    >
+                                        {habitaciones.filter(h => h.activo).map(habitacion => (
+                                            <Option key={habitacion.id} value={habitacion.id}>
+                                                {habitacion.nombre}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    </TabPane>
+                    <TabPane tab="Pacientes" key="3">
+                        <Button type="primary" onClick={openCreatePacienteModal} style={{ marginBottom: '20px' }}>
+                            Crear Paciente
+                        </Button>
+                        <Table
+                            dataSource={pacientes}
+                            columns={[
+                                { title: 'Cédula', dataIndex: 'id', key: 'id' },
+                                { title: 'Nombre', dataIndex: 'name', key: 'name' },
+                                { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
+                                { title: 'Habitación', dataIndex: ['cama', 'habitacion', 'nombre'], key: 'habitacion' },
+                                { title: 'Servicio', dataIndex: ['cama', 'habitacion', 'servicio', 'nombre'], key: 'servicio' },
+                                { title: 'Dieta Recomendada', dataIndex: 'recommended_diet', key: 'recommended_diet' },
+                                {
+                                    title: 'Activo',
+                                    key: 'activo',
+                                    align: 'center',
+                                    render: (_, record) => (
+                                        <Switch
+                                            checked={record.activo}
+                                            onChange={() => toggleActivo(record, 'pacientes')}
+                                        />
+                                    ),
+                                }
+                            ]}
+                            rowKey="id"
+                            scroll={{ x: 10 }} // Añadir scroll lateral
+                        />
+
+                        {/* Modal para crear un nuevo paciente */}
+                        <Modal
+                            title="Crear Nuevo Paciente"
+                            open={isPacienteModalOpen}
+                            onOk={handleCreatePaciente}
+                            onCancel={closeCreatePacienteModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Cédula">
+                                    <Input
+                                        value={newPacienteID}
+                                        onChange={e => setNewPacienteID(e.target.value)}
+                                        placeholder="Ingrese la cédula del paciente"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Nombre">
+                                    <Input
+                                        value={newPacienteName}
+                                        onChange={e => setNewPacienteName(e.target.value)}
+                                        placeholder="Ingrese el nombre del paciente"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Cama">
+                                    <Select
+                                        value={selectedCama}
+                                        onChange={value => setSelectedCama(value)}
+                                        placeholder="Seleccione una cama"
+                                    >
+                                        {habitaciones.flatMap(h => h.camas.filter(c => c.activo && !pacientes.some(p => p.cama.id === c.id))).map(cama => (
+                                            <Option key={cama.id} value={cama.id}>
+                                                {cama.nombre}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item label="Dieta Recomendada">
+                                    <Input
+                                        value={newRecommendedDiet}
+                                        onChange={e => setNewRecommendedDiet(e.target.value)}
+                                        placeholder="Ingrese la dieta recomendada"
+                                    />
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    </TabPane>
+                </Tabs>
+            </Drawer>
+
+            {/* Visualización de Elementos Activos en la Página Principal */}
             <div className="active-data mt-4">
                 <h3>Servicios Activos</h3>
                 <ul className="list-group mb-4">
@@ -208,95 +615,6 @@ const DataManagement = () => {
                     ))}
                 </ul>
             </div>
-
-            <Drawer
-                title="Gestión de Datos"
-                placement="right"
-                onClose={closeDrawer}
-                open={isDrawerOpen}
-                width={600}
-            >
-                <Tabs defaultActiveKey="1">
-                    <TabPane tab="Servicios" key="1">
-                        <Table
-                            dataSource={servicios}
-                            columns={[
-                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                                {
-                                    title: 'Activo',
-                                    key: 'activo',
-                                    render: (_, record) => (
-                                        <Switch
-                                            checked={record.activo}
-                                            onChange={() => toggleActivo(record, 'servicios')}
-                                        />
-                                    ),
-                                }
-                            ]}
-                            rowKey="id"
-                        />
-                    </TabPane>
-                    <TabPane tab="Habitaciones" key="2">
-                        <Table
-                            dataSource={habitaciones}
-                            columns={[
-                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                                { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
-                                {
-                                    title: 'Camas',
-                                    key: 'camas',
-                                    render: (_, habitacion) => (
-                                        <ul>
-                                            {habitacion.camas.map(cama => (
-                                                <li key={cama.id}>
-                                                    {cama.nombre}
-                                                    <Switch
-                                                        checked={cama.activo}
-                                                        onChange={() => toggleActivo(cama, 'camas')}
-                                                        style={{ marginLeft: 8 }}
-                                                    />
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )
-                                },
-                                {
-                                    title: 'Activo',
-                                    key: 'activo',
-                                    render: (_, record) => (
-                                        <Switch
-                                            checked={record.activo}
-                                            onChange={() => toggleActivo(record, 'habitaciones')}
-                                        />
-                                    ),
-                                }
-                            ]}
-                            rowKey="id"
-                        />
-                    </TabPane>
-                    <TabPane tab="Pacientes" key="3">
-                        <Table
-                            dataSource={pacientes}
-                            columns={[
-                                { title: 'Nombre', dataIndex: 'name', key: 'name' },
-                                { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
-                                { title: 'Habitación', dataIndex: ['cama', 'habitacion', 'nombre'], key: 'habitacion' },
-                                {
-                                    title: 'Activo',
-                                    key: 'activo',
-                                    render: (_, record) => (
-                                        <Switch
-                                            checked={record.activo}
-                                            onChange={() => toggleActivo(record, 'pacientes')}
-                                        />
-                                    ),
-                                }
-                            ]}
-                            rowKey="id"
-                        />
-                    </TabPane>
-                </Tabs>
-            </Drawer>
         </div>
     );
 };

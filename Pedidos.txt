@@ -1,0 +1,730 @@
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'pedidos'
+class PedidosConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'pedidos'
+from django.db import models
+from pacientes.models import Paciente
+from menus.models import Menu, MenuOption
+
+class Pedido(models.Model):
+    STATUS_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('en_proceso', 'En Proceso'),
+        ('completado', 'Completado'),
+    ]
+
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    opciones = models.ManyToManyField(MenuOption, through='PedidoMenuOption', blank=True, related_name='pedidos')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendiente')
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    adicionales = models.JSONField(default=dict, blank=True)
+    sectionStatus = models.JSONField(default=dict, blank=True)  # Campo para almacenar el estado de las secciones
+
+    def __str__(self):
+        return f"Pedido {self.id} - {self.paciente.name} - {self.status}"
+
+class PedidoMenuOption(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    menu_option = models.ForeignKey(MenuOption, on_delete=models.CASCADE)
+    selected = models.BooleanField(default=False)
+from rest_framework import serializers
+from pedidos.models import Pedido, PedidoMenuOption
+from pacientes.models import Paciente
+from pacientes.serializers import PacienteSerializer
+from menus.models import Menu, MenuOption
+from menus.serializers import MenuSerializer, MenuOptionSerializer
+
+class PedidoSerializer(serializers.ModelSerializer):
+    paciente = PacienteSerializer(read_only=True)
+    menu = MenuSerializer(read_only=True)
+    opciones = MenuOptionSerializer(source='pedidomenuoption_set', many=True, read_only=True)
+
+    class Meta:
+        model = Pedido
+        fields = ['id', 'paciente', 'menu', 'opciones', 'status', 'fecha_pedido', 'adicionales', 'sectionStatus']
+
+    def create(self, validated_data):
+        opciones_data = self.initial_data.get('opciones', [])
+        adicionales_data = validated_data.pop('adicionales')
+        section_status_data = validated_data.pop('sectionStatus', {})
+        paciente_id = self.initial_data.get('paciente')
+        menu_id = self.initial_data.get('menu')
+
+        paciente = Paciente.objects.get(id=paciente_id)
+        menu = Menu.objects.get(id=menu_id)
+
+        # Validamos que el paciente esté activo
+        if not paciente.activo:
+            raise serializers.ValidationError("El paciente seleccionado no está activo.")
+
+        pedido = Pedido.objects.create(paciente=paciente, menu=menu, sectionStatus=section_status_data, **validated_data)
+
+        for opcion_data in opciones_data:
+            opcion_id = opcion_data.get('id')
+            if opcion_id is not None:
+                selected = opcion_data.get('selected', False)
+                menu_option = MenuOption.objects.get(id=opcion_id)
+                PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
+
+        pedido.adicionales = adicionales_data
+        pedido.save()
+        return pedido
+
+    def update(self, instance, validated_data):
+        opciones_data = self.initial_data.get('opciones', [])
+        adicionales_data = validated_data.pop('adicionales', instance.adicionales)
+        section_status_data = validated_data.pop('sectionStatus', instance.sectionStatus)
+
+        instance.paciente = validated_data.get('paciente', instance.paciente)
+        instance.menu = validated_data.get('menu', instance.menu)
+        instance.status = validated_data.get('status', instance.status)
+        instance.adicionales = adicionales_data
+        instance.sectionStatus = section_status_data
+        instance.save()
+
+        if opciones_data:
+            for opcion_data in opciones_data:
+                opcion_id = opcion_data.get('id')
+                if opcion_id is not None:
+                    selected = opcion_data['selected']
+                    menu_option = MenuOption.objects.get(id=opcion_id)
+                    PedidoMenuOption.objects.update_or_create(
+                        pedido=instance,
+                        menu_option=menu_option,
+                        defaults={'selected': selected}
+                    )
+
+        return instance
+# Importamos la función path desde django.urls para definir rutas
+from django.urls import path
+# Importamos las vistas PedidoListCreateView, PedidoDetailView, PedidoStatusUpdateView y PedidoCompletadosView desde el archivo views
+from .views import PedidoListCreateView, PedidoDetailView, PedidoStatusUpdateView, PedidoCompletadosView
+
+# Definimos las rutas para la aplicación de pedidos
+urlpatterns = [
+    # Ruta para listar todos los pedidos y crear uno nuevo
+    path('', PedidoListCreateView.as_view(), name='pedido-list-create'),
+    
+    # Ruta para obtener, actualizar o eliminar un pedido específico por su ID
+    path('<int:pk>/', PedidoDetailView.as_view(), name='pedido-detail'),
+    
+    # Ruta para actualizar el estado de un pedido específico por su ID
+    path('<int:pk>/status/', PedidoStatusUpdateView.as_view(), name='pedido-status-update'),
+
+    # Ruta para obtener los pedidos completados y aplicar filtros
+    path('completados/', PedidoCompletadosView.as_view(), name='pedido-completados'),
+]
+from rest_framework import generics, views
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import Pedido
+from .serializers import PedidoSerializer
+
+class PedidoListCreateView(generics.ListCreateAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+    @action(detail=False, methods=['get'])
+    def pendientes(self, request):
+        pedidos_pendientes = Pedido.objects.filter(status='pendiente')
+        serializer = self.get_serializer(pedidos_pendientes, many=True)
+        return Response(serializer.data)
+
+class PedidoCompletadosView(views.APIView):
+    def get(self, request):
+        pedidos_completados = Pedido.objects.filter(status='completado')
+        paciente_name = request.query_params.get('paciente', None)
+        if paciente_name:
+            pedidos_completados = pedidos_completados.filter(paciente__name__icontains=paciente_name)
+        serializer = PedidoSerializer(pedidos_completados, many=True)
+        return Response(serializer.data)
+
+class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+class PedidoStatusUpdateView(generics.UpdateAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+import React, { useEffect, useState } from 'react';
+import { Select, Button, Checkbox, Spin, Collapse, Modal } from 'antd';
+import { getPacientes, getMenus, createPedido } from '../services/api';
+import '../styles/RealizarPedido.scss';
+import PedidosPendientes from '../components/PedidosPendientes';
+import HistorialPedidos from '../components/HistorialPedidos';
+
+const { Option } = Select;
+const { Panel } = Collapse;
+
+const RealizarPedido = () => {
+    const [pacientes, setPacientes] = useState([]);
+    const [menus, setMenus] = useState([]);
+    const [selectedPaciente, setSelectedPaciente] = useState(null);
+    const [selectedMenu, setSelectedMenu] = useState(null);
+    const [selectedOptions, setSelectedOptions] = useState({});
+    const [additionalOptions, setAdditionalOptions] = useState({
+        leche: '',
+        bebida: '',
+        azucarPanela: [],
+        vegetales: '',
+        golosina: false
+    });
+    const [loading, setLoading] = useState(true);
+    const [confirmVisible, setConfirmVisible] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const pacientesResponse = await getPacientes();
+                const menusResponse = await getMenus();
+                setPacientes(pacientesResponse);
+                setMenus(menusResponse);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching data', error);
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handlePacienteChange = value => {
+        setSelectedPaciente(value);
+    };
+
+    const handleMenuChange = value => {
+        const menu = menus.find(menu => menu.id === value);
+        setSelectedMenu(menu);
+        setSelectedOptions({});
+    };
+
+    const handleOptionChange = (sectionName, optionType, optionId, checked) => {
+        setSelectedOptions(prevOptions => {
+            const newOptions = { ...prevOptions };
+
+            if (!newOptions[sectionName]) {
+                newOptions[sectionName] = {};
+            }
+
+            if (!newOptions[sectionName][optionType]) {
+                newOptions[sectionName][optionType] = [];
+            }
+
+            if (checked) {
+                if (optionType === 'acompanantes') {
+                    if (newOptions[sectionName][optionType].length < 2) {
+                        newOptions[sectionName][optionType].push(optionId);
+                    }
+                } else {
+                    newOptions[sectionName][optionType] = [optionId];
+                }
+            } else {
+                newOptions[sectionName][optionType] = newOptions[sectionName][optionType].filter(id => id !== optionId);
+            }
+
+            return newOptions;
+        });
+    };
+
+    const validateSelections = () => {
+        const errors = [];
+
+        const sectionsValidation = {
+            Adicional: { adicionales: { max: 1 } },
+            Algo: { adicionales: { max: 1 }, bebidas: { max: 1 } },
+            Onces: { adicionales: { max: 1 } },
+            Desayuno: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+            Almuerzo: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+            Cena: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+        };
+
+        for (const [sectionName, rules] of Object.entries(sectionsValidation)) {
+            const sectionOptions = selectedOptions[sectionName] || {};
+            for (const [optionType, rule] of Object.entries(rules)) {
+                const selectedCount = (sectionOptions[optionType] || []).length;
+                if (rule.max !== undefined && selectedCount > rule.max) {
+                    errors.push(`${sectionName} - ${optionType}: Máximo ${rule.max} opciones`);
+                }
+            }
+        }
+
+        return errors;
+    };
+
+    const showConfirmModal = () => {
+        const validationErrors = validateSelections();
+        if (validationErrors.length > 0) {
+            Modal.error({
+                title: 'Errores de Validación',
+                content: (
+                    <ul>
+                        {validationErrors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                        ))}
+                    </ul>
+                ),
+            });
+        } else {
+            setConfirmVisible(true);
+        }
+    };
+
+    const handleOk = async () => {
+        setConfirmVisible(false);
+        try {
+            const opciones = [];
+            for (const section of selectedMenu.sections) {
+                for (const key in section) {
+                    if (section[key] instanceof Array) {
+                        section[key].forEach(option => {
+                            const selected = selectedOptions[section.titulo]?.[key]?.includes(option.id) || false;
+                            opciones.push({
+                                id: option.id,
+                                selected: selected,
+                            });
+                        });
+                    }
+                }
+            }
+
+            const pedido = {
+                paciente: selectedPaciente,
+                menu: selectedMenu.id,
+                opciones: opciones,
+                adicionales: additionalOptions,
+            };
+
+            await createPedido(pedido);
+            resetForm();
+        } catch (error) {
+            console.error('Error creating pedido', error);
+        }
+    };
+
+    const resetForm = () => {
+        setSelectedPaciente(null);
+        setSelectedMenu(null);
+        setSelectedOptions({});
+        setAdditionalOptions({
+            leche: '',
+            bebida: '',
+            azucarPanela: [],
+            vegetales: '',
+            golosina: false
+        });
+    };
+
+    const handleCancel = () => {
+        setConfirmVisible(false);
+    };
+
+    const filterOption = (input, option) => {
+        return option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    };
+
+    if (loading) {
+        return <Spin />;
+    }
+
+    return (
+        <div className="realizar-pedido">
+            <h2>Realizar un Pedido</h2>
+            <div className="form-item">
+                <label>Paciente</label>
+                <Select
+                    showSearch
+                    filterOption={filterOption}
+                    value={selectedPaciente}
+                    onChange={handlePacienteChange}
+                    style={{ width: '100%' }}
+                >
+                    {pacientes.map(paciente => (
+                        <Option key={paciente.id} value={paciente.id}>
+                            {paciente.name} (Cama: {paciente.cama.nombre}, Hab: {paciente.cama.habitacion.nombre}, Serv: {paciente.cama.habitacion.servicio.nombre})
+                        </Option>
+                    ))}
+                </Select>
+            </div>
+            <div className="form-item">
+                <label>Menú</label>
+                <Select value={selectedMenu?.id} onChange={handleMenuChange} style={{ width: '100%' }}>
+                    {menus.map(menu => (
+                        <Option key={menu.id} value={menu.id}>
+                            {menu.nombre}
+                        </Option>
+                    ))}
+                </Select>
+            </div>
+            {selectedMenu && selectedMenu.sections.map(section => (
+                <Collapse key={section.id} className="section-collapse">
+                    <Panel header={section.titulo}>
+                        {Object.keys(section).map(key => (
+                            key !== 'id' && key !== 'titulo' && section[key].length > 0 && (
+                                <div key={key} className="option-group">
+                                    <h4>{key.charAt(0).toUpperCase() + key.slice(1)}</h4>
+                                    {section[key].map(option => (
+                                        <Checkbox
+                                            key={option.id}
+                                            checked={selectedOptions[section.titulo]?.[key]?.includes(option.id)}
+                                            onChange={e => handleOptionChange(section.titulo, key, option.id, e.target.checked)}
+                                        >
+                                            {option.texto}
+                                        </Checkbox>
+                                    ))}
+                                </div>
+                            )
+                        ))}
+                    </Panel>
+                </Collapse>
+            ))}
+            <div className="additional-options">
+                <h3>Opciones Adicionales</h3>
+                <div className="form-item">
+                    <label>Leche</label>
+                    <Select
+                        value={additionalOptions.leche}
+                        onChange={value => setAdditionalOptions(prev => ({ ...prev, leche: value }))}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="entera">Leche entera</Option>
+                        <Option value="deslactosada">Leche deslactosada</Option>
+                    </Select>
+                </div>
+                <div className="form-item">
+                    <label>Bebida</label>
+                    <Select
+                        value={additionalOptions.bebida}
+                        onChange={value => setAdditionalOptions(prev => ({ ...prev, bebida: value }))}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="leche">Bebida en leche</Option>
+                        <Option value="agua">Bebida en agua</Option>
+                    </Select>
+                </div>
+                <div className="form-item">
+                    <label>Azúcar y/o Panela</label>
+                    <Checkbox.Group
+                        value={additionalOptions.azucarPanela}
+                        onChange={checkedValues => setAdditionalOptions(prev => ({ ...prev, azucarPanela: checkedValues }))}
+                    >
+                        <Checkbox value="azucar">Azúcar</Checkbox>
+                        <Checkbox value="panela">Panela</Checkbox>
+                    </Checkbox.Group>
+                </div>
+                <div className="form-item">
+                    <label>Vegetales</label>
+                    <Select
+                        value={additionalOptions.vegetales}
+                        onChange={value => setAdditionalOptions(prev => ({ ...prev, vegetales: value }))}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="crudos">Vegetales Crudos</Option>
+                        <Option value="calientes">Vegetales Calientes</Option>
+                    </Select>
+                </div>
+                <div className="form-item">
+                    <label>Golosina Opcional</label>
+                    <Checkbox
+                        checked={additionalOptions.golosina}
+                        onChange={e => setAdditionalOptions(prev => ({ ...prev, golosina: e.target.checked }))}
+                    >
+                        Golosina
+                    </Checkbox>
+                </div>
+            </div>
+            <Button onClick={showConfirmModal} type="primary" className="submit-button">
+                Realizar Pedido
+            </Button>
+            <Modal
+                title="Confirmación de Pedido"
+                visible={confirmVisible}
+                onOk={handleOk}
+                onCancel={handleCancel}
+            >
+                <p>
+                    Pacientes con restricción de azúcares o dieta hipoglúcida no deben consumir alimentos con mermelada, galletas dulces, ni harinas adicionales.
+                </p>
+                <p>
+                    Prima la dieta recomendada por el médico tratante con las restricciones.
+                </p>
+                <p>
+                    Asegúrese de los elementos seleccionados según las restricciones del paciente.
+                </p>
+            </Modal>
+
+            <PedidosPendientes />
+            <HistorialPedidos />
+        </div>
+    );
+};
+
+export default RealizarPedido;
+import React, { useState, useEffect } from 'react';
+import { Button, Spin, Collapse } from 'antd';
+import { getPedidos, updatePedido } from '../services/api';
+import '../styles/PedidosPendientes.scss';
+
+const { Panel } = Collapse;
+
+const PedidosPendientes = () => {
+    const [pedidos, setPedidos] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPedidos = async () => {
+            try {
+                const response = await getPedidos();
+                setPedidos(response.filter(pedido => pedido.status !== 'completado'));
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching pedidos', error);
+                setLoading(false);
+            }
+        };
+
+        fetchPedidos();
+    }, []);
+
+    const handleSectionStatusChange = async (pedidoId, sectionTitle) => {
+        try {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+
+            const updatedSections = { ...pedido.sectionStatus, [sectionTitle]: 'completado' };
+
+            const allSectionsCompleted = Object.values(updatedSections).length === pedido.menu.sections.length &&
+                                         Object.values(updatedSections).every(status => status === 'completado');
+
+            const updatedPedido = {
+                ...pedido,
+                status: allSectionsCompleted ? 'completado' : 'en_proceso',
+                sectionStatus: updatedSections,
+            };
+
+            await updatePedido(pedidoId, updatedPedido);
+
+            setPedidos(prevPedidos =>
+                prevPedidos.map(p =>
+                    p.id === pedidoId
+                        ? { ...p, sectionStatus: updatedSections, status: updatedPedido.status }
+                        : p
+                ).filter(p => p.status !== 'completado')
+            );
+
+        } catch (error) {
+            console.error('Error updating section status', error);
+        }
+    };
+
+    if (loading) {
+        return <Spin />;
+    }
+
+    const renderSections = (pedido) => {
+        const sectionsToShow = {
+            'Adicional': ['adicionales'],
+            'Algo': ['adicionales', 'bebidas'],
+            'Onces': ['adicionales'],
+            'Desayuno': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
+            'Almuerzo': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
+            'Cena': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas']
+        };
+
+        return pedido.menu.sections.map(section => {
+            const optionsToRender = sectionsToShow[section.titulo];
+
+            return optionsToRender && optionsToRender.length > 0 ? (
+                <div key={section.id}>
+                    <h4>{section.titulo}</h4>
+                    {optionsToRender.map(optionType => (
+                        <div key={optionType}>
+                            <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
+                            {section[optionType].map(option => (
+                                <div key={option.id}>
+                                    {option.texto}
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                    <Button
+                        onClick={() => handleSectionStatusChange(pedido.id, section.titulo)}
+                        disabled={pedido.sectionStatus?.[section.titulo] === 'completado'}
+                    >
+                        {pedido.sectionStatus?.[section.titulo] === 'completado' ? 'Completado' : 'Marcar como Completado'}
+                    </Button>
+                </div>
+            ) : null;
+        });
+    };
+
+    return (
+        <div className="pedidos-pendientes">
+            <h2>Pedidos Pendientes</h2>
+            <Collapse>
+                {pedidos.length > 0 ? (
+                    pedidos.map(pedido => (
+                        <Panel header={`Pedido ${pedido.id} - ${pedido.paciente.name}`} key={pedido.id}>
+                            {renderSections(pedido)}
+                            <div>
+                                <h4>Opciones Adicionales del Menú</h4>
+                                <div>Leche: {pedido.adicionales.leche}</div>
+                                <div>Bebida: {pedido.adicionales.bebida}</div>
+                                <div>Azúcar/Panela: {pedido.adicionales.azucarPanela.join(', ')}</div>
+                                <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                                <div>Golosina: {pedido.adicionales.golosina ? 'Sí' : 'No'}</div>
+                            </div>
+                        </Panel>
+                    ))
+                ) : (
+                    <p>No hay pedidos pendientes.</p>
+                )}
+            </Collapse>
+        </div>
+    );
+};
+
+export default PedidosPendientes;
+import React, { useState, useEffect } from 'react';
+import { Collapse, Spin, Select } from 'antd';
+import { getPacientes, getPedidosCompletados } from '../services/api';
+import '../styles/HistorialPedidos.scss';
+
+const { Panel } = Collapse;
+const { Option } = Select;
+
+const HistorialPedidos = () => {
+    const [pacientes, setPacientes] = useState([]);
+    const [pedidosCompletados, setPedidosCompletados] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [selectedPaciente, setSelectedPaciente] = useState(null);
+
+    useEffect(() => {
+        const fetchPacientes = async () => {
+            try {
+                const response = await getPacientes();
+                setPacientes(response);
+            } catch (error) {
+                console.error('Error fetching patients', error);
+            }
+        };
+
+        fetchPacientes();
+    }, []);
+
+    useEffect(() => {
+        const fetchPedidosCompletados = async () => {
+            if (!selectedPaciente) {
+                setPedidosCompletados([]);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const response = await getPedidosCompletados(selectedPaciente);
+                setPedidosCompletados(response);
+            } catch (error) {
+                console.error('Error fetching completed orders', error);
+            }
+            setLoading(false);
+        };
+
+        fetchPedidosCompletados();
+    }, [selectedPaciente]);
+
+    const handlePacienteChange = (value) => {
+        setSelectedPaciente(value);
+    };
+
+    const filterOption = (input, option) => {
+        return option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    };
+
+    if (loading) {
+        return <Spin />;
+    }
+
+    const renderSections = (pedido) => {
+        const sectionsToShow = {
+            'Adicional': ['adicionales'],
+            'Algo': ['adicionales', 'bebidas'],
+            'Onces': ['adicionales'],
+            'Desayuno': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
+            'Almuerzo': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
+            'Cena': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas']
+        };
+
+        return pedido.menu.sections.map(section => {
+            const optionsToRender = sectionsToShow[section.titulo];
+            return optionsToRender && optionsToRender.length > 0 ? (
+                <div key={section.id}>
+                    <h4>{section.titulo}</h4>
+                    {optionsToRender.map(optionType => (
+                        <div key={optionType}>
+                            <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
+                            {section[optionType].map(option => (
+                                <div key={option.id}>
+                                    {option.texto}
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            ) : null;
+        });
+    };
+
+    return (
+        <div className="historial-pedidos">
+            <h2>Historial de Pedidos Completados</h2>
+            <Select
+                showSearch
+                placeholder="Seleccionar Paciente"
+                value={selectedPaciente}
+                onChange={handlePacienteChange}
+                style={{ width: 300, marginBottom: 20 }}
+                filterOption={filterOption}
+            >
+                {pacientes.map(paciente => (
+                    <Option key={paciente.id} value={paciente.id}>
+                        {paciente.name} (Cama: {paciente.cama.nombre}, Hab: {paciente.cama.habitacion.nombre}, Serv: {paciente.cama.habitacion.servicio.nombre})
+                    </Option>
+                ))}
+            </Select>
+
+            {pedidosCompletados.length > 0 ? (
+                <Collapse>
+                    {pedidosCompletados.map(pedido => (
+                        <Panel header={`Pedido ${pedido.id} - ${pedido.paciente.name}`} key={pedido.id}>
+                            <h4>Fecha del Pedido: {new Date(pedido.fecha_pedido).toLocaleString()}</h4>
+                            {renderSections(pedido)}
+                            <div className="adicionales">
+                                <h4>Opciones Adicionales del Menú</h4>
+                                <div>Leche: {pedido.adicionales.leche}</div>
+                                <div>Bebida: {pedido.adicionales.bebida}</div>
+                                <div>Azúcar/Panela: {pedido.adicionales.azucarPanela.join(', ')}</div>
+                                <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                                <div>Golosina: {pedido.adicionales.golosina ? 'Sí' : 'No'}</div>
+                            </div>
+                        </Panel>
+                    ))}
+                </Collapse>
+            ) : (
+                <p>No hay pedidos completados para este paciente.</p>
+            )}
+        </div>
+    );
+};
+
+export default HistorialPedidos;

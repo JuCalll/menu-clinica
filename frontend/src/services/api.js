@@ -93,6 +93,12 @@ export const updateServicio = async (id, servicioData) => {
     return response.data;
 };
 
+// Función para crear un nuevo servicio
+export const createServicio = async (servicioData) => {
+    const response = await api.post('/servicios/', servicioData);
+    return response.data;
+};
+
 // Función para crear una nueva habitación con camas
 export const createHabitacion = async (habitacionData) => {
     const response = await api.post('/habitaciones/', habitacionData);
