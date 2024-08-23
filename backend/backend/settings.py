@@ -150,7 +150,7 @@ TIME_ZONE = 'America/Bogota'
 # Habilitar la internacionalización
 USE_I18N = True
 # Habilitar el uso de zonas horarias
-USE_TZ = True
+USE_TZ = False
 
 # URL para servir archivos estáticos
 STATIC_URL = 'static/'

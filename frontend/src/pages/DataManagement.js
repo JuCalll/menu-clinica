@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Drawer, Tabs, Table, Switch, Modal, Form, Input, notification, Select } from 'antd';
+import { Button, Drawer, Tabs, Table, Switch, Modal, Form, Input, notification, Select, Collapse } from 'antd';
 import api, { createServicio, createHabitacion, createCama, createPaciente } from '../services/api';  // Importamos las nuevas funciones
 import '../styles/DataManagement.scss';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
+const { Panel } = Collapse;
+const { confirm } = Modal;
 
 const DataManagement = () => {
     const [pacientes, setPacientes] = useState([]);
@@ -51,94 +53,161 @@ const DataManagement = () => {
     const closeDrawer = () => setIsDrawerOpen(false);
 
     const toggleActivo = async (item, type) => {
-        try {
-            console.log("Datos antes de actualizar:", item);
-    
-            const updatedItem = { ...item, activo: !item.activo };
-    
-            if (type === 'habitaciones') {
-                let servicioId = item.servicio_id;
-                if (!servicioId) {
-                    const servicio = servicios.find(s => s.nombre === item.servicio);
-                    if (servicio) {
-                        servicioId = servicio.id;
-                    }
+        const showConfirm = (isActivating) => {
+            let title = '';
+            let content = '';
+
+            if (isActivating) {
+                switch (type) {
+                    case 'servicios':
+                        title = '¿Estás seguro de que deseas activar este servicio?';
+                        content = 'Esta acción activará el servicio y permitirá activar habitaciones y camas relacionadas a él.';
+                        break;
+                    case 'habitaciones':
+                        title = '¿Estás seguro de que deseas activar esta habitación?';
+                        content = 'Esta acción activará la habitación y permitirá activar las camas relacionadas a ella.';
+                        break;
+                    case 'camas':
+                        title = '¿Estás seguro de que deseas activar esta cama?';
+                        content = 'Esta acción activará la cama para ser asignada a un paciente.';
+                        break;
+                    case 'pacientes':
+                        title = '¿Estás seguro de que deseas activar a este paciente?';
+                        content = 'Esta acción activará al paciente y asignará su cama asociada.';
+                        break;
+                    default:
+                        title = '¿Estás seguro de que deseas continuar?';
+                        content = 'Esta acción cambiará el estado del elemento seleccionado a activo.';
+                        break;
                 }
-                updatedItem.servicio_id = servicioId;
-                console.log("Servicio ID extraído:", updatedItem.servicio_id);
-            }
-    
-            if (type === 'camas') {
-                const habitacion = habitaciones.find(h => h.id === item.habitacion);
-                console.log("Habitación encontrada:", habitacion);
-                if (!habitacion || !habitacion.activo) {
-                    alert("No se puede activar la cama porque la habitación no está activa.");
-                    return;
-                }
-    
-                updatedItem.habitacion_id = habitacion.id;
-                console.log("Habitación ID extraído:", updatedItem.habitacion_id);
-            }
-    
-            if (type === 'pacientes') {
-                const cama = item.cama ? item.cama : null;
-                console.log("Cama obtenida:", cama);
-    
-                if (!cama) {
-                    console.error("Error: No se encontró la cama asociada al paciente.");
-                    return;
-                }
-    
-                const habitacion = cama.habitacion ? cama.habitacion : null;
-                console.log("Habitación obtenida desde cama:", habitacion);
-    
-                if (!habitacion) {
-                    console.error("Error: No se encontró la habitación asociada a la cama.");
-                    return;
-                }
-    
-                const servicio = habitacion.servicio ? habitacion.servicio : null;
-                console.log("Servicio obtenido desde habitación:", servicio);
-    
-                if (!servicio) {
-                    console.error("Error: No se encontró el servicio asociado a la habitación.");
-                    return;
-                }
-    
-                // Verificación de estados
-                const camaActiva = cama.activo !== undefined ? cama.activo : "no definido";
-                const habitacionActiva = habitacion.activo !== undefined ? habitacion.activo : "no definido";
-                const servicioActivo = servicio.activo !== undefined ? servicio.activo : "no definido";
-    
-                console.log("Estado de cama:", camaActiva);
-                console.log("Estado de habitación:", habitacionActiva);
-                console.log("Estado de servicio:", servicioActivo);
-    
-                if (camaActiva === null || habitacionActiva === null || servicioActivo === null) {
-                    console.error("Error: Estado indefinido para cama, habitación o servicio.");
-                    return;
-                }
-    
-                if (!camaActiva || !habitacionActiva || !servicioActivo) {
-                    alert("No se puede activar el paciente porque la cama, habitación o servicio no están activos.");
-                    return;
-                }
-    
-                updatedItem.cama_id = cama.id;
-                console.log("Cama ID extraído:", updatedItem.cama_id);
-            }
-    
-            console.log(`Datos enviados al backend para actualizar ${type}:`, updatedItem);
-            const response = await api.put(`/${type}/${item.id}/`, updatedItem);
-            console.log("Respuesta del backend:", response.data);
-            refreshData();
-        } catch (error) {
-            if (error.response && error.response.status === 400) {
-                const errorMessage = error.response.data.detail || "No se puede activar el paciente debido a restricciones en la lógica de activación.";
-                alert(`Error: ${errorMessage}`);
             } else {
-                console.error('Error toggling activo:', error.response ? error.response.data : error);
+                switch (type) {
+                    case 'servicios':
+                        title = '¿Estás seguro de que deseas desactivar este servicio?';
+                        content = 'Esta acción desactivará el servicio y todas las habitaciones y camas asociadas a él. El servicio permanecerá en la base de datos como inactivo.';
+                        break;
+                    case 'habitaciones':
+                        title = '¿Estás seguro de que deseas desactivar esta habitación?';
+                        content = 'Esta acción desactivará la habitación y todas las camas asociadas a ella. La habitación permanecerá en la base de datos como inactiva.';
+                        break;
+                    case 'camas':
+                        title = '¿Estás seguro de que deseas desactivar esta cama?';
+                        content = 'Esta acción desactivará la cama y quedará disponible para ser asignada a un nuevo paciente. La cama permanecerá en la base de datos como inactiva.';
+                        break;
+                    case 'pacientes':
+                        title = '¿Estás seguro de que deseas desactivar a este paciente?';
+                        content = 'Esta acción desactivará al paciente y liberará su cama asociada. El paciente permanecerá en la base de datos como inactivo.';
+                        break;
+                    default:
+                        title = '¿Estás seguro de que deseas continuar?';
+                        content = 'Esta acción cambiará el estado del elemento seleccionado a inactivo.';
+                        break;
+                }
             }
+
+            confirm({
+                title: title,
+                content: content,
+                onOk: async () => {
+                    try {
+                        console.log("Datos antes de actualizar:", item);
+
+                        const updatedItem = { ...item, activo: !item.activo };
+
+                        if (type === 'habitaciones') {
+                            let servicioId = item.servicio_id;
+                            if (!servicioId) {
+                                const servicio = servicios.find(s => s.nombre === item.servicio);
+                                if (servicio) {
+                                    servicioId = servicio.id;
+                                }
+                            }
+                            updatedItem.servicio_id = servicioId;
+                            console.log("Servicio ID extraído:", updatedItem.servicio_id);
+                        }
+
+                        if (type === 'camas') {
+                            const habitacion = habitaciones.find(h => h.id === item.habitacion);
+                            console.log("Habitación encontrada:", habitacion);
+                            if (!habitacion || !habitacion.activo) {
+                                alert("No se puede activar la cama porque la habitación no está activa.");
+                                return;
+                            }
+
+                            updatedItem.habitacion_id = habitacion.id;
+                            console.log("Habitación ID extraído:", updatedItem.habitacion_id);
+                        }
+
+                        if (type === 'pacientes') {
+                            const cama = item.cama ? item.cama : null;
+                            console.log("Cama obtenida:", cama);
+
+                            if (!cama) {
+                                console.error("Error: No se encontró la cama asociada al paciente.");
+                                return;
+                            }
+
+                            const habitacion = cama.habitacion ? cama.habitacion : null;
+                            console.log("Habitación obtenida desde cama:", habitacion);
+
+                            if (!habitacion) {
+                                console.error("Error: No se encontró la habitación asociada a la cama.");
+                                return;
+                            }
+
+                            const servicio = habitacion.servicio ? habitacion.servicio : null;
+                            console.log("Servicio obtenido desde habitación:", servicio);
+
+                            if (!servicio) {
+                                console.error("Error: No se encontró el servicio asociado a la habitación.");
+                                return;
+                            }
+
+                            // Verificación de estados
+                            const camaActiva = cama.activo !== undefined ? cama.activo : "no definido";
+                            const habitacionActiva = habitacion.activo !== undefined ? habitacion.activo : "no definido";
+                            const servicioActivo = servicio.activo !== undefined ? servicio.activo : "no definido";
+
+                            console.log("Estado de cama:", camaActiva);
+                            console.log("Estado de habitación:", habitacionActiva);
+                            console.log("Estado de servicio:", servicioActivo);
+
+                            if (camaActiva === null || habitacionActiva === null || servicioActivo === null) {
+                                console.error("Error: Estado indefinido para cama, habitación o servicio.");
+                                return;
+                            }
+
+                            if (!camaActiva || !habitacionActiva || !servicioActivo) {
+                                alert("No se puede activar el paciente porque la cama, habitación o servicio no están activos.");
+                                return;
+                            }
+
+                            updatedItem.cama_id = cama.id;
+                            console.log("Cama ID extraído:", updatedItem.cama_id);
+                        }
+
+                        const response = await api.put(`/${type}/${item.id}/`, updatedItem);
+                        console.log("Respuesta del backend:", response.data);
+                        refreshData();
+                    } catch (error) {
+                        if (error.response && error.response.status === 400) {
+                            const errorMessage = error.response.data.detail || "No se puede activar el paciente debido a restricciones en la lógica de activación.";
+                            alert(`Error: ${errorMessage}`);
+                        } else {
+                            console.error('Error toggling activo:', error.response ? error.response.data : error);
+                        }
+                    }
+                },
+                onCancel() {
+                    console.log('Acción cancelada por el usuario');
+                },
+            });
+        };
+
+        if (item.activo) {
+            showConfirm(false);  // Mostrar la confirmación para desactivar
+        } else {
+            showConfirm(true);  // Mostrar la confirmación para activar
         }
     };
 
@@ -239,9 +308,9 @@ const DataManagement = () => {
 
         try {
             const payload = {
-                id: newPacienteID,
+                cedula: newPacienteID,  // Ahora enviamos la cédula en lugar de `id`
                 name: newPacienteName,
-                cama_id: selectedCama,  // Cambiamos "cama" a "cama_id"
+                cama_id: selectedCama,  // "cama_id" sigue siendo correcto
                 recommended_diet: newRecommendedDiet,
                 activo: true // Por defecto, el paciente se crea como activo
             };
@@ -258,6 +327,7 @@ const DataManagement = () => {
             notification.error({ message: 'Error al crear el paciente', description: error.response?.data?.message || error.message });
         }
     };
+
 
     // Nueva función para abrir el modal de creación de servicios
     const openCreateServicioModal = () => {
@@ -505,7 +575,7 @@ const DataManagement = () => {
                         <Table
                             dataSource={pacientes}
                             columns={[
-                                { title: 'Cédula', dataIndex: 'id', key: 'id' },
+                                { title: 'Cédula', dataIndex: 'cedula', key: 'cedula' },
                                 { title: 'Nombre', dataIndex: 'name', key: 'name' },
                                 { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
                                 { title: 'Habitación', dataIndex: ['cama', 'habitacion', 'nombre'], key: 'habitacion' },
@@ -607,13 +677,21 @@ const DataManagement = () => {
                 </ul>
 
                 <h3>Pacientes Activos</h3>
-                <ul className="list-group">
+                <Collapse>
                     {pacientes.filter(p => p.activo).map(paciente => (
-                        <li key={paciente.id} className="list-group-item">
-                            {paciente.name} - Habitación: {paciente.cama.habitacion.nombre} - Servicio: {paciente.cama.habitacion.servicio.nombre}
-                        </li>
+                        <Panel
+                            header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                            key={paciente.id}
+                        >
+                            <p><strong>Cédula:</strong> {paciente.cedula}</p>
+                            <p><strong>Cama:</strong> {paciente.cama.nombre}</p>
+                            <p><strong>Habitación:</strong> {paciente.cama.habitacion.nombre}</p>
+                            <p><strong>Servicio:</strong> {paciente.cama.habitacion.servicio.nombre}</p>
+                            <p><strong>Dieta Recomendada:</strong> {paciente.recommended_diet}</p>
+                            <p><strong>Registrado en:</strong> {paciente.created_at}</p>
+                        </Panel>
                     ))}
-                </ul>
+                </Collapse>
             </div>
         </div>
     );

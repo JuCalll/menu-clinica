@@ -16,10 +16,19 @@ class PedidoListCreateView(generics.ListCreateAPIView):
 
 class PedidoCompletadosView(views.APIView):
     def get(self, request):
+        # Obtener el ID del paciente en lugar del nombre
+        paciente_id = request.query_params.get('paciente', None)
         pedidos_completados = Pedido.objects.filter(status='completado')
-        paciente_name = request.query_params.get('paciente', None)
-        if paciente_name:
-            pedidos_completados = pedidos_completados.filter(paciente__name__icontains=paciente_name)
+        
+        if paciente_id:
+            pedidos_completados = pedidos_completados.filter(paciente__id=paciente_id)
+            print(f"Filtrando pedidos completados para el paciente ID: {paciente_id}")
+        else:
+            print("No se proporcionó un paciente ID.")
+
+        # Añadimos un log para verificar los pedidos encontrados
+        print(f"Pedidos Completados encontrados: {pedidos_completados.count()}")
+
         serializer = PedidoSerializer(pedidos_completados, many=True)
         return Response(serializer.data)
 

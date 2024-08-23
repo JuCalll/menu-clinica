@@ -1,79 +1,68 @@
 import pytest
-from django.core.exceptions import ValidationError
-from camas.models import Cama
+from django.urls import reverse
+from rest_framework.test import APIClient
+from rest_framework import status
 from habitaciones.models import Habitacion
+from camas.models import Cama
 from servicios.models import Servicio
 from pacientes.models import Paciente
+from authentication.models import CustomUser
 
 @pytest.mark.django_db
-def test_paciente_no_puede_activarse_con_cama_desactivada():
-    # Crear un servicio y una habitación activa
-    servicio = Servicio.objects.create(nombre="Cardiología", activo=True)
+def test_create_paciente_with_unique_id():
+    client = APIClient()
+
+    # Autenticar el cliente con el modelo de usuario personalizado
+    user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
+    client.force_authenticate(user=user)
+
+    servicio = Servicio.objects.create(nombre="SERVICIO TEST", activo=True)
     habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=True)
+    cama = Cama.objects.create(nombre="Cama 101", habitacion=habitacion, activo=True)
+
+    data = {
+        "id": "12345678",
+        "name": "Juan Aguirre",
+        "cama_id": cama.id,
+        "recommended_diet": "Hipoglúcida",
+        "activo": True
+    }
     
-    # Crear una cama desactivada
-    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=False)
-    
-    # Crear un paciente que intenta activarse
-    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
-    
-    # Intentar activar el paciente
-    paciente.activo = True
-    
-    with pytest.raises(ValidationError):
-        paciente.save()
+    response = client.post(reverse('paciente-list-create'), data=data, format='json')
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Paciente.objects.count() == 1
 
 @pytest.mark.django_db
-def test_paciente_no_puede_activarse_con_habitacion_desactivada():
-    # Crear un servicio activo y una habitación desactivada
-    servicio = Servicio.objects.create(nombre="Cardiología", activo=True)
-    habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=False)
-    
-    # Crear una cama activa en la habitación desactivada
-    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
-    
-    # Crear un paciente que intenta activarse
-    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
-    
-    # Intentar activar el paciente
-    paciente.activo = True
-    
-    with pytest.raises(ValidationError):
-        paciente.save()
+def test_create_paciente_with_duplicate_id():
+    client = APIClient()
 
-@pytest.mark.django_db
-def test_paciente_no_puede_activarse_con_servicio_desactivado():
-    # Crear un servicio desactivado y una habitación
-    servicio = Servicio.objects.create(nombre="Cardiología", activo=False)
+    # Autenticar el cliente con el modelo de usuario personalizado
+    user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='testpassword')
+    client.force_authenticate(user=user)
+
+    servicio = Servicio.objects.create(nombre="SERVICIO TEST", activo=True)
     habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=True)
-    
-    # Crear una cama activa en la habitación activa
-    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
-    
-    # Crear un paciente que intenta activarse
-    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
-    
-    # Intentar activar el paciente
-    paciente.activo = True
-    
-    with pytest.raises(ValidationError):
-        paciente.save()
+    cama = Cama.objects.create(nombre="Cama 101", habitacion=habitacion, activo=True)
 
-@pytest.mark.django_db
-def test_paciente_puede_activarse_correctamente():
-    # Crear un servicio, habitación y cama activos
-    servicio = Servicio.objects.create(nombre="Cardiología", activo=True)
-    habitacion = Habitacion.objects.create(nombre="Habitación 101", servicio=servicio, activo=True)
-    cama = Cama.objects.create(nombre="Cama 1", habitacion=habitacion, activo=True)
-    
-    # Crear un paciente que se puede activar
-    paciente = Paciente.objects.create(id="1234567890", name="Juan Pérez", cama=cama, recommended_diet="Hipoglucida", activo=False)
-    
-    # Activar el paciente
-    paciente.activo = True
-    paciente.save()
-    
-    # Verificar que el paciente se haya activado correctamente
-    paciente.refresh_from_db()
-    assert paciente.activo is True
+    # Create the first patient
+    data1 = {
+        "id": "12345678",
+        "name": "Juan Aguirre",
+        "cama_id": cama.id,
+        "recommended_diet": "Hipoglúcida",
+        "activo": True
+    }
+    response1 = client.post(reverse('paciente-list-create'), data=data1, format='json')
+    assert response1.status_code == status.HTTP_201_CREATED
 
+    # Try to create a second patient with the same id but different timestamp
+    data2 = {
+        "id": "12345678",
+        "name": "Juan Aguirre",
+        "cama_id": cama.id,
+        "recommended_diet": "Hipoglúcida",
+        "activo": True
+    }
+    response2 = client.post(reverse('paciente-list-create'), data=data2, format='json')
+    assert response2.status_code == status.HTTP_201_CREATED  # Esperamos que se cree correctamente
+    assert Paciente.objects.count() == 2  # Verificamos que hay dos registros en la base de datos

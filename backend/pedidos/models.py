@@ -24,3 +24,4 @@ class PedidoMenuOption(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     menu_option = models.ForeignKey(MenuOption, on_delete=models.CASCADE)
     selected = models.BooleanField(default=False)
+    
