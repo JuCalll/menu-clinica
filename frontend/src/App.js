@@ -13,6 +13,8 @@ import RealizarPedido from './pages/RealizarPedido';
 import DataManagement from './pages/DataManagement'; // Nuevo componente unificado
 import Register from './pages/Register';
 import MenuPage from './pages/MenuPage';
+import PedidosPendientes from './pages/PedidosPendientes';
+import HistorialPedidos from './pages/HistorialPedidos';
 
 // Importamos los componentes de la aplicación
 import Layout from './components/Layout';
@@ -43,7 +45,8 @@ function App() {
           
           {/* Ruta para la página de realización de pedidos */}
           <Route path="/realizar-pedido" element={<RealizarPedido />} />
-          
+          <Route path="/pedidos/pendientes" element={<PedidosPendientes />} />
+          <Route path="/pedidos/historial" element={<HistorialPedidos />} />
           {/* Ruta para la página de gestión de servicios, habitaciones y pacientes */}
           <Route path="/gestion-datos" element={<DataManagement />} />
         </Route>

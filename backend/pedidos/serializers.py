@@ -33,6 +33,7 @@ class PedidoSerializer(serializers.ModelSerializer):
         paciente = Paciente.objects.get(id=paciente_id)
         menu = Menu.objects.get(id=menu_id)
 
+        # Validamos que el paciente esté activo
         if not paciente.activo:
             raise serializers.ValidationError("El paciente seleccionado no está activo.")
 
@@ -44,8 +45,12 @@ class PedidoSerializer(serializers.ModelSerializer):
             opcion_id = opcion_data.get('id')
             if opcion_id is not None:
                 selected = opcion_data.get('selected', False)
-                menu_option = MenuOption.objects.get(id=opcion_id)
-                PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
+                try:
+                    menu_option = MenuOption.objects.get(id=opcion_id)
+                    PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
+                except MenuOption.DoesNotExist:
+                    print(f"MenuOption con ID {opcion_id} no existe. Saltando esta opción.")
+                    continue
 
         pedido.adicionales = adicionales_data
         pedido.save()
@@ -71,14 +76,17 @@ class PedidoSerializer(serializers.ModelSerializer):
             for opcion_data in opciones_data:
                 opcion_id = opcion_data.get('id')
                 if opcion_id is not None:
-                    selected = opcion_data['selected']
-                    menu_option = MenuOption.objects.get(id=opcion_id)
-                    PedidoMenuOption.objects.update_or_create(
-                        pedido=instance,
-                        menu_option=menu_option,
-                        defaults={'selected': selected}
-                    )
+                    try:
+                        menu_option = MenuOption.objects.get(id=opcion_id)
+                        selected = opcion_data['selected']
+                        PedidoMenuOption.objects.update_or_create(
+                            pedido=instance,
+                            menu_option=menu_option,
+                            defaults={'selected': selected}
+                        )
+                    except MenuOption.DoesNotExist:
+                        print(f"MenuOption con ID {opcion_id} no existe. Saltando esta opción.")
+                        continue
 
         print(f"Pedido actualizado con status: {instance.status}")
         return instance
-

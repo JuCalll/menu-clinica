@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Select, Button, Checkbox, Spin, Collapse, Modal } from 'antd';
 import { getPacientes, getMenus, createPedido } from '../services/api';
 import '../styles/RealizarPedido.scss';
-import PedidosPendientes from '../components/PedidosPendientes';
-import HistorialPedidos from '../components/HistorialPedidos';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -303,9 +301,6 @@ const RealizarPedido = () => {
                     Asegúrese de los elementos seleccionados según las restricciones del paciente.
                 </p>
             </Modal>
-
-            <PedidosPendientes />
-            <HistorialPedidos />
         </div>
     );
 };

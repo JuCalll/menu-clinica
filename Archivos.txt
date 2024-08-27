@@ -1,0 +1,4195 @@
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'authentication'
+class AuthenticationConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'authentication'
+# Importamos el modelo AbstractUser y BaseUserManager desde django.contrib.auth.models
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+# Importamos el módulo models de Django
+from django.db import models
+
+# Definimos un gestor personalizado para el modelo de usuario
+class CustomUserManager(BaseUserManager):
+
+    # Método para crear un usuario normal
+    def create_user(self, username, email, password=None, **extra_fields):
+        # Verificamos si el correo electrónico está presente
+        if not email:
+            raise ValueError('El campo de correo electrónico debe estar configurado')
+        # Normalizamos el correo electrónico (conversión a minúsculas y manejo de dominio)
+        email = self.normalize_email(email)
+        # Creamos una instancia del modelo de usuario con los campos proporcionados
+        user = self.model(username=username, email=email, **extra_fields)
+        # Establecemos la contraseña para el usuario
+        user.set_password(password)
+        # Guardamos el usuario en la base de datos
+        user.save(using=self._db)
+        # Retornamos el usuario creado
+        return user
+
+    # Método para crear un superusuario
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        # Establecemos valores por defecto para los campos is_staff e is_superuser
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        # Verificamos que is_staff sea True para un superusuario
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('El superusuario debe tener is_staff=True')
+        # Verificamos que is_superuser sea True para un superusuario
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('El superusuario debe tener is_superuser=True')
+
+        # Creamos y retornamos el superusuario utilizando el método create_user
+        return self.create_user(username, email, password, **extra_fields)
+
+# Definimos un modelo de usuario personalizado que hereda de AbstractUser
+class CustomUser(AbstractUser):
+    # Reemplazamos el campo de correo electrónico por uno que debe ser único
+    email = models.EmailField(unique=True)
+
+    # Asociamos el gestor de usuarios personalizado a este modelo
+    objects = CustomUserManager()
+
+    # Método para representar el usuario como una cadena de texto
+    def __str__(self):
+        # Retornamos el nombre de usuario
+        return self.username
+# Importamos el módulo serializers de Django REST framework
+from rest_framework import serializers
+# Importamos el modelo CustomUser desde el archivo models
+from .models import CustomUser
+
+# Definimos un serializer para el modelo CustomUser
+class UserSerializer(serializers.ModelSerializer):
+    # Meta clase que define el modelo y los campos a serializar
+    class Meta:
+        model = CustomUser  # Especificamos el modelo CustomUser
+        fields = ('id', 'username', 'password', 'email')  # Campos a incluir en la serialización
+        # Indicamos que el campo password solo debe ser utilizado para escritura (no se devolverá en respuestas)
+        extra_kwargs = {'password': {'write_only': True}}
+
+    # Método para crear un nuevo usuario con los datos validados
+    def create(self, validated_data):
+        # Utilizamos el gestor personalizado para crear un usuario con los datos validados
+        user = CustomUser.objects.create_user(**validated_data)
+        # Retornamos el usuario creado
+        return user
+
+# Definimos un serializer para manejar el login del usuario
+class LoginSerializer(serializers.Serializer):
+    # Campos que se necesitan para autenticar a un usuario
+    username = serializers.CharField()  # Campo para el nombre de usuario
+    password = serializers.CharField()  # Campo para la contraseña
+# Importamos el módulo path desde django.urls para definir rutas
+from django.urls import path
+# Importamos las vistas RegisterView y LoginView desde el archivo views
+from .views import RegisterView, LoginView
+# Importamos las vistas TokenObtainPairView y TokenRefreshView desde rest_framework_simplejwt.views
+# Estas vistas se utilizan para manejar la obtención y la actualización de tokens JWT
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+# Definimos las rutas de la aplicación 'authentication'
+urlpatterns = [
+    # Ruta para registrar un nuevo usuario, asociada a la vista RegisterView
+    path('register/', RegisterView.as_view(), name='register'),
+    # Ruta para iniciar sesión, asociada a la vista LoginView
+    path('login/', LoginView.as_view(), name='login'),
+    # Ruta para obtener un nuevo par de tokens (access y refresh), asociada a la vista TokenObtainPairView
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # Ruta para refrescar un token de acceso usando el token de refresh, asociada a la vista TokenRefreshView
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+]
+# Importamos la función authenticate de django.contrib.auth para autenticar usuarios
+from django.contrib.auth import authenticate
+# Importamos los módulos generics y permissions de Django REST framework
+from rest_framework import generics, permissions
+# Importamos la clase Response para manejar las respuestas HTTP en las vistas
+from rest_framework.response import Response
+# Importamos la clase RefreshToken de rest_framework_simplejwt.tokens para manejar los tokens JWT
+from rest_framework_simplejwt.tokens import RefreshToken
+# Importamos el modelo CustomUser desde el archivo models
+from .models import CustomUser
+# Importamos los serializers UserSerializer y LoginSerializer desde el archivo serializers
+from .serializers import UserSerializer, LoginSerializer
+
+# Definimos una vista para registrar nuevos usuarios
+class RegisterView(generics.CreateAPIView):
+    # Especificamos el queryset para recuperar todos los usuarios (aunque en este caso solo se utiliza para crear)
+    queryset = CustomUser.objects.all()
+    # Permitimos el acceso a cualquier usuario, incluso si no está autenticado
+    permission_classes = (permissions.AllowAny,)
+    # Especificamos el serializer que será utilizado para validar y deserializar los datos de la solicitud
+    serializer_class = UserSerializer
+
+# Definimos una vista para manejar el login de usuarios
+class LoginView(generics.GenericAPIView):
+    # Permitimos el acceso a cualquier usuario, incluso si no está autenticado
+    permission_classes = (permissions.AllowAny,)
+    # Especificamos el serializer que será utilizado para validar y deserializar los datos de la solicitud
+    serializer_class = LoginSerializer
+
+    # Método POST para manejar la solicitud de login
+    def post(self, request, *args, **kwargs):
+        # Validamos los datos recibidos utilizando el serializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # Autenticamos al usuario utilizando el nombre de usuario y la contraseña proporcionados
+        user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
+        # Si la autenticación es exitosa, generamos y devolvemos los tokens JWT
+        if user:
+            # Generamos un nuevo refresh token para el usuario autenticado
+            refresh = RefreshToken.for_user(user)
+            # Devolvemos el refresh token y el access token en la respuesta
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            })
+        # Si la autenticación falla, devolvemos un error
+        return Response({"error": "Credenciales inválidas"}, status=400)
+from django.apps import AppConfig
+
+
+class CamasConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'camas'
+from django.db import models
+from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save  # Importación de post_save
+from django.dispatch import receiver  # Importación de receiver
+from habitaciones.models import Habitacion
+
+class Cama(models.Model):
+    nombre = models.CharField(max_length=50)
+    habitacion = models.ForeignKey(Habitacion, related_name='camas', on_delete=models.CASCADE)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('nombre', 'habitacion')
+
+    def __str__(self):
+        return f'{self.nombre} - {self.habitacion.nombre}'
+
+@receiver(post_save, sender=Cama)
+def desactivar_paciente(sender, instance, **kwargs):
+    if not instance.activo:  # Si la cama se desactiva
+        from pacientes.models import Paciente  # Importación dentro de la función para evitar ciclo
+        # Desactivar el paciente asociado
+        Paciente.objects.filter(cama=instance).update(activo=False)
+
+@receiver(post_save, sender=Cama)
+def validar_activacion_cama(sender, instance, **kwargs):
+    if instance.activo and not instance.habitacion.activo:
+        raise ValidationError('No se puede activar una cama si la habitación no está activa.')
+from rest_framework import serializers
+from .models import Cama
+
+class CamaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cama
+        fields = ['id', 'nombre', 'habitacion', 'activo']
+from django.urls import path
+from .views import CamaListCreateView, CamaDetailView
+
+urlpatterns = [
+    path('', CamaListCreateView.as_view(), name='cama-list-create'),
+    path('<int:pk>/', CamaDetailView.as_view(), name='cama-detail'),
+]
+from rest_framework import generics
+from .models import Cama
+from .serializers import CamaSerializer
+
+class CamaListCreateView(generics.ListCreateAPIView):
+    queryset = Cama.objects.all()
+    serializer_class = CamaSerializer
+
+class CamaDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Cama.objects.all()
+    serializer_class = CamaSerializer
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'habitaciones'
+class HabitacionesConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'habitaciones'
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from servicios.models import Servicio  # Esto puede quedarse igual porque no crea un ciclo
+from django.core.exceptions import ValidationError
+
+class Habitacion(models.Model):
+    nombre = models.CharField(max_length=255, unique=True)
+    servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+    def save(self, *args, **kwargs):
+        if self.activo and not self.servicio.activo:
+            raise ValidationError('No se puede activar una habitación si el servicio no está activo.')
+        super().save(*args, **kwargs)
+
+@receiver(post_save, sender=Habitacion)
+def desactivar_camas_y_pacientes(sender, instance, **kwargs):
+    if not instance.activo:
+        from camas.models import Cama  # Importación dentro de la función para evitar ciclo
+        from pacientes.models import Paciente  # Importación dentro de la función para evitar ciclo
+
+        instance.camas.update(activo=False)
+        Paciente.objects.filter(cama__habitacion=instance).update(activo=False)
+from rest_framework import serializers
+from .models import Habitacion
+from servicios.models import Servicio
+from camas.serializers import CamaSerializer
+
+class HabitacionSerializer(serializers.ModelSerializer):
+    servicio_id = serializers.PrimaryKeyRelatedField(queryset=Servicio.objects.all(), source='servicio', write_only=True)
+    servicio = serializers.ReadOnlyField(source='servicio.nombre')
+    camas = CamaSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Habitacion
+        fields = ['id', 'nombre', 'servicio_id', 'servicio', 'activo', 'camas']
+
+    def create(self, validated_data):
+        habitacion = Habitacion.objects.create(**validated_data)
+        return habitacion
+
+    def update(self, instance, validated_data):
+        instance.nombre = validated_data.get('nombre', instance.nombre)
+        instance.servicio = validated_data.get('servicio', instance.servicio)
+        instance.activo = validated_data.get('activo', instance.activo)
+
+        # Validación para asegurar que no se active la habitación si el servicio está desactivado
+        if instance.activo and not instance.servicio.activo:
+            raise serializers.ValidationError("No se puede activar la habitación porque el servicio está inactivo.")
+
+        instance.save()
+
+        # Desactivación de las camas si la habitación se desactiva
+        if not instance.activo:
+            instance.camas.update(activo=False)
+
+        return instance
+from django.urls import path
+from .views import HabitacionListCreateView, HabitacionDetailView
+
+urlpatterns = [
+    path('', HabitacionListCreateView.as_view(), name='habitacion-list-create'),
+    path('<int:pk>/', HabitacionDetailView.as_view(), name='habitacion-detail'),
+]
+from rest_framework import generics
+from .models import Habitacion
+from .serializers import HabitacionSerializer
+
+class HabitacionListCreateView(generics.ListCreateAPIView):
+    serializer_class = HabitacionSerializer
+
+    def get_queryset(self):
+        return Habitacion.objects.all()
+
+class HabitacionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Habitacion.objects.all()
+    serializer_class = HabitacionSerializer
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'menus'
+class MenusConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'menus'
+# Importamos el módulo de modelos de Django
+from django.db import models
+
+# Definimos un modelo para representar un menú
+class Menu(models.Model):
+    # El menú tiene un nombre, que es un campo de texto con un máximo de 255 caracteres
+    nombre = models.CharField(max_length=255)
+
+    # Representamos el menú como una cadena de texto
+    def __str__(self):
+        # Devolvemos el nombre del menú
+        return self.nombre
+
+# Definimos un modelo para representar una sección de un menú
+class MenuSection(models.Model):
+    # La sección pertenece a un menú, por lo que creamos una relación ForeignKey
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name='sections')
+    # La sección tiene un título, que es un campo de texto con un máximo de 255 caracteres
+    titulo = models.CharField(max_length=255)
+
+    # Representamos la sección como una cadena de texto
+    def __str__(self):
+        # Devolvemos el título de la sección
+        return self.titulo
+
+# Definimos un modelo para representar una opción de un menú
+class MenuOption(models.Model):
+    # La opción pertenece a una sección, por lo que creamos una relación ForeignKey
+    section = models.ForeignKey(MenuSection, on_delete=models.CASCADE, related_name='options')
+    # La opción tiene un texto, que es un campo de texto con un máximo de 255 caracteres
+    texto = models.CharField(max_length=255)
+    # La opción tiene un tipo, que es un campo de texto con un máximo de 50 caracteres
+    # Este campo puede ser usado para categorizar la opción (por ejemplo, 'opciones', 'bebida', 'adicional', etc.)
+    tipo = models.CharField(max_length=50)
+
+    # Representamos la opción como una cadena de texto
+    def __str__(self):
+        # Devolvemos el texto de la opción
+        return self.texto
+# Importamos el módulo de serializers de Django REST framework
+from rest_framework import serializers
+# Importamos los modelos Menu, MenuSection y MenuOption desde el archivo models
+from .models import Menu, MenuSection, MenuOption
+
+# Definimos un serializer para representar el modelo MenuOption
+class MenuOptionSerializer(serializers.ModelSerializer):
+    # Meta clase que define el modelo y los campos a serializar
+    class Meta:
+        model = MenuOption  # Especificamos el modelo MenuOption
+        fields = ['id', 'texto', 'tipo']  # Campos a incluir en la serialización
+
+# Definimos un serializer para representar el modelo MenuSection
+class MenuSectionSerializer(serializers.ModelSerializer):
+    # Campos adicionales definidos como métodos personalizados
+    adicionales = serializers.SerializerMethodField()
+    platos_principales = serializers.SerializerMethodField()
+    acompanantes = serializers.SerializerMethodField()
+    bebidas = serializers.SerializerMethodField()
+
+    # Meta clase que define el modelo y los campos a serializar
+    class Meta:
+        model = MenuSection  # Especificamos el modelo MenuSection
+        fields = ['id', 'titulo', 'adicionales', 'platos_principales', 'acompanantes', 'bebidas']  # Campos a incluir en la serialización
+
+    # Método para obtener las opciones del tipo 'adicionales'
+    def get_adicionales(self, obj):
+        # Filtramos las opciones por tipo y las serializamos
+        return MenuOptionSerializer(obj.options.filter(tipo='adicionales'), many=True).data
+
+    # Método para obtener las opciones del tipo 'platos_principales'
+    def get_platos_principales(self, obj):
+        # Filtramos las opciones por tipo y las serializamos
+        return MenuOptionSerializer(obj.options.filter(tipo='platos_principales'), many=True).data
+
+    # Método para obtener las opciones del tipo 'acompanantes'
+    def get_acompanantes(self, obj):
+        # Filtramos las opciones por tipo y las serializamos
+        return MenuOptionSerializer(obj.options.filter(tipo='acompanantes'), many=True).data
+
+    # Método para obtener las opciones del tipo 'bebidas'
+    def get_bebidas(self, obj):
+        # Filtramos las opciones por tipo y las serializamos
+        return MenuOptionSerializer(obj.options.filter(tipo='bebidas'), many=True).data
+
+# Definimos un serializer para representar el modelo Menu
+class MenuSerializer(serializers.ModelSerializer):
+    # Secciones del menú serializadas con un serializer anidado
+    sections = MenuSectionSerializer(many=True, required=False)
+
+    # Meta clase que define el modelo y los campos a serializar
+    class Meta:
+        model = Menu  # Especificamos el modelo Menu
+        fields = ['id', 'nombre', 'sections']  # Campos a incluir en la serialización
+
+    # Método para crear un nuevo menú junto con sus secciones y opciones
+    def create(self, validated_data):
+        # Obtenemos los datos de las secciones desde la solicitud
+        sections_data = self.context['request'].data.get('sections', [])
+        # Creamos el menú con los datos validados
+        menu = Menu.objects.create(nombre=validated_data.get('nombre'))
+        # Iteramos sobre cada sección para crearla junto con sus opciones
+        for section_data in sections_data:
+            # Extraemos las opciones de cada tipo
+            adicionales_data = section_data.pop('adicionales', [])
+            platos_principales_data = section_data.pop('platos_principales', [])
+            acompanantes_data = section_data.pop('acompanantes', [])
+            bebidas_data = section_data.pop('bebidas', [])
+            # Creamos la sección correspondiente
+            section = MenuSection.objects.create(menu=menu, titulo=section_data['titulo'])
+            # Creamos las opciones asociadas a la sección
+            for adicional_data in adicionales_data:
+                MenuOption.objects.create(section=section, **adicional_data)
+            for plato_principal_data in platos_principales_data:
+                MenuOption.objects.create(section=section, **plato_principal_data)
+            for acompanante_data in acompanantes_data:
+                MenuOption.objects.create(section=section, **acompanante_data)
+            for bebida_data in bebidas_data:
+                MenuOption.objects.create(section=section, **bebida_data)
+        # Retornamos el menú creado
+        return menu
+
+    # Método para actualizar un menú existente junto con sus secciones y opciones
+    def update(self, instance, validated_data):
+        # Obtenemos los datos de las secciones desde la solicitud
+        sections_data = self.context['request'].data.get('sections', [])
+        # Actualizamos el nombre del menú si se ha proporcionado un nuevo valor
+        instance.nombre = validated_data.get('nombre', instance.nombre)
+        instance.save()
+
+        # Eliminamos secciones existentes que no están en la solicitud
+        existing_section_ids = {section.id for section in instance.sections.all()}
+        request_section_ids = {section_data.get('id') for section_data in sections_data if 'id' in section_data}
+        sections_to_delete = existing_section_ids - request_section_ids
+        if sections_to_delete:
+            MenuSection.objects.filter(id__in=sections_to_delete).delete()
+
+        # Iteramos sobre cada sección proporcionada en los datos
+        for section_data in sections_data:
+            # Extraemos las opciones de cada tipo
+            adicionales_data = section_data.pop('adicionales', [])
+            platos_principales_data = section_data.pop('platos_principales', [])
+            acompanantes_data = section_data.pop('acompanantes', [])
+            bebidas_data = section_data.pop('bebidas', [])
+            section_id = section_data.get('id')
+
+            # Si la sección ya existe, la actualizamos
+            if section_id and MenuSection.objects.filter(id=section_id, menu=instance).exists():
+                section = MenuSection.objects.get(id=section_id, menu=instance)
+                section.titulo = section_data.get('titulo', section.titulo)
+                section.save()
+
+                # Eliminamos las opciones existentes para la sección
+                section.options.all().delete()
+            else:
+                # Si la sección no existe, la creamos
+                section = MenuSection.objects.create(menu=instance, **section_data)
+
+            # Creamos las nuevas opciones para la sección
+            for adicional_data in adicionales_data:
+                MenuOption.objects.create(section=section, **adicional_data)
+            for plato_principal_data in platos_principales_data:
+                MenuOption.objects.create(section=section, **plato_principal_data)
+            for acompanante_data in acompanantes_data:
+                MenuOption.objects.create(section=section, **acompanante_data)
+            for bebida_data in bebidas_data:
+                MenuOption.objects.create(section=section, **bebida_data)
+
+        # Retornamos la instancia del menú actualizada
+        return instance
+# Importamos la función path desde django.urls para definir rutas
+from django.urls import path
+# Importamos las vistas MenuListCreateView y MenuDetailView desde el archivo views
+from .views import MenuListCreateView, MenuDetailView
+
+# Definimos las rutas para la aplicación de menús
+urlpatterns = [
+    # Ruta para listar todos los menús y crear uno nuevo
+    # Esta vista maneja solicitudes GET para listar y POST para crear
+    path('', MenuListCreateView.as_view(), name='menu-list-create'),
+    
+    # Ruta para obtener, actualizar o eliminar un menú específico por su ID
+    # Esta vista maneja solicitudes GET para obtener, PUT/PATCH para actualizar, y DELETE para eliminar
+    path('<int:pk>/', MenuDetailView.as_view(), name='menu-detail'),
+]
+# Importamos el módulo generics de Django REST framework
+from rest_framework import generics
+# Importamos el modelo Menu desde el archivo models
+from .models import Menu
+# Importamos el serializer MenuSerializer desde el archivo serializers
+from .serializers import MenuSerializer
+
+# Definimos una vista genérica para listar y crear menús
+class MenuListCreateView(generics.ListCreateAPIView):
+    # Especificamos el queryset que será utilizado para recuperar todos los menús
+    queryset = Menu.objects.all()
+    # Especificamos el serializer que será utilizado para la serialización y deserialización de los datos
+    serializer_class = MenuSerializer
+
+# Definimos una vista genérica para recuperar, actualizar y eliminar un menú específico
+class MenuDetailView(generics.RetrieveUpdateDestroyAPIView):
+    # Especificamos el queryset que será utilizado para recuperar un menú específico
+    queryset = Menu.objects.all()
+    # Especificamos el serializer que será utilizado para la serialización y deserialización de los datos
+    serializer_class = MenuSerializer
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'pacientes'
+class PacientesConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'pacientes'
+from django.db import models
+from django.core.exceptions import ValidationError
+from camas.models import Cama
+
+class Paciente(models.Model):
+    id = models.AutoField(primary_key=True)  # Campo autoincremental como nueva clave primaria
+    cedula = models.CharField(max_length=20)  # Número de cédula, ya no es único
+    name = models.CharField(max_length=100)
+    cama = models.ForeignKey(Cama, on_delete=models.CASCADE)
+    recommended_diet = models.CharField(max_length=255)
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)  # Campo timestamp para la fecha de creación
+
+    def save(self, *args, **kwargs):
+        if self.activo:
+            if not self.cama.activo:
+                raise ValidationError('No se puede activar un paciente porque la cama no está activa.')
+            if not self.cama.habitacion.activo:
+                raise ValidationError('No se puede activar un paciente porque la habitación no está activa.')
+            if not self.cama.habitacion.servicio.activo:
+                raise ValidationError('No se puede activar un paciente porque el servicio no está activo.')
+        else:
+            # Si el paciente se desactiva, liberar la cama asociada
+            self.cama.activo = False
+            self.cama.save()
+
+        super(Paciente, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from django.core.exceptions import ValidationError
+from .models import Paciente
+from camas.models import Cama
+from habitaciones.models import Habitacion
+from servicios.models import Servicio
+
+class ServicioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Servicio
+        fields = ['id', 'nombre']
+
+class HabitacionSerializer(serializers.ModelSerializer):
+    servicio = ServicioSerializer(read_only=True)
+
+    class Meta:
+        model = Habitacion
+        fields = ['id', 'nombre', 'servicio']
+
+class CamaSerializer(serializers.ModelSerializer):
+    habitacion = HabitacionSerializer(read_only=True)
+
+    class Meta:
+        model = Cama
+        fields = ['id', 'nombre', 'habitacion']
+
+class PacienteSerializer(serializers.ModelSerializer):
+    cama_id = serializers.PrimaryKeyRelatedField(queryset=Cama.objects.all(), source='cama', write_only=True)
+    cama = CamaSerializer(read_only=True)
+
+    class Meta:
+        model = Paciente
+        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 'recommended_diet', 'activo', 'created_at']  # Se añade el campo `created_at`
+
+    def create(self, validated_data):
+        return Paciente.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.cama = validated_data.get('cama', instance.cama)
+        instance.recommended_diet = validated_data.get('recommended_diet', instance.recommended_diet)
+        instance.activo = validated_data.get('activo', instance.activo)
+        
+        try:
+            instance.save()
+        except ValidationError as e:
+            raise DRFValidationError({"detail": e.messages})  # Se lanza el mensaje específico como una excepción de DRF
+
+        return instance
+from django.urls import path
+from .views import PacienteListCreateView, PacienteDetailView
+
+urlpatterns = [
+    path('', PacienteListCreateView.as_view(), name='paciente-list-create'),
+    path('<int:pk>/', PacienteDetailView.as_view(), name='paciente-detail'),  # Cambiado a <int:pk> para reflejar que `id` ahora es un campo autoincremental
+]
+from rest_framework import generics
+from .models import Paciente
+from .serializers import PacienteSerializer
+
+class PacienteListCreateView(generics.ListCreateAPIView):
+    serializer_class = PacienteSerializer
+
+    def get_queryset(self):
+        return Paciente.objects.filter(activo=True)  # Solo mostrar pacientes activos en la vista de listado
+
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Paciente.objects.all()
+    serializer_class = PacienteSerializer
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'pedidos'
+class PedidosConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'pedidos'
+from django.db import models
+from pacientes.models import Paciente
+from menus.models import Menu, MenuOption
+
+class Pedido(models.Model):
+    STATUS_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('en_proceso', 'En Proceso'),
+        ('completado', 'Completado'),
+    ]
+
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE)
+    opciones = models.ManyToManyField(MenuOption, through='PedidoMenuOption', blank=True, related_name='pedidos')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendiente')
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    adicionales = models.JSONField(default=dict, blank=True)
+    sectionStatus = models.JSONField(default=dict, blank=True)  # Campo para almacenar el estado de las secciones
+
+    def __str__(self):
+        return f"Pedido {self.id} - {self.paciente.name} - {self.status}"
+
+class PedidoMenuOption(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
+    menu_option = models.ForeignKey(MenuOption, on_delete=models.CASCADE)
+    selected = models.BooleanField(default=False)
+    
+from rest_framework import serializers
+from pedidos.models import Pedido, PedidoMenuOption
+from pacientes.models import Paciente
+from pacientes.serializers import PacienteSerializer
+from menus.models import Menu, MenuOption
+from menus.serializers import MenuSerializer, MenuOptionSerializer
+
+class PedidoMenuOptionSerializer(serializers.ModelSerializer):
+    texto = serializers.CharField(source='menu_option.texto', read_only=True)
+
+    class Meta:
+        model = PedidoMenuOption
+        fields = ['id', 'texto', 'selected']
+
+class PedidoSerializer(serializers.ModelSerializer):
+    paciente = PacienteSerializer(read_only=True)
+    menu = MenuSerializer(read_only=True)
+    opciones = PedidoMenuOptionSerializer(source='pedidomenuoption_set', many=True, read_only=True)
+
+    class Meta:
+        model = Pedido
+        fields = ['id', 'paciente', 'menu', 'opciones', 'status', 'fecha_pedido', 'adicionales', 'sectionStatus']
+
+    def create(self, validated_data):
+        opciones_data = self.initial_data.get('opciones', [])
+        adicionales_data = validated_data.pop('adicionales')
+        section_status_data = validated_data.pop('sectionStatus', {})
+        paciente_id = self.initial_data.get('paciente')
+        menu_id = self.initial_data.get('menu')
+
+        print(f"Creando pedido para paciente ID: {paciente_id} con menú ID: {menu_id}")
+
+        paciente = Paciente.objects.get(id=paciente_id)
+        menu = Menu.objects.get(id=menu_id)
+
+        # Validamos que el paciente esté activo
+        if not paciente.activo:
+            raise serializers.ValidationError("El paciente seleccionado no está activo.")
+
+        pedido = Pedido.objects.create(paciente=paciente, menu=menu, sectionStatus=section_status_data, **validated_data)
+
+        print(f"Pedido creado con ID: {pedido.id}")
+
+        for opcion_data in opciones_data:
+            opcion_id = opcion_data.get('id')
+            if opcion_id is not None:
+                selected = opcion_data.get('selected', False)
+                try:
+                    menu_option = MenuOption.objects.get(id=opcion_id)
+                    PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
+                except MenuOption.DoesNotExist:
+                    print(f"MenuOption con ID {opcion_id} no existe. Saltando esta opción.")
+                    continue
+
+        pedido.adicionales = adicionales_data
+        pedido.save()
+
+        print(f"Pedido guardado con adicionales: {pedido.adicionales}")
+        return pedido
+
+    def update(self, instance, validated_data):
+        opciones_data = self.initial_data.get('opciones', [])
+        adicionales_data = validated_data.pop('adicionales', instance.adicionales)
+        section_status_data = validated_data.pop('sectionStatus', instance.sectionStatus)
+
+        print(f"Actualizando pedido ID: {instance.id}")
+
+        instance.paciente = validated_data.get('paciente', instance.paciente)
+        instance.menu = validated_data.get('menu', instance.menu)
+        instance.status = validated_data.get('status', instance.status)
+        instance.adicionales = adicionales_data
+        instance.sectionStatus = section_status_data
+        instance.save()
+
+        if opciones_data:
+            for opcion_data in opciones_data:
+                opcion_id = opcion_data.get('id')
+                if opcion_id is not None:
+                    try:
+                        menu_option = MenuOption.objects.get(id=opcion_id)
+                        selected = opcion_data['selected']
+                        PedidoMenuOption.objects.update_or_create(
+                            pedido=instance,
+                            menu_option=menu_option,
+                            defaults={'selected': selected}
+                        )
+                    except MenuOption.DoesNotExist:
+                        print(f"MenuOption con ID {opcion_id} no existe. Saltando esta opción.")
+                        continue
+
+        print(f"Pedido actualizado con status: {instance.status}")
+        return instance
+from django.urls import path
+from .views import PedidoListCreateView, PedidoDetailView, PedidoStatusUpdateView, PedidoCompletadosView, PedidoPrintView
+
+urlpatterns = [
+    path('', PedidoListCreateView.as_view(), name='pedido-list-create'),
+    path('<int:pk>/', PedidoDetailView.as_view(), name='pedido-detail'),
+    path('<int:pk>/status/', PedidoStatusUpdateView.as_view(), name='pedido-status-update'),
+    path('completados/', PedidoCompletadosView.as_view(), name='pedido-completados'),
+    path('<int:pk>/print/', PedidoPrintView.as_view(), name='pedido-print'),
+]from rest_framework import generics, views
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import Pedido
+from .serializers import PedidoSerializer
+import usb.core
+import usb.util
+
+class PedidoListCreateView(generics.ListCreateAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+    @action(detail=False, methods=['get'])
+    def pendientes(self, request):
+        pedidos_pendientes = Pedido.objects.filter(status='pendiente')
+        serializer = self.get_serializer(pedidos_pendientes, many=True)
+        return Response(serializer.data)
+
+class PedidoCompletadosView(views.APIView):
+    def get(self, request):
+        # Obtener el ID del paciente en lugar del nombre
+        paciente_id = request.query_params.get('paciente', None)
+        pedidos_completados = Pedido.objects.filter(status='completado')
+        
+        if paciente_id:
+            pedidos_completados = pedidos_completados.filter(paciente__id=paciente_id)
+            print(f"Filtrando pedidos completados para el paciente ID: {paciente_id}")
+        else:
+            print("No se proporcionó un paciente ID.")
+
+        # Añadimos un log para verificar los pedidos encontrados
+        print(f"Pedidos Completados encontrados: {pedidos_completados.count()}")
+
+        serializer = PedidoSerializer(pedidos_completados, many=True)
+        return Response(serializer.data)
+
+class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+class PedidoStatusUpdateView(generics.UpdateAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+class PedidoPrintView(views.APIView):
+    def post(self, request, pk):
+        try:
+            pedido = Pedido.objects.get(pk=pk)
+            self.print_pedido(pedido)
+            return Response({"status": "success", "message": "Pedido impreso con éxito."})
+        except Pedido.DoesNotExist:
+            return Response({"status": "error", "message": "Pedido no encontrado."}, status=404)
+
+    def print_pedido(self, pedido):
+        dev = usb.core.find(idVendor=0x1FC9, idProduct=0x2016)
+
+        if dev is None:
+            raise ValueError('Dispositivo no encontrado')
+
+        dev.set_configuration()
+
+        cfg = dev.get_active_configuration()
+        interface_number = cfg[(0,0)].bInterfaceNumber
+        intf = usb.util.find_descriptor(cfg, bInterfaceNumber=interface_number)
+        ep = usb.util.find_descriptor(
+            intf,
+            custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
+        )
+
+        print_data = (
+            "===============================\n"
+            f"Paciente: {pedido.paciente.name}\n"
+            f"Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}\n"
+            f"Habitación: {pedido.paciente.cama.habitacion.nombre}\n"
+            f"Cama: {pedido.paciente.cama.nombre}\n"
+            "===============================\n\n\n"
+        )
+
+        try:
+            ep.write(b'\x1b\x40' + print_data.encode('utf-8'))
+            ep.write(b'\n\n\n\n\n')
+            ep.write(b'\x1d\x56\x00')
+        finally:
+            # Liberar la interfaz USB
+            usb.util.release_interface(dev, interface_number)
+            usb.util.dispose_resources(dev)
+            print("Información del paciente impresa y dispositivo liberado con éxito.")
+# Importamos el módulo AppConfig de Django
+from django.apps import AppConfig
+
+# Definimos la configuración de la aplicación 'servicios'
+class ServiciosConfig(AppConfig):
+    # Especificamos el tipo de campo por defecto para los modelos en esta aplicación
+    default_auto_field = 'django.db.models.BigAutoField'
+    # Especificamos el nombre de la aplicación
+    name = 'servicios'
+# servicios/models.py
+from django.db import models
+
+class Servicio(models.Model):
+    nombre = models.CharField(max_length=255)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if not is_new and not self.activo:
+            # Importaciones dentro de la función para evitar ciclos
+            from habitaciones.models import Habitacion
+            from camas.models import Cama
+            from pacientes.models import Paciente
+
+            habitaciones = self.habitacion_set.all()
+            habitaciones.update(activo=False)
+
+            camas = Cama.objects.filter(habitacion__in=habitaciones)
+            camas.update(activo=False)
+
+            Paciente.objects.filter(cama__in=camas).update(activo=False)
+from rest_framework import serializers
+from .models import Servicio
+
+class ServicioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Servicio
+        fields = ['id', 'nombre', 'activo']  # Incluir el campo 'activo' en la serialización
+from django.urls import path
+from .views import ServicioListCreateView, ServicioDetailView
+
+urlpatterns = [
+    path('', ServicioListCreateView.as_view(), name='servicio-list-create'),
+    path('<int:pk>/', ServicioDetailView.as_view(), name='servicio-detail'),
+]
+from rest_framework import generics
+from .models import Servicio
+from .serializers import ServicioSerializer
+
+class ServicioListCreateView(generics.ListCreateAPIView):
+    serializer_class = ServicioSerializer
+
+    def get_queryset(self):
+        return Servicio.objects.all()
+
+class ServicioDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Servicio.objects.all()
+    serializer_class = ServicioSerializer
+# Importamos Path de pathlib para manejar rutas de archivos
+from pathlib import Path
+# Importamos timedelta de datetime para manejar intervalos de tiempo
+from datetime import timedelta
+# Importamos os para interactuar con variables de entorno y el sistema operativo
+import os
+# Importamos load_dotenv de dotenv para cargar variables de entorno desde un archivo .env
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
+
+# Definimos la ruta base del proyecto, es decir, la carpeta principal que contiene todos los archivos del proyecto
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Obtener las variables de entorno
+
+# Se obtiene la clave secreta de Django desde una variable de entorno, si no se encuentra, se usa un valor por defecto (esto no es seguro para producción)
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'ZOM50YBnVo12HpKqySoeXS9M621bNTB0JJ-mqFYpzUbnTFcMWfEh_7y2iB9ZUvVz6fg')
+
+# Se establece si el modo debug está activado o no, basado en una variable de entorno
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+
+# Lista de hosts permitidos, se separa en una lista desde una cadena en la variable de entorno
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+
+# Definimos las aplicaciones instaladas en el proyecto
+INSTALLED_APPS = [
+    'django.contrib.admin',  # Admin de Django
+    'django.contrib.auth',  # Autenticación de Django
+    'django.contrib.contenttypes',  # Tipos de contenido de Django
+    'django.contrib.sessions',  # Manejo de sesiones en Django
+    'django.contrib.messages',  # Manejo de mensajes en Django
+    'django.contrib.staticfiles',  # Archivos estáticos en Django
+    'rest_framework',  # Django REST framework
+    'corsheaders',  # Manejo de CORS (Cross-Origin Resource Sharing)
+    'authentication',  # Aplicación de autenticación personalizada
+    'pedidos',  # Aplicación de gestión de pedidos
+    'pacientes',  # Aplicación de gestión de pacientes
+    'camas',
+    'habitaciones',  # Aplicación de gestión de habitaciones
+    'servicios',  # Aplicación de gestión de servicios
+    'menus',  # Aplicación de gestión de menús
+]
+
+# Configuraciones para Django REST framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # Autenticación basada en tokens JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        # Solo usuarios autenticados pueden acceder a las vistas
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# Configuraciones para JWT (JSON Web Tokens)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Tiempo de vida del token de acceso
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Tiempo de vida del token de refresco
+    'BLACKLIST_AFTER_ROTATION': True,  # Poner en lista negra el token anterior después de refrescar
+    'UPDATE_LAST_LOGIN': False,  # No actualizar el último inicio de sesión automáticamente
+    'ALGORITHM': 'HS256',  # Algoritmo de cifrado para los tokens
+    'SIGNING_KEY': SECRET_KEY,  # Clave secreta para firmar los tokens
+    'VERIFYING_KEY': None,  # Clave para verificar los tokens (no utilizada aquí)
+    'AUDIENCE': None,  # Audiencia (no utilizada aquí)
+    'ISSUER': None,  # Emisor (no utilizado aquí)
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Tipo de cabecera para el token
+    'USER_ID_FIELD': 'id',  # Campo que identifica al usuario en el token
+    'USER_ID_CLAIM': 'user_id',  # Reclamación que identifica al usuario en el token
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),  # Clases de tokens utilizados
+    'TOKEN_TYPE_CLAIM': 'token_type',  # Tipo de token en la reclamación
+    'JTI_CLAIM': 'jti',  # Identificador único de token
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',  # Reclamación de expiración del token de refresco deslizante
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=10),  # Tiempo de vida del token deslizante
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),  # Tiempo de vida del refresco deslizante
+}
+
+# Especificamos que el modelo de usuario personalizado se utilizará en lugar del modelo de usuario predeterminado de Django
+AUTH_USER_MODEL = 'authentication.CustomUser'
+
+# Definimos el middleware utilizado en el proyecto
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Middleware para manejar CORS
+    'django.middleware.common.CommonMiddleware',  # Middleware común de Django
+    'django.middleware.security.SecurityMiddleware',  # Middleware de seguridad de Django
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Middleware de manejo de sesiones
+    'django.middleware.csrf.CsrfViewMiddleware',  # Middleware de protección contra CSRF
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Middleware de autenticación
+    'django.contrib.messages.middleware.MessageMiddleware',  # Middleware de manejo de mensajes
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',  # Protección contra clickjacking
+]
+
+# Configuración para permitir todas las fuentes de CORS y permitir credenciales
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# Especificamos el archivo de configuración de URLs raíz para el proyecto
+ROOT_URLCONF = 'backend.urls'
+
+# Configuraciones de plantillas de Django
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # Backend de plantillas
+        'DIRS': [],  # Directorios adicionales para buscar plantillas
+        'APP_DIRS': True,  # Buscar plantillas en los directorios de las aplicaciones
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',  # Contexto de depuración
+                'django.template.context_processors.request',  # Contexto de la solicitud
+                'django.contrib.auth.context_processors.auth',  # Contexto de autenticación
+                'django.contrib.messages.context_processors.messages',  # Contexto de mensajes
+            ],
+        },
+    },
+]
+
+# Especificamos la configuración de la aplicación WSGI
+WSGI_APPLICATION = 'backend.wsgi.application'
+
+# Configuración de la base de datos, utilizando SQLite para desarrollo
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # Motor de base de datos SQLite
+        'NAME': BASE_DIR / 'db.sqlite3',  # Nombre del archivo de base de datos
+    }
+}
+
+# Validadores de contraseñas para la autenticación
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# Configuración del idioma del proyecto
+LANGUAGE_CODE = 'en-us'
+# Configuración de la zona horaria
+TIME_ZONE = 'America/Bogota'
+# Habilitar la internacionalización
+USE_I18N = True
+# Habilitar el uso de zonas horarias
+USE_TZ = False
+
+# URL para servir archivos estáticos
+STATIC_URL = 'static/'
+
+# Especificar el tipo de campo auto incremental predeterminado para los modelos
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Importamos el módulo admin de django.contrib para la administración del sitio
+from django.contrib import admin
+# Importamos las funciones path e include desde django.urls para definir rutas
+from django.urls import path, include
+
+# Definimos las rutas principales del proyecto
+urlpatterns = [
+    # Ruta para acceder a la interfaz de administración de Django
+    path('admin/', admin.site.urls),
+    # Rutas relacionadas con la autenticación, incluyendo las definidas en authentication.urls
+    path('api/auth/', include('authentication.urls')),
+    # Rutas relacionadas con la gestión de pacientes, incluyendo las definidas en pacientes.urls
+    path('api/pacientes/', include('pacientes.urls')),
+    # Rutas relacionadas con la gestión de habitaciones, incluyendo las definidas en habitaciones.urls
+    path('api/habitaciones/', include('habitaciones.urls')),
+    # Rutas relacionadas con la gestión de servicios, incluyendo las definidas en servicios.urls
+    path('api/servicios/', include('servicios.urls')),
+    # Rutas relacionadas con la gestión de menús, incluyendo las definidas en menus.urls
+    path('api/menus/', include('menus.urls')),
+    # Rutas relacionadas con la gestión de pedidos, incluyendo las definidas en pedidos.urls
+    path('api/pedidos/', include('pedidos.urls')),
+    # Rutas relacionadas con la gestión de camas, incluyendo las definidas en camas.urls
+    path('api/camas/', include('camas.urls')),
+]
+# Importamos el módulo os para interactuar con las variables de entorno del sistema operativo
+import os
+
+# Importamos la función get_asgi_application de django.core.asgi para configurar la aplicación ASGI
+from django.core.asgi import get_asgi_application
+
+# Establecemos la variable de entorno 'DJANGO_SETTINGS_MODULE' con el valor 'backend.settings'
+# Esto indica a Django qué archivo de configuración debe usar
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+
+# Llamamos a get_asgi_application para obtener la aplicación ASGI que Django utilizará
+application = get_asgi_application()
+# Importamos el módulo os para interactuar con variables de entorno del sistema operativo
+import os
+
+# Importamos la función get_wsgi_application de django.core.wsgi para configurar la aplicación WSGI
+from django.core.wsgi import get_wsgi_application
+
+# Establecemos la variable de entorno 'DJANGO_SETTINGS_MODULE' con el valor 'backend.settings'
+# Esto indica a Django qué archivo de configuración debe usar
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+
+# Llamamos a get_wsgi_application para obtener la aplicación WSGI que Django utilizará
+application = get_wsgi_application()
+# Clave secreta utilizada por Django para varias operaciones criptográficas
+DJANGO_SECRET_KEY=ZOM50YBnVo12HpKqySoeXS9M621bNTB0JJ-mqFYpzUbnTFcMWfEh_7y2iB9ZUvVz6fg
+
+# Modo de depuración. Si se establece en True, Django mostrará más información en caso de errores. Esto no debe ser usado en producción.
+DJANGO_DEBUG=True
+
+# Lista de hosts permitidos que pueden hacer solicitudes al servidor Django
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import { FaBars } from 'react-icons/fa';
+import '../styles/FloatingButton.scss';
+
+const FloatingButton = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isPedidosOpen, setIsPedidosOpen] = useState(false);
+
+    const toggleMenu = () => {
+        setIsOpen(!isOpen);
+    };
+
+    const togglePedidosMenu = () => {
+        setIsPedidosOpen(!isPedidosOpen);
+    };
+
+    return (
+        <div className="floating-button">
+            <button className="btn" onClick={toggleMenu}>
+                <FaBars />
+            </button>
+
+            <div className={`floating-menu ${isOpen ? 'show' : ''}`}>
+                <NavLink to="/" className="nav-link" onClick={toggleMenu}>Inicio</NavLink>
+                <NavLink to="/menus" className="nav-link" onClick={toggleMenu}>Menús</NavLink>
+
+                <div 
+                    className={`nav-link pedidos-toggle ${isPedidosOpen ? 'open' : ''}`} 
+                    onClick={togglePedidosMenu} 
+                    style={{ cursor: 'pointer' }}
+                >
+                    Pedidos
+                </div>
+                {isPedidosOpen && (
+                    <div className={`submenu ${isPedidosOpen ? 'submenu-open' : ''}`}>
+                        <NavLink to="/realizar-pedido" className="nav-link submenu-item" onClick={toggleMenu}>Realizar Pedido</NavLink>
+                        <NavLink to="/pedidos/pendientes" className="nav-link submenu-item" onClick={toggleMenu}>Pedidos Pendientes</NavLink>
+                        <NavLink to="/pedidos/historial" className="nav-link submenu-item" onClick={toggleMenu}>Historial de Pedidos</NavLink>
+                    </div>
+                )}
+
+                <NavLink to="/gestion-datos" className="nav-link" onClick={toggleMenu}>Gestión de Datos</NavLink>
+            </div>
+        </div>
+    );
+};
+
+export default FloatingButton;
+// Importamos React para crear componentes
+import React from 'react';
+// Importamos Link desde react-router-dom para manejar la navegación entre páginas
+import { Link } from 'react-router-dom';
+// Importamos el archivo de estilos SCSS para este componente
+import '../styles/Header.scss';
+// Importamos el logo de la aplicación desde la carpeta assets
+import logo from '../assets/logo.png';
+
+// Definimos el componente Header
+const Header = () => {
+    // Función para manejar el cierre de sesión
+    const handleLogout = () => {
+        // Removemos el token de autenticación del almacenamiento local (localStorage)
+        localStorage.removeItem('token');
+    };
+
+    // Renderizamos el encabezado (header) de la aplicación
+    return (
+        <header className="header navbar navbar-expand-lg navbar-dark bg-primary">
+            <div className="container d-flex justify-content-between align-items-center">
+                {/* Sección izquierda del encabezado con el logo */}
+                <div className="header-left d-flex align-items-center">
+                    <img src={logo} alt="Logo" className="logo" />
+                </div>
+                {/* Sección derecha del encabezado con el enlace para cerrar sesión */}
+                <div className="header-right">
+                    {/* Enlace para cerrar sesión, que redirige a la página de login y ejecuta handleLogout */}
+                    <Link to="/login" className="nav-link" onClick={handleLogout}>Cerrar sesión</Link>
+                </div>
+            </div>
+        </header>
+    );
+};
+
+// Exportamos el componente Header para que pueda ser utilizado en otras partes de la aplicación
+export default Header;
+// Importamos React para crear componentes
+import React from 'react';
+// Importamos los componentes Header, Sidebar y FloatingButton
+import Header from './Header';
+import Sidebar from './Sidebar';
+import FloatingButton from './FloatingButton'; 
+// Importamos Outlet desde react-router-dom para renderizar sub-rutas dentro del componente principal
+import { Outlet } from 'react-router-dom';
+// Importamos el archivo de estilos SCSS para este componente
+import '../styles/Layout.scss';
+
+// Definimos el componente Layout que organiza la estructura de la aplicación
+const Layout = () => {
+    return (
+        <div className="layout d-flex flex-column">
+            {/* Componente Header en la parte superior */}
+            <Header />
+            
+            {/* Contenedor principal que incluye la barra lateral y el contenido principal */}
+            <div className="main-content d-flex flex-grow-1">
+                {/* Componente Sidebar en el lado izquierdo */}
+                <Sidebar />
+                
+                {/* Contenedor para el contenido principal de la página */}
+                <div className="content flex-grow-1 p-3">
+                    {/* Outlet se usa para renderizar las rutas secundarias que cambian según la navegación */}
+                    <Outlet />
+                </div>
+            </div>
+            
+            {/* Botón flotante para navegación rápida */}
+            <FloatingButton /> 
+        </div>
+    );
+};
+
+// Exportamos el componente Layout para que pueda ser utilizado en otras partes de la aplicación
+export default Layout;
+// Importamos React para crear componentes
+import React from 'react';
+// Importamos Navigate desde react-router-dom para redirigir al usuario
+import { Navigate } from 'react-router-dom';
+
+// Definimos el componente PrivateRoute para manejar rutas privadas
+const PrivateRoute = ({ children }) => {
+    // Obtenemos el token de autenticación desde el almacenamiento local (localStorage)
+    const token = localStorage.getItem('token');
+    
+    // Si el token existe, renderizamos los componentes hijos (children)
+    // Si no existe, redirigimos al usuario a la página de inicio de sesión ("/login")
+    return token ? children : <Navigate to="/login" />;
+};
+
+// Exportamos el componente PrivateRoute para que pueda ser utilizado en otras partes de la aplicación
+export default PrivateRoute;
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import '../styles/Sidebar.scss';
+
+const Sidebar = () => {
+  const [isPedidosOpen, setIsPedidosOpen] = useState(false);
+
+  const togglePedidosMenu = () => {
+    setIsPedidosOpen(!isPedidosOpen);
+  };
+
+  return (
+    <div className="sidebar vh-100">
+      <nav className="nav flex-column">
+        <NavLink to="/" className="nav-link">Inicio</NavLink>
+        <NavLink to="/menus" className="nav-link">Menús</NavLink>
+
+        <div 
+          className={`nav-link pedidos-toggle ${isPedidosOpen ? 'open' : ''}`} 
+          onClick={togglePedidosMenu} 
+          style={{ cursor: 'pointer' }}
+        >
+          Pedidos
+        </div>
+        {isPedidosOpen && (
+          <div className={`submenu ${isPedidosOpen ? 'submenu-open' : ''}`}>
+            <NavLink to="/realizar-pedido" className="nav-link submenu-item">Realizar Pedido</NavLink>
+            <NavLink to="/pedidos/pendientes" className="nav-link submenu-item">Pedidos Pendientes</NavLink>
+            <NavLink to="/pedidos/historial" className="nav-link submenu-item">Historial de Pedidos</NavLink>
+          </div>
+        )}
+        
+        <NavLink to="/gestion-datos" className="nav-link">Gestión de Datos</NavLink>
+      </nav>
+    </div>
+  );
+};
+
+export default Sidebar;
+import React, { useState, useEffect } from 'react';
+import { Button, Drawer, Tabs, Table, Switch, Modal, Form, Input, notification, Select, Collapse } from 'antd';
+import api, { createServicio, createHabitacion, createCama, createPaciente } from '../services/api';  // Importamos las nuevas funciones
+import '../styles/DataManagement.scss';
+
+const { TabPane } = Tabs;
+const { Option } = Select;
+const { Panel } = Collapse;
+const { confirm } = Modal;
+
+const DataManagement = () => {
+    const [pacientes, setPacientes] = useState([]);
+    const [servicios, setServicios] = useState([]);
+    const [habitaciones, setHabitaciones] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Estado para el modal de creación de servicios
+    const [isHabitacionModalOpen, setIsHabitacionModalOpen] = useState(false); // Estado para el modal de creación de habitaciones
+    const [isCamaModalOpen, setIsCamaModalOpen] = useState(false); // Estado para el modal de creación de camas
+    const [isPacienteModalOpen, setIsPacienteModalOpen] = useState(false); // Estado para el modal de creación de pacientes
+    const [newServicioName, setNewServicioName] = useState(''); // Estado para el nombre del nuevo servicio
+    const [newHabitacionName, setNewHabitacionName] = useState(''); // Estado para el nombre de la nueva habitación
+    const [newCamaName, setNewCamaName] = useState(''); // Estado para el nombre de la nueva cama
+    const [newPacienteID, setNewPacienteID] = useState(''); // Estado para la cédula del nuevo paciente
+    const [newPacienteName, setNewPacienteName] = useState(''); // Estado para el nombre del nuevo paciente
+    const [newRecommendedDiet, setNewRecommendedDiet] = useState(''); // Estado para la dieta recomendada del nuevo paciente
+    const [selectedServicio, setSelectedServicio] = useState(null); // Estado para el servicio seleccionado al crear una habitación
+    const [selectedHabitacion, setSelectedHabitacion] = useState(null); // Estado para la habitación seleccionada al crear una cama
+    const [selectedCama, setSelectedCama] = useState(null); // Estado para la cama seleccionada al crear un paciente
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [pacientesResponse, serviciosResponse, habitacionesResponse] = await Promise.all([
+                    api.get('/pacientes/'),
+                    api.get('/servicios/'),
+                    api.get('/habitaciones/')
+                ]);
+
+                setPacientes(pacientesResponse.data);
+                setServicios(serviciosResponse.data);
+                setHabitaciones(habitacionesResponse.data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const openDrawer = () => setIsDrawerOpen(true);
+    const closeDrawer = () => setIsDrawerOpen(false);
+
+    const toggleActivo = async (item, type) => {
+        const showConfirm = (isActivating) => {
+            let title = '';
+            let content = '';
+
+            if (isActivating) {
+                switch (type) {
+                    case 'servicios':
+                        title = '¿Estás seguro de que deseas activar este servicio?';
+                        content = 'Esta acción activará el servicio y permitirá activar habitaciones y camas relacionadas a él.';
+                        break;
+                    case 'habitaciones':
+                        title = '¿Estás seguro de que deseas activar esta habitación?';
+                        content = 'Esta acción activará la habitación y permitirá activar las camas relacionadas a ella.';
+                        break;
+                    case 'camas':
+                        title = '¿Estás seguro de que deseas activar esta cama?';
+                        content = 'Esta acción activará la cama para ser asignada a un paciente.';
+                        break;
+                    case 'pacientes':
+                        title = '¿Estás seguro de que deseas activar a este paciente?';
+                        content = 'Esta acción activará al paciente y asignará su cama asociada.';
+                        break;
+                    default:
+                        title = '¿Estás seguro de que deseas continuar?';
+                        content = 'Esta acción cambiará el estado del elemento seleccionado a activo.';
+                        break;
+                }
+            } else {
+                switch (type) {
+                    case 'servicios':
+                        title = '¿Estás seguro de que deseas desactivar este servicio?';
+                        content = 'Esta acción desactivará el servicio y todas las habitaciones y camas asociadas a él. El servicio permanecerá en la base de datos como inactivo.';
+                        break;
+                    case 'habitaciones':
+                        title = '¿Estás seguro de que deseas desactivar esta habitación?';
+                        content = 'Esta acción desactivará la habitación y todas las camas asociadas a ella. La habitación permanecerá en la base de datos como inactiva.';
+                        break;
+                    case 'camas':
+                        title = '¿Estás seguro de que deseas desactivar esta cama?';
+                        content = 'Esta acción desactivará la cama y quedará disponible para ser asignada a un nuevo paciente. La cama permanecerá en la base de datos como inactiva.';
+                        break;
+                    case 'pacientes':
+                        title = '¿Estás seguro de que deseas desactivar a este paciente?';
+                        content = 'Esta acción desactivará al paciente y liberará su cama asociada. El paciente permanecerá en la base de datos como inactivo.';
+                        break;
+                    default:
+                        title = '¿Estás seguro de que deseas continuar?';
+                        content = 'Esta acción cambiará el estado del elemento seleccionado a inactivo.';
+                        break;
+                }
+            }
+
+            confirm({
+                title: title,
+                content: content,
+                onOk: async () => {
+                    try {
+                        console.log("Datos antes de actualizar:", item);
+
+                        const updatedItem = { ...item, activo: !item.activo };
+
+                        if (type === 'habitaciones') {
+                            let servicioId = item.servicio_id;
+                            if (!servicioId) {
+                                const servicio = servicios.find(s => s.nombre === item.servicio);
+                                if (servicio) {
+                                    servicioId = servicio.id;
+                                }
+                            }
+                            updatedItem.servicio_id = servicioId;
+                            console.log("Servicio ID extraído:", updatedItem.servicio_id);
+                        }
+
+                        if (type === 'camas') {
+                            const habitacion = habitaciones.find(h => h.id === item.habitacion);
+                            console.log("Habitación encontrada:", habitacion);
+                            if (!habitacion || !habitacion.activo) {
+                                alert("No se puede activar la cama porque la habitación no está activa.");
+                                return;
+                            }
+
+                            updatedItem.habitacion_id = habitacion.id;
+                            console.log("Habitación ID extraído:", updatedItem.habitacion_id);
+                        }
+
+                        if (type === 'pacientes') {
+                            const cama = item.cama ? item.cama : null;
+                            console.log("Cama obtenida:", cama);
+
+                            if (!cama) {
+                                console.error("Error: No se encontró la cama asociada al paciente.");
+                                return;
+                            }
+
+                            const habitacion = cama.habitacion ? cama.habitacion : null;
+                            console.log("Habitación obtenida desde cama:", habitacion);
+
+                            if (!habitacion) {
+                                console.error("Error: No se encontró la habitación asociada a la cama.");
+                                return;
+                            }
+
+                            const servicio = habitacion.servicio ? habitacion.servicio : null;
+                            console.log("Servicio obtenido desde habitación:", servicio);
+
+                            if (!servicio) {
+                                console.error("Error: No se encontró el servicio asociado a la habitación.");
+                                return;
+                            }
+
+                            // Verificación de estados
+                            const camaActiva = cama.activo !== undefined ? cama.activo : "no definido";
+                            const habitacionActiva = habitacion.activo !== undefined ? habitacion.activo : "no definido";
+                            const servicioActivo = servicio.activo !== undefined ? servicio.activo : "no definido";
+
+                            console.log("Estado de cama:", camaActiva);
+                            console.log("Estado de habitación:", habitacionActiva);
+                            console.log("Estado de servicio:", servicioActivo);
+
+                            if (camaActiva === null || habitacionActiva === null || servicioActivo === null) {
+                                console.error("Error: Estado indefinido para cama, habitación o servicio.");
+                                return;
+                            }
+
+                            if (!camaActiva || !habitacionActiva || !servicioActivo) {
+                                alert("No se puede activar el paciente porque la cama, habitación o servicio no están activos.");
+                                return;
+                            }
+
+                            updatedItem.cama_id = cama.id;
+                            console.log("Cama ID extraído:", updatedItem.cama_id);
+                        }
+
+                        const response = await api.put(`/${type}/${item.id}/`, updatedItem);
+                        console.log("Respuesta del backend:", response.data);
+                        refreshData();
+                    } catch (error) {
+                        if (error.response && error.response.status === 400) {
+                            const errorMessage = error.response.data.detail || "No se puede activar el paciente debido a restricciones en la lógica de activación.";
+                            alert(`Error: ${errorMessage}`);
+                        } else {
+                            console.error('Error toggling activo:', error.response ? error.response.data : error);
+                        }
+                    }
+                },
+                onCancel() {
+                    console.log('Acción cancelada por el usuario');
+                },
+            });
+        };
+
+        if (item.activo) {
+            showConfirm(false);  // Mostrar la confirmación para desactivar
+        } else {
+            showConfirm(true);  // Mostrar la confirmación para activar
+        }
+    };
+
+    const refreshData = async () => {
+        setLoading(true);
+        try {
+            const [pacientesResponse, serviciosResponse, habitacionesResponse] = await Promise.all([
+                api.get('/pacientes/'),
+                api.get('/servicios/'),
+                api.get('/habitaciones/')
+            ]);
+
+            setPacientes(pacientesResponse.data);
+            setServicios(serviciosResponse.data);
+            setHabitaciones(habitacionesResponse.data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setLoading(false);
+        }
+    };
+
+    // Nueva función para manejar la creación de un servicio
+    const handleCreateServicio = async () => {
+        if (!newServicioName) {
+            notification.error({ message: 'Error', description: 'El nombre del servicio es obligatorio' });
+            return;
+        }
+
+        try {
+            await createServicio({ nombre: newServicioName });
+            notification.success({ message: 'Servicio creado exitosamente' });
+            setIsModalOpen(false);
+            setNewServicioName('');
+            refreshData(); // Refrescamos la lista de servicios
+        } catch (error) {
+            notification.error({ message: 'Error al crear el servicio', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para manejar la creación de una habitación
+    const handleCreateHabitacion = async () => {
+        if (!newHabitacionName || !selectedServicio) {
+            notification.error({ message: 'Error', description: 'El nombre de la habitación y la selección de un servicio son obligatorios' });
+            return;
+        }
+
+        try {
+            const payload = {
+                nombre: newHabitacionName,
+                servicio_id: selectedServicio,
+                activo: false,
+                camas: []
+            };
+
+            await createHabitacion(payload);
+            notification.success({ message: 'Habitación creada exitosamente' });
+            setIsHabitacionModalOpen(false);
+            setNewHabitacionName('');
+            setSelectedServicio(null);
+            refreshData();
+        } catch (error) {
+            notification.error({ message: 'Error al crear la habitación', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para manejar la creación de una cama
+    const handleCreateCama = async () => {
+        if (!newCamaName || !selectedHabitacion) {
+            notification.error({ message: 'Error', description: 'El nombre de la cama y la selección de una habitación son obligatorios' });
+            return;
+        }
+
+        try {
+            const payload = {
+                nombre: newCamaName,
+                habitacion: selectedHabitacion,
+                activo: false
+            };
+
+            await createCama(payload);
+            notification.success({ message: 'Cama creada exitosamente' });
+            setIsCamaModalOpen(false);
+            setNewCamaName('');
+            setSelectedHabitacion(null);
+            refreshData();
+        } catch (error) {
+            notification.error({ message: 'Error al crear la cama', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Nueva función para manejar la creación de un paciente
+    const handleCreatePaciente = async () => {
+        if (!newPacienteID || !newPacienteName || !selectedCama || !newRecommendedDiet) {
+            notification.error({ message: 'Error', description: 'Todos los campos son obligatorios para crear un paciente' });
+            return;
+        }
+
+        try {
+            const payload = {
+                cedula: newPacienteID,  // Ahora enviamos la cédula en lugar de `id`
+                name: newPacienteName,
+                cama_id: selectedCama,  // "cama_id" sigue siendo correcto
+                recommended_diet: newRecommendedDiet,
+                activo: true // Por defecto, el paciente se crea como activo
+            };
+
+            await createPaciente(payload);
+            notification.success({ message: 'Paciente creado exitosamente' });
+            setIsPacienteModalOpen(false);
+            setNewPacienteID('');
+            setNewPacienteName('');
+            setNewRecommendedDiet('');
+            setSelectedCama(null);
+            refreshData();
+        } catch (error) {
+            notification.error({ message: 'Error al crear el paciente', description: error.response?.data?.message || error.message });
+        }
+    };
+
+
+    // Nueva función para abrir el modal de creación de servicios
+    const openCreateServicioModal = () => {
+        setIsModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de servicios
+    const closeCreateServicioModal = () => {
+        setIsModalOpen(false);
+        setNewServicioName('');
+    };
+
+    // Nueva función para abrir el modal de creación de habitaciones
+    const openCreateHabitacionModal = () => {
+        const activeServices = servicios.filter(s => s.activo);
+        if (activeServices.length === 0) {
+            notification.warning({ message: 'Advertencia', description: 'No se pueden crear habitaciones porque no hay servicios activos' });
+            return;
+        }
+        setIsHabitacionModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de habitaciones
+    const closeCreateHabitacionModal = () => {
+        setIsHabitacionModalOpen(false);
+        setNewHabitacionName('');
+        setSelectedServicio(null);
+    };
+
+    // Nueva función para abrir el modal de creación de camas
+    const openCreateCamaModal = () => {
+        const activeHabitaciones = habitaciones.filter(h => h.activo);
+        if (activeHabitaciones.length === 0) {
+            notification.warning({ message: 'Advertencia', description: 'No se pueden crear camas porque no hay habitaciones activas' });
+            return;
+        }
+        setIsCamaModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de camas
+    const closeCreateCamaModal = () => {
+        setIsCamaModalOpen(false);
+        setNewCamaName('');
+        setSelectedHabitacion(null);
+    };
+
+    // Nueva función para abrir el modal de creación de pacientes
+    const openCreatePacienteModal = () => {
+        // Filtrar camas activas que no tengan un paciente asociado
+        const activeCamas = habitaciones.flatMap(h => h.camas.filter(c => c.activo && !pacientes.some(p => p.cama.id === c.id)));
+        if (activeCamas.length === 0) {
+            notification.warning({ message: 'Advertencia', description: 'No se pueden crear pacientes porque no hay camas disponibles sin pacientes' });
+            return;
+        }
+        setIsPacienteModalOpen(true);
+    };
+
+    // Nueva función para cerrar el modal de creación de pacientes
+    const closeCreatePacienteModal = () => {
+        setIsPacienteModalOpen(false);
+        setNewPacienteID('');
+        setNewPacienteName('');
+        setNewRecommendedDiet('');
+        setSelectedCama(null);
+    };
+
+    if (loading) {
+        return <div>Cargando...</div>;
+    }
+
+    return (
+        <div className="data-management container mt-5">
+            <h2>Gestión de Pacientes, Servicios y Habitaciones</h2>
+
+            <Button type="primary" onClick={openDrawer}>
+                Panel de Gestión
+            </Button>
+
+            <Drawer
+                title="Gestión de Datos"
+                placement="right"
+                onClose={closeDrawer}
+                open={isDrawerOpen}
+                width={600}
+            >
+                <Tabs defaultActiveKey="1">
+                    <TabPane tab="Servicios" key="1">
+                        <Button type="primary" onClick={openCreateServicioModal} style={{ marginBottom: '20px' }}>
+                            Crear Servicio
+                        </Button>
+                        <Table
+                            dataSource={servicios}
+                            columns={[
+                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                {
+                                    title: 'Activo',
+                                    key: 'activo',
+                                    render: (_, record) => (
+                                        <Switch
+                                            checked={record.activo}
+                                            onChange={() => toggleActivo(record, 'servicios')}
+                                        />
+                                    ),
+                                }
+                            ]}
+                            rowKey="id"
+                            scroll={{ x: 10 }} // Añadir scroll lateral
+                        />
+
+                        {/* Modal para crear un nuevo servicio */}
+                        <Modal
+                            title="Crear Nuevo Servicio"
+                            open={isModalOpen}
+                            onOk={handleCreateServicio}
+                            onCancel={closeCreateServicioModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Nombre del Servicio">
+                                    <Input
+                                        value={newServicioName}
+                                        onChange={e => setNewServicioName(e.target.value)}
+                                        placeholder="Ingrese el nombre del servicio"
+                                    />
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    </TabPane>
+                    <TabPane tab="Habitaciones" key="2">
+                        <Button type="primary" onClick={openCreateHabitacionModal} style={{ marginBottom: '20px' }}>
+                            Crear Habitación
+                        </Button>
+                        <Button type="primary" onClick={openCreateCamaModal} style={{ marginBottom: '20px' }}>
+                            Crear Cama
+                        </Button>
+                        <Table
+                            dataSource={habitaciones}
+                            columns={[
+                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
+                                {
+                                    title: 'Camas',
+                                    key: 'camas',
+                                    render: (_, habitacion) => (
+                                        <ul>
+                                            {habitacion.camas.map(cama => (
+                                                <li key={cama.id}>
+                                                    {cama.nombre}
+                                                    <Switch
+                                                        checked={cama.activo}
+                                                        onChange={() => toggleActivo(cama, 'camas')}
+                                                        style={{ marginLeft: 8 }}
+                                                    />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )
+                                },
+                                {
+                                    title: 'Activo',
+                                    key: 'activo',
+                                    render: (_, record) => (
+                                        <Switch
+                                            checked={record.activo}
+                                            onChange={() => toggleActivo(record, 'habitaciones')}
+                                        />
+                                    ),
+                                }
+                            ]}
+                            rowKey="id"
+                            scroll={{ x: 10 }} // Añadir scroll lateral
+                        />
+
+                        {/* Modal para crear una nueva habitación */}
+                        <Modal
+                            title="Crear Nueva Habitación"
+                            open={isHabitacionModalOpen}
+                            onOk={handleCreateHabitacion}
+                            onCancel={closeCreateHabitacionModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Nombre de la Habitación">
+                                    <Input
+                                        value={newHabitacionName}
+                                        onChange={e => setNewHabitacionName(e.target.value)}
+                                        placeholder="Ingrese el nombre de la habitación"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Servicio">
+                                    <Select
+                                        value={selectedServicio}
+                                        onChange={value => setSelectedServicio(value)}
+                                        placeholder="Seleccione un servicio"
+                                    >
+                                        {servicios.filter(s => s.activo).map(servicio => (
+                                            <Option key={servicio.id} value={servicio.id}>
+                                                {servicio.nombre}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+
+                        {/* Modal para crear una nueva cama */}
+                        <Modal
+                            title="Crear Nueva Cama"
+                            open={isCamaModalOpen}
+                            onOk={handleCreateCama}
+                            onCancel={closeCreateCamaModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Nombre de la Cama">
+                                    <Input
+                                        value={newCamaName}
+                                        onChange={e => setNewCamaName(e.target.value)}
+                                        placeholder="Ingrese el nombre de la cama"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Habitación">
+                                    <Select
+                                        value={selectedHabitacion}
+                                        onChange={value => setSelectedHabitacion(value)}
+                                        placeholder="Seleccione una habitación"
+                                    >
+                                        {habitaciones.filter(h => h.activo).map(habitacion => (
+                                            <Option key={habitacion.id} value={habitacion.id}>
+                                                {habitacion.nombre}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    </TabPane>
+                    <TabPane tab="Pacientes" key="3">
+                        <Button type="primary" onClick={openCreatePacienteModal} style={{ marginBottom: '20px' }}>
+                            Crear Paciente
+                        </Button>
+                        <Table
+                            dataSource={pacientes}
+                            columns={[
+                                { title: 'Cédula', dataIndex: 'cedula', key: 'cedula' },
+                                { title: 'Nombre', dataIndex: 'name', key: 'name' },
+                                { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
+                                { title: 'Habitación', dataIndex: ['cama', 'habitacion', 'nombre'], key: 'habitacion' },
+                                { title: 'Servicio', dataIndex: ['cama', 'habitacion', 'servicio', 'nombre'], key: 'servicio' },
+                                { title: 'Dieta Recomendada', dataIndex: 'recommended_diet', key: 'recommended_diet' },
+                                {
+                                    title: 'Activo',
+                                    key: 'activo',
+                                    align: 'center',
+                                    render: (_, record) => (
+                                        <Switch
+                                            checked={record.activo}
+                                            onChange={() => toggleActivo(record, 'pacientes')}
+                                        />
+                                    ),
+                                }
+                            ]}
+                            rowKey="id"
+                            scroll={{ x: 10 }} // Añadir scroll lateral
+                        />
+
+                        {/* Modal para crear un nuevo paciente */}
+                        <Modal
+                            title="Crear Nuevo Paciente"
+                            open={isPacienteModalOpen}
+                            onOk={handleCreatePaciente}
+                            onCancel={closeCreatePacienteModal}
+                            okText="Crear"
+                            cancelText="Cancelar"
+                        >
+                            <Form layout="vertical">
+                                <Form.Item label="Cédula">
+                                    <Input
+                                        value={newPacienteID}
+                                        onChange={e => setNewPacienteID(e.target.value)}
+                                        placeholder="Ingrese la cédula del paciente"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Nombre">
+                                    <Input
+                                        value={newPacienteName}
+                                        onChange={e => setNewPacienteName(e.target.value)}
+                                        placeholder="Ingrese el nombre del paciente"
+                                    />
+                                </Form.Item>
+                                <Form.Item label="Cama">
+                                    <Select
+                                        value={selectedCama}
+                                        onChange={value => setSelectedCama(value)}
+                                        placeholder="Seleccione una cama"
+                                    >
+                                        {habitaciones.flatMap(h => h.camas.filter(c => c.activo && !pacientes.some(p => p.cama.id === c.id))).map(cama => (
+                                            <Option key={cama.id} value={cama.id}>
+                                                {cama.nombre}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item label="Dieta Recomendada">
+                                    <Input
+                                        value={newRecommendedDiet}
+                                        onChange={e => setNewRecommendedDiet(e.target.value)}
+                                        placeholder="Ingrese la dieta recomendada"
+                                    />
+                                </Form.Item>
+                            </Form>
+                        </Modal>
+                    </TabPane>
+                </Tabs>
+            </Drawer>
+
+            {/* Visualización de Elementos Activos en la Página Principal */}
+            <div className="active-data mt-4">
+                <h3>Servicios Activos</h3>
+                <ul className="list-group mb-4">
+                    {servicios.filter(s => s.activo).map(servicio => (
+                        <li key={servicio.id} className="list-group-item">
+                            {servicio.nombre}
+                        </li>
+                    ))}
+                </ul>
+
+                <h3>Habitaciones Activas</h3>
+                <ul className="list-group mb-4">
+                    {habitaciones.filter(h => h.activo).map(habitacion => (
+                        <li key={habitacion.id} className="list-group-item">
+                            {habitacion.nombre} - {habitacion.servicio}
+                            <ul>
+                                {habitacion.camas.map(cama => (
+                                    cama.activo && (
+                                        <li key={cama.id}>
+                                            {cama.nombre}
+                                        </li>
+                                    )
+                                ))}
+                            </ul>
+                        </li>
+                    ))}
+                </ul>
+
+                <h3>Pacientes Activos</h3>
+                <Collapse>
+                    {pacientes.filter(p => p.activo).map(paciente => (
+                        <Panel
+                            header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                            key={paciente.id}
+                        >
+                            <p><strong>Cédula:</strong> {paciente.cedula}</p>
+                            <p><strong>Cama:</strong> {paciente.cama.nombre}</p>
+                            <p><strong>Habitación:</strong> {paciente.cama.habitacion.nombre}</p>
+                            <p><strong>Servicio:</strong> {paciente.cama.habitacion.servicio.nombre}</p>
+                            <p><strong>Dieta Recomendada:</strong> {paciente.recommended_diet}</p>
+                            <p><strong>Registrado en:</strong> {paciente.created_at}</p>
+                        </Panel>
+                    ))}
+                </Collapse>
+            </div>
+        </div>
+    );
+};
+
+export default DataManagement;
+// Importamos React para crear componentes
+import React from 'react';
+// Importamos el archivo de estilos SCSS específico para este componente
+import '../styles/Home.scss';
+
+// Definimos el componente Home que representa la página de inicio
+const Home = () => {
+    return (
+        // Contenedor principal con la clase "home" para aplicar estilos específicos
+        // "text-center" es una clase de Bootstrap para centrar el texto
+        <div className="home text-center">
+            {/* Título de la página de inicio */}
+            <h1>Menú Preferencial - Clínica San Juan de Dios</h1>
+        </div>
+    );
+};
+
+// Exportamos el componente Home para que pueda ser utilizado en otras partes de la aplicación
+export default Home;
+// Importamos React y el hook useState para manejar el estado del componente
+import React, { useState } from 'react';
+// Importamos useNavigate desde react-router-dom para manejar la navegación
+import { useNavigate } from 'react-router-dom';
+// Importamos el servicio API para realizar peticiones al backend
+import api from '../services/api';
+// Importamos el archivo de estilos SCSS específico para este componente
+import '../styles/Login.scss';
+
+// Definimos el componente Login
+const Login = () => {
+    // Estado para manejar el nombre de usuario, contraseña y errores
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    // Inicializamos el hook useNavigate para la redirección después del login
+    const navigate = useNavigate();
+
+    // Función para manejar el envío del formulario de login
+    const handleLogin = async (e) => {
+        e.preventDefault();  // Prevenimos el comportamiento por defecto del formulario
+        try {
+            // Enviamos una petición POST al backend con el nombre de usuario y la contraseña
+            const response = await api.post('/auth/login/', { username, password });
+            // Guardamos el token de acceso en localStorage
+            localStorage.setItem('token', response.data.access);
+            // Redirigimos al usuario a la página de inicio después de un login exitoso
+            navigate('/');
+        } catch (error) {
+            // Si hay un error, actualizamos el estado para mostrar un mensaje de error
+            setError('Login failed');
+        }
+    };
+
+    // Renderizamos el formulario de login
+    return (
+        <div className="login-container container mt-5">
+            <h2>Login</h2>
+            <form onSubmit={handleLogin}>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <button type="submit" className="btn btn-primary btn-block">Login</button>
+                {/* Mostrar mensaje de error si ocurre un fallo en el login */}
+                {error && <p className="text-danger text-center mt-2">{error}</p>}
+            </form>
+        </div>
+    );
+};
+
+// Exportamos el componente Login para que pueda ser utilizado en otras partes de la aplicación
+export default Login;
+// Importamos React y los hooks useState y useEffect para manejar el estado y efectos
+import React, { useState, useEffect } from 'react';
+// Importamos varios componentes y utilidades desde Ant Design
+import { Button, Modal, Form, Input, notification, Spin, Alert, List, Typography, Collapse } from 'antd';
+// Importamos varios íconos desde Ant Design
+import { PlusOutlined, DeleteOutlined, EyeOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+// Importamos funciones API para manejar las operaciones CRUD de menús
+import { createMenu, getMenus, deleteMenu, updateMenu } from '../services/api';
+// Importamos los estilos SCSS para este componente
+import '../styles/Menus.scss';
+
+// Desestructuramos componentes desde Ant Design para un acceso más limpio
+const { Title } = Typography;
+const { Panel } = Collapse;
+const { confirm } = Modal;
+
+// Definimos el componente MenuPage
+const MenuPage = () => {
+    // Estados para manejar la visibilidad de modales, el nombre del menú, el menú actual, y las opciones del menú
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [menuName, setMenuName] = useState('');
+    const [currentMenu, setCurrentMenu] = useState(null);
+    const [options, setOptions] = useState({
+        adicional: { adicionales: [] },
+        algo: { adicionales: [], bebidas: [] },
+        onces: { adicionales: [] },
+        desayuno: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+        almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+        cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+    });
+    const [newOptionText, setNewOptionText] = useState('');
+    const [currentOptionType, setCurrentOptionType] = useState({});
+    const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
+    const [menus, setMenus] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Función para mostrar el modal de creación/edición de menús
+    const showModal = () => {
+        setIsModalOpen(true);
+        setCurrentMenu(null);
+        setMenuName('');
+        setOptions({
+            adicional: { adicionales: [] },
+            algo: { adicionales: [], bebidas: [] },
+            onces: { adicionales: [] },
+            desayuno: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+            almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+            cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+        });
+    };
+
+    // Función para mostrar el modal de detalles del menú
+    const showDetailModal = (menu) => {
+        setCurrentMenu(menu);
+        setIsDetailModalOpen(true);
+    };
+
+    // Función para manejar la creación o actualización de un menú
+    const handleOk = async () => {
+        if (!menuName) {
+            notification.error({ message: 'Error', description: 'El nombre del menú es obligatorio' });
+            return;
+        }
+
+        const sections = Object.keys(options).map(key => {
+            if (key === 'adicional') {
+                return {
+                    titulo: key.charAt(0).toUpperCase() + key.slice(1),
+                    adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
+                };
+            } else if (key === 'algo') {
+                return {
+                    titulo: key.charAt(0).toUpperCase() + key.slice(1),
+                    adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+                    bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || []
+                };
+            } else if (key === 'onces') {
+                return {
+                    titulo: key.charAt(0).toUpperCase() + key.slice(1),
+                    adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || []
+                };
+            } else {
+                return {
+                    titulo: key.charAt(0).toUpperCase() + key.slice(1),
+                    adicionales: options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+                    platos_principales: options[key].platos_principales.map(({ id, ...rest }) => rest) || [],
+                    acompanantes: options[key].acompanantes.map(({ id, ...rest }) => rest) || [],
+                    bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || [],
+                };
+            }
+        });
+
+        // Verificación de al menos dos opciones por sección
+        for (let section of sections) {
+            if (section.adicionales && section.adicionales.length < 2) {
+                notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Adicionales` });
+                return;
+            }
+            if (section.platos_principales && section.platos_principales.length < 2) {
+                notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Platos Principales` });
+                return;
+            }
+            if (section.acompanantes && section.acompanantes.length < 2) {
+                notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Acompañantes` });
+                return;
+            }
+            if (section.bebidas && section.bebidas.length < 2) {
+                notification.error({ message: 'Error', description: `La sección ${section.titulo} debe tener al menos dos opciones en Bebidas` });
+                return;
+            }
+        }
+
+        const payload = {
+            nombre: menuName,
+            sections
+        };
+
+        console.log('Payload:', JSON.stringify(payload, null, 2));
+
+        try {
+            let response;
+            if (currentMenu) {
+                response = await updateMenu(currentMenu.id, payload);
+                notification.success({ message: 'Menú actualizado exitosamente' });
+            } else {
+                response = await createMenu(payload);
+                notification.success({ message: 'Menú creado exitosamente' });
+            }
+            console.log('Response:', response);
+            setIsModalOpen(false);
+            fetchMenus();
+        } catch (error) {
+            console.error('Error:', error.response?.data?.message || error.message);
+            notification.error({ message: 'Error al crear/actualizar el menú', description: error.response?.data?.message || error.message });
+        }
+    };
+
+    // Función para cancelar el modal y limpiar los estados
+    const handleCancel = () => {
+        setIsModalOpen(false);
+        setIsDetailModalOpen(false);
+        setCurrentMenu(null);
+        setMenuName('');
+        setOptions({
+            adicional: { adicionales: [] },
+            algo: { adicionales: [], bebidas: [] },
+            onces: { adicionales: [] },
+            desayuno: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+            almuerzo: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+            cena: { adicionales: [], platos_principales: [], acompanantes: [], bebidas: [] },
+        });
+    };
+
+    // Función para abrir el modal de opciones para una sección específica
+    const openOptionModal = (section, type) => {
+        setCurrentOptionType({ section, type });
+        setNewOptionText('');
+        setIsOptionModalOpen(true);
+    };
+
+    // Función para agregar una nueva opción a una sección
+    const handleAddOption = () => {
+        if (!newOptionText) {
+            notification.error({ message: 'Error', description: 'Debe ingresar un texto para la opción' });
+            return;
+        }
+
+        setOptions(prev => {
+            const newOptions = { ...prev };
+            newOptions[currentOptionType.section][currentOptionType.type].push({ texto: newOptionText, tipo: currentOptionType.type });
+            return newOptions;
+        });
+
+        setIsOptionModalOpen(false);
+    };
+
+    // Función para eliminar una opción de una sección específica
+    const removeOption = (section, type, index) => {
+        setOptions(prev => {
+            const newOptions = { ...prev };
+            newOptions[section][type].splice(index, 1);
+            return newOptions;
+        });
+    };
+
+    // Función para obtener los menús desde el servidor
+    const fetchMenus = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getMenus();
+            setMenus(data);
+            console.log('Fetched menus:', data);
+        } catch (error) {
+            setError('Error fetching menus: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Función para manejar la eliminación de un menú
+    const handleDeleteMenu = async (id) => {
+        confirm({
+            title: '¿Está seguro de que desea eliminar este menú?',
+            icon: <ExclamationCircleOutlined />,
+            content: 'Esta acción no se puede deshacer',
+            okText: 'Sí',
+            okType: 'danger',
+            cancelText: 'No',
+            onOk: async () => {
+                try {
+                    await deleteMenu(id);
+                    notification.success({ message: 'Menú eliminado exitosamente' });
+                    fetchMenus();
+                } catch (error) {
+                    notification.error({ message: 'Error al eliminar el menú', description: error.response?.data?.message || error.message });
+                }
+            },
+        });
+    };
+
+    // Función para manejar la edición de un menú existente
+    const handleEditMenu = (menu) => {
+        setCurrentMenu(menu);
+        setMenuName(menu.nombre);
+        setOptions(menu.sections.reduce((acc, section) => {
+            acc[section.titulo.toLowerCase()] = {
+                adicionales: section.adicionales || [],
+                platos_principales: section.platos_principales || [],
+                acompanantes: section.acompanantes || [],
+                bebidas: section.bebidas || []
+            };
+            return acc;
+        }, {}));
+        setIsModalOpen(true);
+        console.log('Editing menu:', menu);
+    };
+
+    // Efecto para obtener los menús al cargar el componente
+    useEffect(() => {
+        fetchMenus();
+    }, []);
+
+    return (
+        <div className="menu-page">
+            <Title level={2}>Menús</Title>
+            <Button className="custom-button" type="primary" onClick={showModal} icon={<PlusOutlined />}>
+                Crear Menú
+            </Button>
+            <Modal
+                title={currentMenu ? "Editar Menú" : "Crear Menú"}
+                open={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}
+                footer={
+                    <div className="modal-footer">
+                        <Button key="back" className="custom-button save-button" onClick={handleCancel}>
+                            Cancelar
+                        </Button>
+                        <Button key="submit" type="primary" className="custom-button save-button" onClick={handleOk}>
+                            {currentMenu ? "Actualizar Menú" : "Guardar Menú"}
+                        </Button>
+                    </div>
+                }
+            >
+                <Form layout="vertical">
+                    <Form.Item label="Nombre del Menú">
+                        <Input value={menuName} onChange={e => setMenuName(e.target.value)} />
+                    </Form.Item>
+                    <Collapse>
+                        {['adicional', 'algo', 'onces'].map(section => (
+                            <Panel header={section.charAt(0).toUpperCase() + section.slice(1)} key={section}>
+                                <div className="button-group vertical-buttons">
+                                    <Button className="custom-button" onClick={() => openOptionModal(section, 'adicionales')} icon={<PlusOutlined />}>
+                                        Agregar Adicional
+                                    </Button>
+                                    {section === 'algo' && (
+                                        <Button className="custom-button" onClick={() => openOptionModal(section, 'bebidas')} icon={<PlusOutlined />}>
+                                            Agregar Bebida
+                                        </Button>
+                                    )}
+                                </div>
+                                <List
+                                    header={<div>Adicionales</div>}
+                                    bordered
+                                    dataSource={options[section]?.adicionales || []}
+                                    renderItem={(opt, index) => (
+                                        <List.Item
+                                            actions={[
+                                                <Button
+                                                    type="link"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => removeOption(section, 'adicionales', index)}
+                                                />
+                                            ]}
+                                        >
+                                            {opt.texto}
+                                        </List.Item>
+                                    )}
+                                />
+                                {section === 'algo' && (
+                                    <List
+                                        header={<div>Bebidas</div>}
+                                        bordered
+                                        dataSource={options[section]?.bebidas || []}
+                                        renderItem={(opt, index) => (
+                                            <List.Item
+                                                actions={[
+                                                    <Button
+                                                        type="link"
+                                                        icon={<DeleteOutlined />}
+                                                        onClick={() => removeOption(section, 'bebidas', index)}
+                                                    />
+                                                ]}
+                                            >
+                                                {opt.texto}
+                                            </List.Item>
+                                        )}
+                                    />
+                                )}
+                            </Panel>
+                        ))}
+                        {['desayuno', 'almuerzo', 'cena'].map(section => (
+                            <Panel header={section.charAt(0).toUpperCase() + section.slice(1)} key={section}>
+                                <div className="button-group vertical-buttons">
+                                    <Button className="custom-button" onClick={() => openOptionModal(section, 'adicionales')} icon={<PlusOutlined />}>
+                                        Agregar Adicional
+                                    </Button>
+                                    <Button className="custom-button" onClick={() => openOptionModal(section, 'platos_principales')} icon={<PlusOutlined />}>
+                                        Agregar Plato Principal
+                                    </Button>
+                                    <Button className="custom-button" onClick={() => openOptionModal(section, 'acompanantes')} icon={<PlusOutlined />}>
+                                        Agregar Acompañante
+                                    </Button>
+                                    <Button className="custom-button" onClick={() => openOptionModal(section, 'bebidas')} icon={<PlusOutlined />}>
+                                        Agregar Bebida
+                                    </Button>
+                                </div>
+                                <List
+                                    header={<div>Adicionales</div>}
+                                    bordered
+                                    dataSource={options[section]?.adicionales || []}
+                                    renderItem={(opt, index) => (
+                                        <List.Item
+                                            actions={[
+                                                <Button
+                                                    type="link"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => removeOption(section, 'adicionales', index)}
+                                                />
+                                            ]}
+                                        >
+                                            {opt.texto}
+                                        </List.Item>
+                                    )}
+                                />
+                                <List
+                                    header={<div>Platos Principales</div>}
+                                    bordered
+                                    dataSource={options[section]?.platos_principales || []}
+                                    renderItem={(opt, index) => (
+                                        <List.Item
+                                            actions={[
+                                                <Button
+                                                    type="link"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => removeOption(section, 'platos_principales', index)}
+                                                />
+                                            ]}
+                                        >
+                                            {opt.texto}
+                                        </List.Item>
+                                    )}
+                                />
+                                <List
+                                    header={<div>Acompañantes</div>}
+                                    bordered
+                                    dataSource={options[section]?.acompanantes || []}
+                                    renderItem={(opt, index) => (
+                                        <List.Item
+                                            actions={[
+                                                <Button
+                                                    type="link"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => removeOption(section, 'acompanantes', index)}
+                                                />
+                                            ]}
+                                        >
+                                            {opt.texto}
+                                        </List.Item>
+                                    )}
+                                />
+                                <List
+                                    header={<div>Bebidas</div>}
+                                    bordered
+                                    dataSource={options[section]?.bebidas || []}
+                                    renderItem={(opt, index) => (
+                                        <List.Item
+                                            actions={[
+                                                <Button
+                                                    type="link"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => removeOption(section, 'bebidas', index)}
+                                                />
+                                            ]}
+                                        >
+                                            {opt.texto}
+                                        </List.Item>
+                                    )}
+                                />
+                            </Panel>
+                        ))}
+                    </Collapse>
+                </Form>
+            </Modal>
+
+            <Modal
+                title="Añadir opción"
+                open={isOptionModalOpen}
+                onOk={handleAddOption}
+                onCancel={() => setIsOptionModalOpen(false)}
+                footer={
+                    <div className="modal-footer">
+                        <Button key="back" className="custom-button save-button" onClick={() => setIsOptionModalOpen(false)}>
+                            Cancelar
+                        </Button>
+                        <Button key="submit" type="primary" className="custom-button save-button" onClick={handleAddOption}>
+                            OK
+                        </Button>
+                    </div>
+                }
+            >
+                <Form layout="vertical">
+                    <Form.Item label={`Añadir ${currentOptionType.type}`}>
+                        <Input value={newOptionText} onChange={e => setNewOptionText(e.target.value)} />
+                    </Form.Item>
+                </Form>
+            </Modal>
+
+            <Modal
+                title="Detalles del Menú"
+                open={isDetailModalOpen}
+                onOk={() => setIsDetailModalOpen(false)}
+                onCancel={() => setIsDetailModalOpen(false)}
+                footer={[
+                    <Button key="back" className="custom-button save-button" onClick={() => setIsDetailModalOpen(false)}>
+                        Cerrar
+                    </Button>,
+                ]}
+            >
+                {currentMenu && (
+                    <div className="menu-details">
+                        <Title level={3}>{currentMenu.nombre}</Title>
+                        {currentMenu.sections.map(section => (
+                            <div key={section.id}>
+                                <Title level={4}>{section.titulo}</Title>
+                                {section.adicionales?.length > 0 && (
+                                    <>
+                                        <Title level={5}>Adicionales</Title>
+                                        <List
+                                            bordered
+                                            dataSource={section.adicionales}
+                                            renderItem={adicional => <List.Item>{adicional.texto}</List.Item>}
+                                        />
+                                    </>
+                                )}
+                                {section.platos_principales?.length > 0 && (
+                                    <>
+                                        <Title level={5}>Platos Principales</Title>
+                                        <List
+                                            bordered
+                                            dataSource={section.platos_principales}
+                                            renderItem={plato => <List.Item>{plato.texto}</List.Item>}
+                                        />
+                                    </>
+                                )}
+                                {section.acompanantes?.length > 0 && (
+                                    <>
+                                        <Title level={5}>Acompañantes</Title>
+                                        <List
+                                            bordered
+                                            dataSource={section.acompanantes}
+                                            renderItem={acompanante => <List.Item>{acompanante.texto}</List.Item>}
+                                        />
+                                    </>
+                                )}
+                                {section.bebidas?.length > 0 && (
+                                    <>
+                                        <Title level={5}>Bebidas</Title>
+                                        <List
+                                            bordered
+                                            dataSource={section.bebidas}
+                                            renderItem={bebida => <List.Item>{bebida.texto}</List.Item>}
+                                        />
+                                    </>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Modal>
+
+            <div className="menu-list">
+                {loading ? (
+                    <div className="loading-container">
+                        <Spin tip="Cargando menús..." />
+                    </div>
+                ) : error ? (
+                    <Alert message="Error" description={error} type="error" />
+                ) : menus.length > 0 ? (
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={menus}
+                        renderItem={menu => (
+                            <List.Item
+                                actions={[
+                                    <Button type="link" icon={<EyeOutlined />} onClick={() => showDetailModal(menu)} />,
+                                    <Button type="link" icon={<EditOutlined />} onClick={() => handleEditMenu(menu)} />,
+                                    <Button type="link" icon={<DeleteOutlined />} onClick={() => handleDeleteMenu(menu.id)} />
+                                ]}
+                            >
+                                <List.Item.Meta
+                                    title={<span className="menu-title">{menu.nombre}</span>}
+                                />
+                            </List.Item>
+                        )}
+                    />
+                ) : (
+                    <p>No hay menús disponibles.</p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default MenuPage;
+import React, { useState, useEffect } from 'react';
+import { Button, Spin, Collapse } from 'antd';
+import { getPedidos, updatePedido } from '../services/api';
+import '../styles/PedidosPendientes.scss';
+import api from '../axiosConfig';
+
+const { Panel } = Collapse;
+
+const PedidosPendientes = () => {
+    const [pedidos, setPedidos] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPedidos = async () => {
+            try {
+                const response = await getPedidos();
+                setPedidos(response.filter(pedido => pedido.status !== 'completado'));
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching pedidos', error);
+                setLoading(false);
+            }
+        };
+
+        fetchPedidos();
+    }, []);
+
+    const handleSectionStatusChange = async (pedidoId, sectionTitle) => {
+        try {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+
+            const updatedSections = { ...pedido.sectionStatus, [sectionTitle]: 'completado' };
+
+            const allSectionsCompleted = Object.values(updatedSections).length === pedido.menu.sections.length &&
+                                         Object.values(updatedSections).every(status => status === 'completado');
+
+            const updatedPedido = {
+                ...pedido,
+                status: allSectionsCompleted ? 'completado' : 'en_proceso',
+                sectionStatus: updatedSections,
+            };
+
+            await updatePedido(pedidoId, updatedPedido);
+
+            setPedidos(prevPedidos =>
+                prevPedidos.map(p =>
+                    p.id === pedidoId
+                        ? { ...p, sectionStatus: updatedSections, status: updatedPedido.status }
+                        : p
+                ).filter(p => p.status !== 'completado')
+            );
+
+        } catch (error) {
+            console.error('Error updating section status', error);
+        }
+    };
+
+    const handlePrint = async (pedido) => {
+        const url = `/pedidos/${pedido.id}/print/`;
+        console.log("URL de la solicitud:", url);
+    
+        try {
+            const response = await api.post(url);
+    
+            console.log("Respuesta completa:", response);
+    
+            if (response.status === 200) {
+                console.log("Pedido impreso con éxito.");
+            } else {
+                console.error("Error al intentar imprimir el pedido:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("Error al intentar imprimir el pedido:", error);
+        }
+    };            
+    
+    if (loading) {
+        return <Spin />;
+    }
+
+    const renderSections = (pedido) => {
+        const sectionsToShow = {
+            'Adicional': ['adicionales'],
+            'Algo': ['adicionales', 'bebidas'],
+            'Onces': ['adicionales'],
+            'Desayuno': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
+            'Almuerzo': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
+            'Cena': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas']
+        };
+
+        return pedido.menu.sections.map(section => {
+            const optionsToRender = sectionsToShow[section.titulo];
+
+            return optionsToRender && optionsToRender.length > 0 ? (
+                <div key={section.id}>
+                    <h4>{section.titulo}</h4>
+                    {optionsToRender.map(optionType => (
+                        <div key={optionType}>
+                            <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
+                            {section[optionType].map(option => (
+                                <div key={option.id}>
+                                    {option.texto}
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                    <Button
+                        onClick={() => handleSectionStatusChange(pedido.id, section.titulo)}
+                        disabled={pedido.sectionStatus?.[section.titulo] === 'completado'}
+                    >
+                        {pedido.sectionStatus?.[section.titulo] === 'completado' ? 'Completado' : 'Marcar como Completado'}
+                    </Button>
+                </div>
+            ) : null;
+        });
+    };
+
+    return (
+        <div className="pedidos-pendientes">
+            <h2>Pedidos Pendientes</h2>
+            <Collapse>
+                {pedidos.length > 0 ? (
+                    pedidos.map(pedido => (
+                        <Panel header={`Pedido ${pedido.id} - ${pedido.paciente.name}`} key={pedido.id}>
+                            {renderSections(pedido)}
+                            <div>
+                                <h4>Opciones Adicionales del Menú</h4>
+                                <div>Leche: {pedido.adicionales.leche}</div>
+                                <div>Bebida: {pedido.adicionales.bebida}</div>
+                                <div>Azúcar/Panela: {pedido.adicionales.azucarPanela.join(', ')}</div>
+                                <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                                <div>Golosina: {pedido.adicionales.golosina ? 'Sí' : 'No'}</div>
+                            </div>
+                            <Button onClick={() => handlePrint(pedido)}>Imprimir</Button>
+                        </Panel>
+                    ))
+                ) : (
+                    <p>No hay pedidos pendientes.</p>
+                )}
+            </Collapse>
+        </div>
+    );
+};
+
+export default PedidosPendientes;
+import React, { useEffect, useState } from 'react';
+import { Select, Button, Checkbox, Spin, Collapse, Modal } from 'antd';
+import { getPacientes, getMenus, createPedido } from '../services/api';
+import '../styles/RealizarPedido.scss';
+
+const { Option } = Select;
+const { Panel } = Collapse;
+
+const RealizarPedido = () => {
+    const [pacientes, setPacientes] = useState([]);
+    const [menus, setMenus] = useState([]);
+    const [selectedPaciente, setSelectedPaciente] = useState(null);
+    const [selectedMenu, setSelectedMenu] = useState(null);
+    const [selectedOptions, setSelectedOptions] = useState({});
+    const [additionalOptions, setAdditionalOptions] = useState({
+        leche: '',
+        bebida: '',
+        azucarPanela: [],
+        vegetales: '',
+        golosina: false
+    });
+    const [loading, setLoading] = useState(true);
+    const [confirmVisible, setConfirmVisible] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const pacientesResponse = await getPacientes();
+                const menusResponse = await getMenus();
+                setPacientes(pacientesResponse);
+                setMenus(menusResponse);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching data', error);
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handlePacienteChange = value => {
+        setSelectedPaciente(value);
+    };
+
+    const handleMenuChange = value => {
+        const menu = menus.find(menu => menu.id === value);
+        setSelectedMenu(menu);
+        setSelectedOptions({});
+    };
+
+    const handleOptionChange = (sectionName, optionType, optionId, checked) => {
+        setSelectedOptions(prevOptions => {
+            const newOptions = { ...prevOptions };
+
+            if (!newOptions[sectionName]) {
+                newOptions[sectionName] = {};
+            }
+
+            if (!newOptions[sectionName][optionType]) {
+                newOptions[sectionName][optionType] = [];
+            }
+
+            if (checked) {
+                if (optionType === 'acompanantes') {
+                    if (newOptions[sectionName][optionType].length < 2) {
+                        newOptions[sectionName][optionType].push(optionId);
+                    }
+                } else {
+                    newOptions[sectionName][optionType] = [optionId];
+                }
+            } else {
+                newOptions[sectionName][optionType] = newOptions[sectionName][optionType].filter(id => id !== optionId);
+            }
+
+            return newOptions;
+        });
+    };
+
+    const validateSelections = () => {
+        const errors = [];
+
+        const sectionsValidation = {
+            Adicional: { adicionales: { max: 1 } },
+            Algo: { adicionales: { max: 1 }, bebidas: { max: 1 } },
+            Onces: { adicionales: { max: 1 } },
+            Desayuno: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+            Almuerzo: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+            Cena: { adicionales: { max: 1 }, platos_principales: { max: 1 }, acompanantes: { max: 2 }, bebidas: { max: 1 } },
+        };
+
+        for (const [sectionName, rules] of Object.entries(sectionsValidation)) {
+            const sectionOptions = selectedOptions[sectionName] || {};
+            for (const [optionType, rule] of Object.entries(rules)) {
+                const selectedCount = (sectionOptions[optionType] || []).length;
+                if (rule.max !== undefined && selectedCount > rule.max) {
+                    errors.push(`${sectionName} - ${optionType}: Máximo ${rule.max} opciones`);
+                }
+            }
+        }
+
+        return errors;
+    };
+
+    const showConfirmModal = () => {
+        const validationErrors = validateSelections();
+        if (validationErrors.length > 0) {
+            Modal.error({
+                title: 'Errores de Validación',
+                content: (
+                    <ul>
+                        {validationErrors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                        ))}
+                    </ul>
+                ),
+            });
+        } else {
+            setConfirmVisible(true);
+        }
+    };
+
+    const handleOk = async () => {
+        setConfirmVisible(false);
+        try {
+            const opciones = [];
+            for (const section of selectedMenu.sections) {
+                for (const key in section) {
+                    if (section[key] instanceof Array) {
+                        section[key].forEach(option => {
+                            const selected = selectedOptions[section.titulo]?.[key]?.includes(option.id) || false;
+                            opciones.push({
+                                id: option.id,
+                                selected: selected,
+                            });
+                        });
+                    }
+                }
+            }
+
+            const pedido = {
+                paciente: selectedPaciente,
+                menu: selectedMenu.id,
+                opciones: opciones,
+                adicionales: additionalOptions,
+            };
+
+            await createPedido(pedido);
+            resetForm();
+        } catch (error) {
+            console.error('Error creating pedido', error);
+        }
+    };
+
+    const resetForm = () => {
+        setSelectedPaciente(null);
+        setSelectedMenu(null);
+        setSelectedOptions({});
+        setAdditionalOptions({
+            leche: '',
+            bebida: '',
+            azucarPanela: [],
+            vegetales: '',
+            golosina: false
+        });
+    };
+
+    const handleCancel = () => {
+        setConfirmVisible(false);
+    };
+
+    const filterOption = (input, option) => {
+        return option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    };
+
+    if (loading) {
+        return <Spin />;
+    }
+
+    return (
+        <div className="realizar-pedido">
+            <h2>Realizar un Pedido</h2>
+            <div className="form-item">
+                <label>Paciente</label>
+                <Select
+                    showSearch
+                    filterOption={filterOption}
+                    value={selectedPaciente}
+                    onChange={handlePacienteChange}
+                    style={{ width: '100%' }}
+                >
+                    {pacientes.map(paciente => (
+                        <Option key={paciente.id} value={paciente.id}>
+                            {paciente.name} (Cama: {paciente.cama.nombre}, Hab: {paciente.cama.habitacion.nombre}, Serv: {paciente.cama.habitacion.servicio.nombre})
+                        </Option>
+                    ))}
+                </Select>
+            </div>
+            <div className="form-item">
+                <label>Menú</label>
+                <Select value={selectedMenu?.id} onChange={handleMenuChange} style={{ width: '100%' }}>
+                    {menus.map(menu => (
+                        <Option key={menu.id} value={menu.id}>
+                            {menu.nombre}
+                        </Option>
+                    ))}
+                </Select>
+            </div>
+            {selectedMenu && selectedMenu.sections.map(section => (
+                <Collapse key={section.id} className="section-collapse">
+                    <Panel header={section.titulo}>
+                        {Object.keys(section).map(key => (
+                            key !== 'id' && key !== 'titulo' && section[key].length > 0 && (
+                                <div key={key} className="option-group">
+                                    <h4>{key.charAt(0).toUpperCase() + key.slice(1)}</h4>
+                                    {section[key].map(option => (
+                                        <Checkbox
+                                            key={option.id}
+                                            checked={selectedOptions[section.titulo]?.[key]?.includes(option.id)}
+                                            onChange={e => handleOptionChange(section.titulo, key, option.id, e.target.checked)}
+                                        >
+                                            {option.texto}
+                                        </Checkbox>
+                                    ))}
+                                </div>
+                            )
+                        ))}
+                    </Panel>
+                </Collapse>
+            ))}
+            <div className="additional-options">
+                <h3>Opciones Adicionales</h3>
+                <div className="form-item">
+                    <label>Leche</label>
+                    <Select
+                        value={additionalOptions.leche}
+                        onChange={value => setAdditionalOptions(prev => ({ ...prev, leche: value }))}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="entera">Leche entera</Option>
+                        <Option value="deslactosada">Leche deslactosada</Option>
+                    </Select>
+                </div>
+                <div className="form-item">
+                    <label>Bebida</label>
+                    <Select
+                        value={additionalOptions.bebida}
+                        onChange={value => setAdditionalOptions(prev => ({ ...prev, bebida: value }))}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="leche">Bebida en leche</Option>
+                        <Option value="agua">Bebida en agua</Option>
+                    </Select>
+                </div>
+                <div className="form-item">
+                    <label>Azúcar y/o Panela</label>
+                    <Checkbox.Group
+                        value={additionalOptions.azucarPanela}
+                        onChange={checkedValues => setAdditionalOptions(prev => ({ ...prev, azucarPanela: checkedValues }))}
+                    >
+                        <Checkbox value="azucar">Azúcar</Checkbox>
+                        <Checkbox value="panela">Panela</Checkbox>
+                    </Checkbox.Group>
+                </div>
+                <div className="form-item">
+                    <label>Vegetales</label>
+                    <Select
+                        value={additionalOptions.vegetales}
+                        onChange={value => setAdditionalOptions(prev => ({ ...prev, vegetales: value }))}
+                        style={{ width: '100%' }}
+                    >
+                        <Option value="crudos">Vegetales Crudos</Option>
+                        <Option value="calientes">Vegetales Calientes</Option>
+                    </Select>
+                </div>
+                <div className="form-item">
+                    <label>Golosina Opcional</label>
+                    <Checkbox
+                        checked={additionalOptions.golosina}
+                        onChange={e => setAdditionalOptions(prev => ({ ...prev, golosina: e.target.checked }))}
+                    >
+                        Golosina
+                    </Checkbox>
+                </div>
+            </div>
+            <Button onClick={showConfirmModal} type="primary" className="submit-button">
+                Realizar Pedido
+            </Button>
+            <Modal
+                title="Confirmación de Pedido"
+                visible={confirmVisible}
+                onOk={handleOk}
+                onCancel={handleCancel}
+            >
+                <p>
+                    Pacientes con restricción de azúcares o dieta hipoglúcida no deben consumir alimentos con mermelada, galletas dulces, ni harinas adicionales.
+                </p>
+                <p>
+                    Prima la dieta recomendada por el médico tratante con las restricciones.
+                </p>
+                <p>
+                    Asegúrese de los elementos seleccionados según las restricciones del paciente.
+                </p>
+            </Modal>
+        </div>
+    );
+};
+
+export default RealizarPedido;
+// Importamos React y el hook useState para manejar el estado del componente
+import React, { useState } from 'react';
+// Importamos axios para realizar solicitudes HTTP al backend
+import axios from 'axios';
+// Importamos el archivo de estilos SCSS específico para este componente
+import '../styles/Login.scss';
+
+// Definimos el componente Register
+const Register = () => {
+    // Estados para manejar los valores de los campos de entrada y los errores
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    // Función para manejar el envío del formulario de registro
+    const handleRegister = async (e) => {
+        e.preventDefault(); // Prevenimos el comportamiento por defecto del formulario
+        try {
+            // Enviamos una solicitud POST al backend para registrar un nuevo usuario
+            const response = await axios.post('http://127.0.0.1:8000/api/auth/register/', {
+                username,
+                email,
+                password
+            });
+            // Si la solicitud es exitosa, mostramos un mensaje en la consola
+            console.log('Usuario registrado con éxito', response.data);
+        } catch (error) {
+            // Si hay un error, mostramos un mensaje de error en la interfaz y en la consola
+            setError('El registro falló');
+            console.error('Error en el registro', error.response);
+        }
+    };
+
+    // Renderizamos el formulario de registro
+    return (
+        <div className="register-container container mt-5">
+            <h2>Registro</h2>
+            <form onSubmit={handleRegister}>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        placeholder="Nombre de usuario"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="email"
+                        placeholder="Correo electrónico"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="form-control"
+                    />
+                </div>
+                <button type="submit" className="btn btn-primary btn-block">Registrar</button>
+                {/* Mostrar mensaje de error si ocurre un fallo en el registro */}
+                {error && <p className="text-danger text-center mt-2">{error}</p>}
+            </form>
+        </div>
+    );
+};
+
+// Exportamos el componente Register para que pueda ser utilizado en otras partes de la aplicación
+export default Register;
+// Importamos la configuración de Axios personalizada
+import api from '../axiosConfig';
+
+// Función para registrar un usuario
+export const registerUser = async (userData) => {
+    const response = await api.post('/auth/register/', userData);
+    return response.data;
+};
+
+// Función para iniciar sesión
+export const loginUser = async (userData) => {
+    const response = await api.post('/auth/login/', userData);
+    return response.data;
+};
+
+// Función para obtener todos los menús
+export const getMenus = async () => {
+    const response = await api.get('/menus/');
+    return response.data;
+};
+
+// Función para crear un nuevo menú
+export const createMenu = async (menuData) => {
+    const response = await api.post('/menus/', menuData);
+    return response.data;
+};
+
+// Función para actualizar un menú existente
+export const updateMenu = async (id, menuData) => {
+    const response = await api.put(`/menus/${id}/`, menuData);
+    return response.data;
+};
+
+// Función para eliminar un menú
+export const deleteMenu = async (id) => {
+    const response = await api.delete(`/menus/${id}/`);
+    return response.data;
+};
+
+// Función para obtener todas las opciones de menú
+export const getMenuOptions = async () => {
+    const response = await api.get('/menus/options/');
+    return response.data;
+};
+
+// Función para crear una nueva opción de menú
+export const createMenuOption = async (optionData) => {
+    const response = await api.post('/menus/options/', optionData);
+    return response.data;
+};
+
+// Función para obtener todos los pacientes
+export const getPacientes = async () => {
+    const response = await api.get('/pacientes/');
+    return response.data;
+};
+
+// Función para crear un nuevo paciente
+export const createPaciente = async (pacienteData) => {
+    const response = await api.post('/pacientes/', pacienteData);
+    return response.data;
+};
+
+// Funciones CRUD para pedidos
+export const getPedidos = async () => {
+    const response = await api.get('/pedidos/');
+    return response.data;
+};
+
+export const createPedido = async (pedidoData) => {
+    const response = await api.post('/pedidos/', pedidoData);
+    return response.data;
+};
+
+export const updatePedido = async (id, pedidoData) => {
+    const response = await api.put(`/pedidos/${id}/`, pedidoData);
+    return response.data;
+};
+
+export const deletePedido = async (id) => {
+    const response = await api.delete(`/pedidos/${id}/`);
+    return response.data;
+};
+
+export const getPedidosCompletados = async (searchTerm = '') => {
+    const response = await api.get(`/pedidos/completados/?paciente=${searchTerm}`);
+    return response.data;
+};
+
+// Función para actualizar un servicio existente (activar/desactivar)
+export const updateServicio = async (id, servicioData) => {
+    const response = await api.put(`/servicios/${id}/`, servicioData);
+    return response.data;
+};
+
+// Función para crear un nuevo servicio
+export const createServicio = async (servicioData) => {
+    const response = await api.post('/servicios/', servicioData);
+    return response.data;
+};
+
+// Función para crear una nueva habitación con camas
+export const createHabitacion = async (habitacionData) => {
+    const response = await api.post('/habitaciones/', habitacionData);
+    return response.data;
+};
+
+// Función para actualizar una habitación existente (con camas)
+export const updateHabitacion = async (id, habitacionData) => {
+    const response = await api.put(`/habitaciones/${id}/`, habitacionData);
+    return response.data;
+};
+
+// Función para obtener todas las camas
+export const getCamas = async () => {
+    const response = await api.get('/camas/');
+    return response.data;
+};
+
+// Función para crear una nueva cama
+export const createCama = async (camaData) => {
+    const response = await api.post('/camas/', camaData);
+    return response.data;
+};
+
+// Función para actualizar una cama existente
+export const updateCama = async (id, camaData) => {
+    const response = await api.put(`/camas/${id}/`, camaData);
+    return response.data;
+};
+
+// Función para eliminar una cama
+export const deleteCama = async (id) => {
+    const response = await api.delete(`/camas/${id}/`);
+    return response.data;
+};
+
+// Función para actualizar un paciente existente (activar/desactivar)
+export const updatePaciente = async (id, pacienteData) => {
+    const response = await api.put(`/pacientes/${id}/`, pacienteData);
+    return response.data;
+};
+
+// Exportamos la configuración de Axios por defecto
+export default api;
+/* Importamos la fuente 'Syne' desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+/* Estilos globales para el body */
+body {
+    /* Establecemos la fuente por defecto como 'Syne' con respaldo en sans-serif */
+    font-family: 'Syne', sans-serif;
+    /* Eliminamos los márgenes y el padding por defecto */
+    margin: 0;
+    padding: 0;
+    /* Establecemos un color de fondo suave para todo el documento */
+    background-color: #f8f9fa;
+}
+
+/* Estilos para los encabezados h1 */
+h1 {
+    /* Aplicamos el color institucional al texto del encabezado */
+    color: #174288;
+    /* Centramos el texto */
+    text-align: center;
+    /* Añadimos un margen superior para separar el encabezado del borde superior de la página */
+    margin-top: 20px;
+}
+
+/* Estilos para las listas desordenadas */
+ul {
+    /* Eliminamos los estilos de lista predeterminados (puntos) */
+    list-style-type: none;
+    /* Eliminamos el padding predeterminado de las listas */
+    padding: 0;
+
+    /* Estilos para los elementos de la lista */
+    li {
+        /* Establecemos un fondo blanco para los elementos de la lista */
+        background-color: #fff;
+        /* Añadimos un borde alrededor de los elementos con un color gris claro */
+        border: 1px solid #dee2e6;
+        /* Añadimos un margen alrededor de cada elemento de la lista */
+        margin: 10px;
+        /* Añadimos un padding interno para separar el contenido del borde */
+        padding: 10px;
+        /* Redondeamos las esquinas de los elementos */
+        border-radius: 5px;
+        /* Añadimos una sombra suave para dar un efecto de elevación */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+        /* Estilos al pasar el cursor sobre los elementos de la lista */
+        &:hover {
+            /* Cambiamos el color del borde al color institucional al hacer hover */
+            border-color: #00A7E2;
+            /* Aumentamos la sombra y cambiamos su color para resaltar el elemento */
+            box-shadow: 0 0 10px rgba(0, 167, 226, 0.5);
+        }
+    }
+}
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+body {
+    font-family: 'Syne', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h2, h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+h4 {
+    font-weight: 700;
+    color: #34495e;
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 5px;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.section h3 {
+    border-bottom: 2px solid #e74c3c;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.list-group-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Syne', sans-serif;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.btn-primary {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+.mt-5 {
+    margin-top: 3rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.list-group {
+    padding-left: 0;
+    margin-bottom: 20px;
+}
+
+.list-group-item h4 {
+    margin-bottom: 10px;
+}
+
+.list-group-item p {
+    margin: 0;
+}
+.floating-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+
+    .btn {
+        background-color: #174288;
+        border: none;
+        font-size: 24px;
+        padding: 15px;
+        border-radius: 50%;
+        color: #fff;
+        transition: background-color 0.3s, transform 0.3s;
+
+        &:hover {
+            background-color: #00A7E2;
+            transform: scale(1.1);
+        }
+    }
+
+    .floating-menu {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+
+        &.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .nav-link {
+            color: #174288;
+            position: relative;
+
+            &:hover {
+                color: #00A7E2;
+            }
+        }
+
+        .pedidos-toggle {
+            position: relative;
+            cursor: pointer;
+            &::after {
+                content: '';
+                display: inline-block;
+                margin-left: 10px;
+                transition: transform 0.3s ease;
+                border: solid #174288;
+                border-width: 0 2px 2px 0;
+                padding: 3px;
+                transform: rotate(45deg);
+            }
+
+            &.open::after {
+                transform: rotate(-135deg);
+            }
+        }
+
+        .submenu {
+            margin-left: 20px;
+            padding-left: 10px;
+            border-left: 2px solid #00A7E2;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .submenu-open {
+            opacity: 1;
+            max-height: 500px;
+        }
+
+        .submenu-item {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin: 3px 0;
+            padding: 8px 12px;
+
+            &:hover {
+                background-color: #e0e0e0;
+            }
+
+            &.active {
+                background-color: #cce0ff;
+                color: #174288;
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) {
+    .floating-button {
+        display: none;
+    }
+}
+/* Importamos la fuente 'Syne' desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+/* Estilos para el contenedor principal del encabezado */
+.header {
+    /* Aplicamos la fuente 'Syne' a todo el contenedor del encabezado */
+    font-family: 'Syne', sans-serif;
+    /* Establecemos el color de fondo institucional para el encabezado */
+    background-color: #174288;
+
+    /* Estilos para el botón de la barra de navegación (hamburger menu) */
+    .navbar-toggler {
+        /* Establecemos el color del borde del botón al color secundario */
+        border-color: #00A7E2;
+    }
+
+    /* Estilos para el logotipo dentro del encabezado */
+    .logo {
+        /* Definimos la altura del logotipo */
+        height: 50px;
+        /* Añadimos un margen a la derecha para separar el logotipo de los demás elementos */
+        margin-right: 15px;
+    }
+
+    /* Estilos para los enlaces de navegación dentro del encabezado */
+    .nav-link {
+        /* Color blanco para los enlaces de navegación */
+        color: #FFFFFF;
+
+        /* Estilos al pasar el cursor sobre los enlaces */
+        &:hover {
+            /* Cambiamos el color del texto al gris claro cuando se hace hover */
+            color: #DEE2E6;
+        }
+    }
+
+    /* Estilos adicionales para los enlaces dentro de .header-right */
+    .header-right .nav-link {
+        /* Color de fondo institucional para los enlaces en .header-right */
+        background-color: #174288;
+        /* Color blanco para el texto */
+        color: #fff;
+        /* Padding interno para hacer los enlaces más grandes y fáciles de pulsar */
+        padding: 10px 15px;
+        /* Bordes redondeados para los enlaces */
+        border-radius: 5px;
+        /* Transición suave para el cambio de color de fondo */
+        transition: background-color 0.3s;
+
+        /* Estilos al pasar el cursor sobre estos enlaces */
+        &:hover {
+            /* Cambiamos el color de fondo al color secundario cuando se hace hover */
+            background-color: #00A7E2;
+        }
+    }
+}
+.historial-pedidos {
+    margin-top: 40px;
+
+    h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .ant-collapse-header {
+        font-weight: bold;
+    }
+
+    .option-group {
+        margin-bottom: 15px;
+    }
+}
+/* Importamos la fuente 'Syne' desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+/* Estilos para el contenedor principal de la página de inicio */
+.home {
+    /* Aplicamos la fuente 'Syne' a todo el contenedor */
+    font-family: 'Syne', sans-serif;
+    /* Establecemos un color de fondo gris claro */
+    background-color: #DEE2E6;
+    /* Color de texto institucional azul */
+    color: #174288;
+    /* Padding interno para espaciar el contenido */
+    padding: 50px 20px;
+
+    /* Estilos para los encabezados h1 dentro del contenedor .home */
+    h1 {
+        /* Tamaño de fuente grande para el encabezado principal */
+        font-size: 2.5rem;
+        /* Color de texto institucional azul */
+        color: #174288;
+    }
+
+    /* Media query para dispositivos con un ancho máximo de 767px (dispositivos móviles) */
+    @media (max-width: 767px) {
+        /* Reducimos el padding en dispositivos móviles para mejor ajuste */
+        padding: 30px 10px;
+
+        /* Ajustamos el tamaño de fuente del h1 en dispositivos móviles */
+        h1 {
+            font-size: 2rem;
+        }
+    }
+}
+/* Importamos la fuente 'Syne' desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+/* Estilos para el contenedor principal del layout */
+.layout {
+    /* Aplicamos la fuente 'Syne' a todo el layout */
+    font-family: 'Syne', sans-serif;
+    /* Aseguramos que el contenedor ocupe al menos la altura completa de la ventana */
+    min-height: 100vh;
+    /* Establecemos un color de fondo blanco para el layout */
+    background-color: #FFFFFF;
+
+    /* Estilos para la sección principal del contenido */
+    .main-content {
+        /* Hacemos que la sección principal ocupe el espacio disponible */
+        flex: 1;
+        /* Utilizamos flexbox para organizar los elementos internos */
+        display: flex;
+        /* Color de fondo gris claro para el área principal */
+        background-color: #DEE2E6;
+
+        /* Estilos para la sección específica de contenido dentro de main-content */
+        .content {
+            /* Hacemos que el contenido crezca para llenar el espacio disponible */
+            flex-grow: 1;
+            /* Añadimos padding interno para separar el contenido de los bordes */
+            padding: 15px;
+            /* Fondo blanco para la sección de contenido */
+            background-color: #FFFFFF;
+        }
+    }
+}
+
+/* Media query para dispositivos con un ancho máximo de 767px (dispositivos móviles) */
+@media (max-width: 767px) {
+    /* Ajustes en la estructura de la sección principal en pantallas pequeñas */
+    .main-content {
+        /* Cambiamos la dirección de los elementos internos a una columna (de arriba hacia abajo) */
+        flex-direction: column;
+
+        /* Ajustes en el padding de la sección de contenido en pantallas pequeñas */
+        .content {
+            padding: 10px;
+        }
+    }
+
+    /* Ocultamos la barra lateral en dispositivos móviles */
+    .sidebar {
+        display: none;
+    }
+}
+/* Importamos la fuente 'Syne' desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+/* Aplicamos la fuente 'Syne' a todo el documento */
+body {
+  font-family: 'Syne', sans-serif;
+}
+
+/* Estilos para la página de menús */
+.menu-page {
+  /* Padding para espaciar el contenido dentro de la página */
+  padding: 20px;
+  /* Color de fondo suave para la página */
+  background-color: #f0f2f5;
+}
+
+/* Estilos para botones personalizados */
+.custom-button {
+  /* Color de fondo verde para los botones */
+  background-color: #4caf50;
+  /* Color de borde que coincide con el fondo */
+  border-color: #4caf50;
+  /* Color de texto blanco */
+  color: white;
+  /* Aplicamos la fuente 'Syne' a los botones */
+  font-family: 'Syne', sans-serif;
+}
+
+/* Estilos para botones al hacer hover o focus */
+.custom-button:hover,
+.custom-button:focus {
+  /* Cambiamos el color de fondo y borde al verde más oscuro */
+  background-color: #45a049;
+  border-color: #45a049;
+}
+
+/* Estilos para agrupar botones */
+.button-group {
+  /* Utilizamos flexbox para alinear los botones en fila */
+  display: flex;
+  /* Espacio entre los botones */
+  gap: 10px;
+}
+
+/* Estilos para el contenedor de carga */
+.loading-container {
+  /* Centrar el contenido de carga horizontal y verticalmente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Ocupamos toda la altura de la ventana para centrar el contenido */
+  height: 100vh;
+}
+
+/* Estilos para cada elemento de menú */
+.menu-item {
+  /* Margen inferior para separar los elementos de menú */
+  margin-bottom: 20px;
+  /* Padding interno para separar el contenido del borde */
+  padding: 20px;
+  /* Fondo blanco para los elementos de menú */
+  background-color: white;
+  /* Bordes redondeados */
+  border-radius: 8px;
+  /* Sombra suave para darle un efecto de elevación */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los encabezados h3 dentro de .menu-item */
+.menu-item h3 {
+  /* Margen inferior para separar el encabezado del contenido siguiente */
+  margin-bottom: 10px;
+}
+
+/* Estilos para los encabezados h4 dentro de .menu-item */
+.menu-item h4 {
+  /* Margen superior para separar el encabezado del contenido anterior */
+  margin-top: 20px;
+}
+
+/* Estilos específicos para botones personalizados dentro de modales de Ant Design */
+.ant-modal-footer .custom-button {
+  /* Margen derecho para separar los botones en la fila */
+  margin-right: 8px;
+}
+.menu-page {
+  /* Padding para espaciar el contenido dentro de la página */
+  padding: 20px;
+}
+
+.custom-button {
+  /* Margen inferior para separar el botón de otros elementos */
+  margin-bottom: 10px;
+}
+
+.vertical-buttons {
+  /* Flexbox en dirección columna para apilar los botones verticalmente */
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre los botones */
+  gap: 10px;
+}
+
+.button-group {
+  /* Flexbox en dirección columna para apilar los botones verticalmente */
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre los botones */
+  gap: 10px;
+  /* Margen inferior para separar el grupo de botones de otros elementos */
+  margin-bottom: 20px;
+}
+
+.ant-btn {
+  /* Margen derecho para separar los botones en una fila */
+  margin-right: 10px;
+  /* Asegura que los botones ocupen todo el ancho disponible */
+  width: 100%;
+}
+
+.ant-collapse-content-box {
+  /* Flexbox en dirección columna para apilar el contenido verticalmente */
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre los elementos dentro del contenido colapsado */
+  gap: 10px;
+}
+
+.menu-details {
+  /* Estilos específicos para la tipografía dentro de los detalles del menú */
+  .ant-typography {
+    /* Margen superior para separar la tipografía de otros elementos */
+    margin-top: 20px;
+  }
+}
+
+.menu-list {
+  /* Margen superior para separar la lista de menús de otros elementos */
+  margin-top: 20px;
+}
+
+.loading-container {
+  /* Centrar el texto de carga */
+  text-align: center;
+  /* Padding superior e inferior para espaciar el contenido de carga */
+  padding: 50px 0;
+}
+
+.save-button {
+  /* Ajusta el ancho del botón a la mitad del contenedor menos 5px */
+  width: calc(50% - 5px);
+  /* Margen derecho para separar el botón de otros elementos */
+  margin-right: 10px;
+}
+
+.modal-footer {
+  /* Flexbox para centrar los botones en la barra de pie de la ventana modal */
+  display: flex;
+  justify-content: center;
+  /* Espacio entre los botones */
+  gap: 10px;
+}
+
+.modal-footer .ant-btn {
+  /* Ancho fijo para los botones dentro de la ventana modal */
+  width: 100px;
+  /* Margen izquierdo y derecho para espaciar los botones entre sí */
+  margin: 0 10px;
+}
+
+.menu-title {
+  /* Negrita para resaltar el título del menú */
+  font-weight: bold;
+}
+// src/components/PedidosPendientes.scss
+.pedidos-pendientes {
+    .pedido {
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+        padding: 20px;
+        background-color: #f9f9f9;
+
+        .section {
+            margin-bottom: 10px;
+
+            h4 {
+                color: #333;
+            }
+
+            ul {
+                padding-left: 20px;
+
+                li {
+                    list-style-type: disc;
+                }
+            }
+
+            button {
+                padding: 10px;
+                background-color: #007bff;
+                color: #fff;
+                border: none;
+                cursor: pointer;
+
+                &:disabled {
+                    background-color: #6c757d;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
+}
+.realizar-pedido {
+  /* Establece un ancho máximo de 600px y centra el contenedor */
+  max-width: 600px;
+  margin: 0 auto;
+  /* Padding interno para espaciar el contenido */
+  padding: 20px;
+  /* Fondo blanco para el contenedor */
+  background: #fff;
+  /* Bordes redondeados */
+  border-radius: 8px;
+  /* Sombra suave para darle un efecto de elevación */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    /* Centra el texto del encabezado */
+    text-align: center;
+    /* Margen inferior para separar el encabezado del contenido siguiente */
+    margin-bottom: 20px;
+    /* Color del texto en azul institucional */
+    color: #174288;
+  }
+
+  .form-item {
+    /* Margen inferior para separar los elementos del formulario */
+    margin-bottom: 20px;
+  }
+
+  .ant-select {
+    /* Asegura que el selector ocupe todo el ancho disponible */
+    width: 100%;
+  }
+
+  .section-collapse {
+    /* Margen inferior para separar las secciones colapsables */
+    margin-bottom: 20px;
+  }
+
+  .option-group {
+    /* Utiliza flexbox en dirección columna para apilar los elementos verticalmente */
+    display: flex;
+    flex-direction: column;
+    /* Margen izquierdo para dar sangría al grupo de opciones */
+    margin-left: 20px;
+
+    h4 {
+      /* Margen inferior para separar el título del contenido siguiente */
+      margin-bottom: 10px;
+      /* Color del texto en azul institucional */
+      color: #174288;
+    }
+
+    .ant-checkbox-wrapper {
+      /* Margen inferior para separar las opciones de checkbox */
+      margin-bottom: 5px;
+    }
+  }
+
+  .additional-options {
+    /* Margen superior para separar las opciones adicionales del contenido anterior */
+    margin-top: 20px;
+
+    .form-item {
+      /* Margen inferior más pequeño para separar los elementos de las opciones adicionales */
+      margin-bottom: 10px;
+    }
+  }
+
+  .submit-button {
+    /* Asegura que el botón de envío ocupe todo el ancho disponible */
+    width: 100%;
+  }
+}
+/* Importamos la fuente 'Syne' desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
+/* Estilos principales para la barra lateral (sidebar) */
+.sidebar {
+    font-family: 'Syne', sans-serif;
+    background-color: #174288;
+    color: #FFFFFF;
+    padding: 15px;
+
+    .nav-link {
+        color: #FFFFFF;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin: 5px 0;
+
+        &:hover {
+            background-color: #00A7E2;
+            color: #DEE2E6;
+        }
+
+        &.active {
+            background-color: #00A7E2;
+            color: #DEE2E6;
+        }
+    }
+
+    .pedidos-toggle {
+        position: relative;
+
+        /* Añadimos una animación de rotación al ícono del botón de Pedidos */
+        &::after {
+            content: '';
+            display: inline-block;
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+            border: solid #FFFFFF;
+            border-width: 0 2px 2px 0;
+            padding: 3px;
+            transform: rotate(45deg);
+        }
+
+        &.open::after {
+            transform: rotate(-135deg);
+        }
+    }
+
+    .submenu {
+        margin-left: 20px;
+        padding-left: 10px;
+        border-left: 2px solid #00A7E2;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+
+    .submenu-open {
+        opacity: 1;
+        max-height: 500px; /* un valor suficientemente grande para contener todo el contenido */
+    }
+
+    .submenu-item {
+        background-color: #0056A2;
+        border-radius: 4px;
+        margin: 3px 0;
+        padding: 8px 12px;
+
+        &:hover {
+            background-color: #0074D9;
+        }
+
+        &.active {
+            background-color: #0074D9;
+            color: #FFFFFF;
+        }
+    }
+
+    @media (max-width: 767px) {
+        display: none;
+    }
+}// Importamos React y los módulos necesarios para el enrutamiento
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+
+// Importamos los estilos de Bootstrap
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min';
+
+// Importamos las páginas de la aplicación
+import Home from './pages/Home';
+import Login from './pages/Login';
+import RealizarPedido from './pages/RealizarPedido';
+import DataManagement from './pages/DataManagement'; // Nuevo componente unificado
+import Register from './pages/Register';
+import MenuPage from './pages/MenuPage';
+import PedidosPendientes from './pages/PedidosPendientes';
+import HistorialPedidos from './pages/HistorialPedidos';
+
+// Importamos los componentes de la aplicación
+import Layout from './components/Layout';
+import PrivateRoute from './components/PrivateRoute';
+
+// Importamos los estilos globales de la aplicación
+import './styles/App.scss';
+
+// Definimos la función principal de la aplicación
+function App() {
+  return (
+    // Configuramos el enrutador para manejar las rutas de la aplicación
+    <Router>
+      <Routes>
+        {/* Ruta para la página de inicio de sesión */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Ruta para la página de registro */}
+        <Route path="/register" element={<Register />} />
+
+        {/* Rutas protegidas que requieren autenticación */}
+        <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+          {/* Ruta para la página de inicio */}
+          <Route path="/" element={<Home />} />
+          
+          {/* Ruta para la página de menús */}
+          <Route path="/menus" element={<MenuPage />} />
+          
+          {/* Ruta para la página de realización de pedidos */}
+          <Route path="/realizar-pedido" element={<RealizarPedido />} />
+          <Route path="/pedidos/pendientes" element={<PedidosPendientes />} />
+          <Route path="/pedidos/historial" element={<HistorialPedidos />} />
+          {/* Ruta para la página de gestión de servicios, habitaciones y pacientes */}
+          <Route path="/gestion-datos" element={<DataManagement />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
+}
+
+// Exportamos la función App como el componente principal de la aplicación
+export default App;
+// Importamos axios para realizar solicitudes HTTP
+import axios from 'axios';
+
+// Creamos una instancia de axios con la URL base de la API
+const api = axios.create({
+    baseURL: 'http://127.0.0.1:8000/api', // URL base para las solicitudes
+});
+
+// Agregamos un interceptor de solicitudes a la instancia de axios
+api.interceptors.request.use(
+    (config) => {
+        // Obtenemos el token de autenticación del almacenamiento local
+        const token = localStorage.getItem('token');
+        
+        // Si el token existe, lo agregamos al encabezado de la solicitud
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        
+        // Retornamos la configuración de la solicitud
+        return config;
+    },
+    // Manejo de errores en la solicitud
+    (error) => Promise.reject(error) // Rechazamos la promesa en caso de error
+);
+
+// Exportamos la instancia de axios configurada
+export default api;

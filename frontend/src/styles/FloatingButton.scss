@@ -1,81 +1,105 @@
 .floating-button {
-    /* Posicionamos el botón flotante en la esquina inferior derecha */
     position: fixed;
     bottom: 20px;
     right: 20px;
-    /* Aseguramos que el botón esté siempre en la parte superior de otros elementos */
     z-index: 1000;
 
     .btn {
-        /* Color de fondo institucional para el botón */
         background-color: #174288;
-        /* Eliminamos el borde predeterminado */
         border: none;
-        /* Tamaño de fuente grande para el ícono del botón */
         font-size: 24px;
-        /* Padding interno para hacer el botón más grande y fácil de pulsar */
         padding: 15px;
-        /* Hacemos el botón redondeado al 100% para darle forma circular */
         border-radius: 50%;
-        /* Color blanco para el ícono dentro del botón */
         color: #fff;
-        /* Transiciones suaves para el cambio de color de fondo y la transformación */
         transition: background-color 0.3s, transform 0.3s;
 
-        /* Estilos cuando se pasa el cursor sobre el botón */
         &:hover {
-            /* Cambiamos el color de fondo al color secundario cuando se hace hover */
             background-color: #00A7E2;
-            /* Aumentamos ligeramente el tamaño del botón para dar un efecto de "pulso" */
             transform: scale(1.1);
         }
     }
 
     .floating-menu {
-        /* Posicionamos el menú flotante justo encima del botón */
         position: absolute;
         bottom: 60px;
         right: 0;
-        /* Fondo blanco para el menú */
         background-color: #fff;
-        /* Borde gris claro alrededor del menú */
         border: 1px solid #dee2e6;
-        /* Bordes redondeados para el menú */
         border-radius: 8px;
-        /* Sombra suave para darle un efecto de elevación */
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        /* Padding interno para dar espacio al contenido dentro del menú */
         padding: 10px;
-        /* Inicialmente, el menú es invisible y totalmente transparente */
         opacity: 0;
         visibility: hidden;
-        /* Transición suave para mostrar y ocultar el menú */
         transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 
-        /* Clase adicional para mostrar el menú */
         &.show {
-            /* El menú se vuelve visible y completamente opaco */
             opacity: 1;
             visibility: visible;
         }
 
         .nav-link {
-            /* Color institucional para los enlaces del menú */
             color: #174288;
+            position: relative;
 
-            /* Estilos cuando se pasa el cursor sobre los enlaces */
             &:hover {
-                /* Cambiamos el color del enlace al color secundario cuando se hace hover */
                 color: #00A7E2;
+            }
+        }
+
+        .pedidos-toggle {
+            position: relative;
+            cursor: pointer;
+            &::after {
+                content: '';
+                display: inline-block;
+                margin-left: 10px;
+                transition: transform 0.3s ease;
+                border: solid #174288;
+                border-width: 0 2px 2px 0;
+                padding: 3px;
+                transform: rotate(45deg);
+            }
+
+            &.open::after {
+                transform: rotate(-135deg);
+            }
+        }
+
+        .submenu {
+            margin-left: 20px;
+            padding-left: 10px;
+            border-left: 2px solid #00A7E2;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .submenu-open {
+            opacity: 1;
+            max-height: 500px;
+        }
+
+        .submenu-item {
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin: 3px 0;
+            padding: 8px 12px;
+
+            &:hover {
+                background-color: #e0e0e0;
+            }
+
+            &.active {
+                background-color: #cce0ff;
+                color: #174288;
             }
         }
     }
 }
 
-/* Media query para pantallas grandes (ancho mínimo de 992px) */
 @media (min-width: 992px) {
     .floating-button {
-        /* Ocultamos el botón flotante en pantallas grandes */
         display: none;
     }
 }

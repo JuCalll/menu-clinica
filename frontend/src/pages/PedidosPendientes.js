@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Spin, Collapse } from 'antd';
 import { getPedidos, updatePedido } from '../services/api';
 import '../styles/PedidosPendientes.scss';
+import api from '../axiosConfig';
 
 const { Panel } = Collapse;
 
@@ -54,6 +55,25 @@ const PedidosPendientes = () => {
         }
     };
 
+    const handlePrint = async (pedido) => {
+        const url = `/pedidos/${pedido.id}/print/`;
+        console.log("URL de la solicitud:", url);
+    
+        try {
+            const response = await api.post(url);
+    
+            console.log("Respuesta completa:", response);
+    
+            if (response.status === 200) {
+                console.log("Pedido impreso con éxito.");
+            } else {
+                console.error("Error al intentar imprimir el pedido:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("Error al intentar imprimir el pedido:", error);
+        }
+    };            
+    
     if (loading) {
         return <Spin />;
     }
@@ -111,6 +131,7 @@ const PedidosPendientes = () => {
                                 <div>Vegetales: {pedido.adicionales.vegetales}</div>
                                 <div>Golosina: {pedido.adicionales.golosina ? 'Sí' : 'No'}</div>
                             </div>
+                            <Button onClick={() => handlePrint(pedido)}>Imprimir</Button>
                         </Panel>
                     ))
                 ) : (
