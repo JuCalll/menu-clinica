@@ -13,6 +13,18 @@ export const loginUser = async (userData) => {
     return response.data;
 };
 
+// Función para obtener todos los usuarios
+export const getUsuarios = async () => {
+    const response = await api.get('/auth/users/');
+    return response.data;
+};
+
+// Función para crear un nuevo usuario
+export const createUser = async (userData) => {
+    const response = await api.post('/auth/users/', userData);
+    return response.data;
+};
+
 // Función para obtener todos los menús
 export const getMenus = async () => {
     const response = await api.get('/menus/');

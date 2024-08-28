@@ -1,59 +1,47 @@
-// Importamos React y los módulos necesarios para el enrutamiento
+// App.js
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-
-// Importamos los estilos de Bootstrap
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
-// Importamos las páginas de la aplicación
+// Importación de las páginas
 import Home from './pages/Home';
 import Login from './pages/Login';
 import RealizarPedido from './pages/RealizarPedido';
-import DataManagement from './pages/DataManagement'; // Nuevo componente unificado
+import DataManagement from './pages/DataManagement';
 import Register from './pages/Register';
 import MenuPage from './pages/MenuPage';
 import PedidosPendientes from './pages/PedidosPendientes';
 import HistorialPedidos from './pages/HistorialPedidos';
+import UserManagement from './pages/UserManagement';  // Nueva importación de la página de gestión de usuarios
 
-// Importamos los componentes de la aplicación
+// Importación de componentes
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 
-// Importamos los estilos globales de la aplicación
+// Importación de estilos
 import './styles/App.scss';
 
-// Definimos la función principal de la aplicación
 function App() {
   return (
-    // Configuramos el enrutador para manejar las rutas de la aplicación
     <Router>
       <Routes>
-        {/* Ruta para la página de inicio de sesión */}
         <Route path="/login" element={<Login />} />
-        
-        {/* Ruta para la página de registro */}
         <Route path="/register" element={<Register />} />
 
-        {/* Rutas protegidas que requieren autenticación */}
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-          {/* Ruta para la página de inicio */}
           <Route path="/" element={<Home />} />
-          
-          {/* Ruta para la página de menús */}
           <Route path="/menus" element={<MenuPage />} />
-          
-          {/* Ruta para la página de realización de pedidos */}
           <Route path="/realizar-pedido" element={<RealizarPedido />} />
           <Route path="/pedidos/pendientes" element={<PedidosPendientes />} />
           <Route path="/pedidos/historial" element={<HistorialPedidos />} />
-          {/* Ruta para la página de gestión de servicios, habitaciones y pacientes */}
           <Route path="/gestion-datos" element={<DataManagement />} />
+          <Route path="/gestion-usuarios" element={<UserManagement />} />  {/* Nueva ruta para la gestión de usuarios */}
         </Route>
       </Routes>
     </Router>
   );
 }
 
-// Exportamos la función App como el componente principal de la aplicación
 export default App;

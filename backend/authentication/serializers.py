@@ -1,26 +1,34 @@
-# Importamos el módulo serializers de Django REST framework
+# serializers.py
+
 from rest_framework import serializers
-# Importamos el modelo CustomUser desde el archivo models
+from django.contrib.auth import authenticate
 from .models import CustomUser
 
-# Definimos un serializer para el modelo CustomUser
 class UserSerializer(serializers.ModelSerializer):
-    # Meta clase que define el modelo y los campos a serializar
     class Meta:
-        model = CustomUser  # Especificamos el modelo CustomUser
-        fields = ('id', 'username', 'password', 'email')  # Campos a incluir en la serialización
-        # Indicamos que el campo password solo debe ser utilizado para escritura (no se devolverá en respuestas)
+        model = CustomUser
+        fields = ('id', 'username', 'password', 'email', 'name', 'cedula', 'role')  # Asegúrate de incluir 'role'
         extra_kwargs = {'password': {'write_only': True}}
 
-    # Método para crear un nuevo usuario con los datos validados
     def create(self, validated_data):
-        # Utilizamos el gestor personalizado para crear un usuario con los datos validados
         user = CustomUser.objects.create_user(**validated_data)
-        # Retornamos el usuario creado
         return user
 
-# Definimos un serializer para manejar el login del usuario
 class LoginSerializer(serializers.Serializer):
-    # Campos que se necesitan para autenticar a un usuario
-    username = serializers.CharField()  # Campo para el nombre de usuario
-    password = serializers.CharField()  # Campo para la contraseña
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        username = data.get('username')
+        password = data.get('password')
+
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if user:
+                data['user'] = user
+            else:
+                raise serializers.ValidationError("Credenciales incorrectas.")
+        else:
+            raise serializers.ValidationError("Debe incluir 'username' y 'password'.")
+        
+        return data

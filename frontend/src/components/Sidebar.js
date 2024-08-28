@@ -1,12 +1,19 @@
+// Sidebar.js
+
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import '../styles/Sidebar.scss';
 
 const Sidebar = () => {
   const [isPedidosOpen, setIsPedidosOpen] = useState(false);
+  const [isGestionDatosOpen, setIsGestionDatosOpen] = useState(false);
 
   const togglePedidosMenu = () => {
     setIsPedidosOpen(!isPedidosOpen);
+  };
+
+  const toggleGestionDatosMenu = () => {
+    setIsGestionDatosOpen(!isGestionDatosOpen);
   };
 
   return (
@@ -29,8 +36,20 @@ const Sidebar = () => {
             <NavLink to="/pedidos/historial" className="nav-link submenu-item">Historial de Pedidos</NavLink>
           </div>
         )}
-        
-        <NavLink to="/gestion-datos" className="nav-link">Gestión de Datos</NavLink>
+
+        <div 
+          className={`nav-link gestion-datos-toggle ${isGestionDatosOpen ? 'open' : ''}`} 
+          onClick={toggleGestionDatosMenu} 
+          style={{ cursor: 'pointer' }}
+        >
+          Gestión de Datos
+        </div>
+        {isGestionDatosOpen && (
+          <div className={`submenu ${isGestionDatosOpen ? 'submenu-open' : ''}`}>
+            <NavLink to="/gestion-datos" className="nav-link submenu-item">Datos Generales</NavLink>
+            <NavLink to="/gestion-usuarios" className="nav-link submenu-item">Gestión de Usuarios</NavLink>
+          </div>
+        )}
       </nav>
     </div>
   );
