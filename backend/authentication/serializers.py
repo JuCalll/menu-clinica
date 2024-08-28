@@ -1,5 +1,3 @@
-# serializers.py
-
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import CustomUser
@@ -7,7 +5,7 @@ from .models import CustomUser
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'password', 'email', 'name', 'cedula', 'role')  # Asegúrate de incluir 'role'
+        fields = ('id', 'username', 'password', 'email', 'name', 'cedula', 'role')  # Incluimos 'role'
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -25,7 +23,9 @@ class LoginSerializer(serializers.Serializer):
         if username and password:
             user = authenticate(username=username, password=password)
             if user:
+                # Añadimos el rol del usuario al contexto de la respuesta
                 data['user'] = user
+                data['role'] = user.role
             else:
                 raise serializers.ValidationError("Credenciales incorrectas.")
         else:
