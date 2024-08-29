@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import CustomUser
 from .serializers import UserSerializer, LoginSerializer
+from logs.models import LogEntry  # Importar el modelo de LogEntry
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -11,11 +12,20 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserSerializer
 
     def perform_create(self, serializer):
+        instance = serializer.save()
         role = self.request.data.get('role')
         if role == 'admin':
-            serializer.save(is_staff=True, is_superuser=True)
-        else:
-            serializer.save()
+            instance.is_staff = True
+            instance.is_superuser = True
+            instance.save()
+
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='CREATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=serializer.validated_data,
+        )
 
 class LoginView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
@@ -27,6 +37,12 @@ class LoginView(generics.GenericAPIView):
         user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
         if user:
             refresh = RefreshToken.for_user(user)
+            LogEntry.objects.create(
+                user=user,
+                action='LOGIN',
+                model='Authentication',
+                object_id=user.id,
+            )
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
@@ -41,7 +57,35 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
 
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):  # Nueva vista para obtener un usuario por ID
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='LIST',
+            model='CustomUser',
+        )
+        return response
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='UPDATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=serializer.validated_data,
+        )
+
+    def perform_destroy(self, instance):
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='DELETE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+        )
+        instance.delete()

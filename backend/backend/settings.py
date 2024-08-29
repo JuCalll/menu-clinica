@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'habitaciones',
     'servicios',
     'menus',
+    'logs',
 ]
 
 REST_FRAMEWORK = {
@@ -43,7 +44,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'logs.middleware.AuthenticationLoggingMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

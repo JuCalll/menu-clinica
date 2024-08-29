@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Pedido
 from .serializers import PedidoSerializer
+from logs.models import LogEntry 
 import usb.core
 import usb.util
 
@@ -10,26 +11,40 @@ class PedidoListCreateView(generics.ListCreateAPIView):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='CREATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=serializer.validated_data,
+        )
+
     @action(detail=False, methods=['get'])
     def pendientes(self, request):
         pedidos_pendientes = Pedido.objects.filter(status='pendiente')
         serializer = self.get_serializer(pedidos_pendientes, many=True)
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='LIST',
+            model='Pedido',
+        )
         return Response(serializer.data)
 
 class PedidoCompletadosView(views.APIView):
     def get(self, request):
-        # Obtener el ID del paciente en lugar del nombre
         paciente_id = request.query_params.get('paciente', None)
         pedidos_completados = Pedido.objects.filter(status='completado')
         
         if paciente_id:
             pedidos_completados = pedidos_completados.filter(paciente__id=paciente_id)
-            print(f"Filtrando pedidos completados para el paciente ID: {paciente_id}")
-        else:
-            print("No se proporcionó un paciente ID.")
 
-        # Añadimos un log para verificar los pedidos encontrados
-        print(f"Pedidos Completados encontrados: {pedidos_completados.count()}")
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='LIST',
+            model='Pedido',
+        )
 
         serializer = PedidoSerializer(pedidos_completados, many=True)
         return Response(serializer.data)
@@ -37,6 +52,25 @@ class PedidoCompletadosView(views.APIView):
 class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='UPDATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=serializer.validated_data,
+        )
+
+    def perform_destroy(self, instance):
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='DELETE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+        )
+        instance.delete()
 
 class PedidoStatusUpdateView(generics.UpdateAPIView):
     queryset = Pedido.objects.all()
@@ -47,6 +81,13 @@ class PedidoStatusUpdateView(generics.UpdateAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='UPDATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=request.data,
+        )
         return Response(serializer.data)
 
 class PedidoPrintView(views.APIView):

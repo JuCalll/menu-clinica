@@ -1,20 +1,41 @@
-# Importamos el módulo generics de Django REST framework
 from rest_framework import generics
-# Importamos el modelo Menu desde el archivo models
 from .models import Menu
-# Importamos el serializer MenuSerializer desde el archivo serializers
 from .serializers import MenuSerializer
+from logs.models import LogEntry  # Importar el modelo de LogEntry
 
-# Definimos una vista genérica para listar y crear menús
 class MenuListCreateView(generics.ListCreateAPIView):
-    # Especificamos el queryset que será utilizado para recuperar todos los menús
     queryset = Menu.objects.all()
-    # Especificamos el serializer que será utilizado para la serialización y deserialización de los datos
     serializer_class = MenuSerializer
 
-# Definimos una vista genérica para recuperar, actualizar y eliminar un menú específico
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='CREATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=serializer.validated_data,
+        )
+
 class MenuDetailView(generics.RetrieveUpdateDestroyAPIView):
-    # Especificamos el queryset que será utilizado para recuperar un menú específico
     queryset = Menu.objects.all()
-    # Especificamos el serializer que será utilizado para la serialización y deserialización de los datos
     serializer_class = MenuSerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='UPDATE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+            changes=serializer.validated_data,
+        )
+
+    def perform_destroy(self, instance):
+        LogEntry.objects.create(
+            user=self.request.user,
+            action='DELETE',
+            model=instance.__class__.__name__,
+            object_id=instance.id,
+        )
+        instance.delete()

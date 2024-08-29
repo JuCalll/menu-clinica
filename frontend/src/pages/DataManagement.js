@@ -28,6 +28,8 @@ const DataManagement = () => {
     const [selectedHabitacion, setSelectedHabitacion] = useState(null); // Estado para la habitación seleccionada al crear una cama
     const [selectedCama, setSelectedCama] = useState(null); // Estado para la cama seleccionada al crear un paciente
 
+    const userRole = localStorage.getItem('role');  // Obtener el rol del usuario
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -414,160 +416,169 @@ const DataManagement = () => {
                 width={600}
             >
                 <Tabs defaultActiveKey="1">
-                    <TabPane tab="Servicios" key="1">
-                        <Button type="primary" onClick={openCreateServicioModal} style={{ marginBottom: '20px' }}>
-                            Crear Servicio
-                        </Button>
-                        <Table
-                            dataSource={servicios}
-                            columns={[
-                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                                {
-                                    title: 'Activo',
-                                    key: 'activo',
-                                    render: (_, record) => (
-                                        <Switch
-                                            checked={record.activo}
-                                            onChange={() => toggleActivo(record, 'servicios')}
-                                        />
-                                    ),
-                                }
-                            ]}
-                            rowKey="id"
-                            scroll={{ x: 10 }} // Añadir scroll lateral
-                        />
+                    {/* Mostrar solo la pestaña de "Servicios" si el usuario no es Jefe de Enfermería */}
+                    {userRole !== 'jefe_enfermeria' && (
+                        <TabPane tab="Servicios" key="1">
+                            <Button type="primary" onClick={openCreateServicioModal} style={{ marginBottom: '20px' }}>
+                                Crear Servicio
+                            </Button>
+                            <Table
+                                dataSource={servicios}
+                                columns={[
+                                    { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                    {
+                                        title: 'Activo',
+                                        key: 'activo',
+                                        render: (_, record) => (
+                                            <Switch
+                                                checked={record.activo}
+                                                onChange={() => toggleActivo(record, 'servicios')}
+                                            />
+                                        ),
+                                    }
+                                ]}
+                                rowKey="id"
+                                scroll={{ x: 10 }} // Añadir scroll lateral
+                            />
 
-                        {/* Modal para crear un nuevo servicio */}
-                        <Modal
-                            title="Crear Nuevo Servicio"
-                            open={isModalOpen}
-                            onOk={handleCreateServicio}
-                            onCancel={closeCreateServicioModal}
-                            okText="Crear"
-                            cancelText="Cancelar"
-                        >
-                            <Form layout="vertical">
-                                <Form.Item label="Nombre del Servicio">
-                                    <Input
-                                        value={newServicioName}
-                                        onChange={e => setNewServicioName(e.target.value)}
-                                        placeholder="Ingrese el nombre del servicio"
-                                    />
-                                </Form.Item>
-                            </Form>
-                        </Modal>
-                    </TabPane>
-                    <TabPane tab="Habitaciones" key="2">
-                        <Button type="primary" onClick={openCreateHabitacionModal} style={{ marginBottom: '20px' }}>
-                            Crear Habitación
-                        </Button>
-                        <Button type="primary" onClick={openCreateCamaModal} style={{ marginBottom: '20px' }}>
-                            Crear Cama
-                        </Button>
-                        <Table
-                            dataSource={habitaciones}
-                            columns={[
-                                { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                                { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
-                                {
-                                    title: 'Camas',
-                                    key: 'camas',
-                                    render: (_, habitacion) => (
-                                        <ul>
-                                            {habitacion.camas.map(cama => (
-                                                <li key={cama.id}>
-                                                    {cama.nombre}
-                                                    <Switch
-                                                        checked={cama.activo}
-                                                        onChange={() => toggleActivo(cama, 'camas')}
-                                                        style={{ marginLeft: 8 }}
-                                                    />
-                                                </li>
+                            {/* Modal para crear un nuevo servicio */}
+                            <Modal
+                                title="Crear Nuevo Servicio"
+                                open={isModalOpen}
+                                onOk={handleCreateServicio}
+                                onCancel={closeCreateServicioModal}
+                                okText="Crear"
+                                cancelText="Cancelar"
+                            >
+                                <Form layout="vertical">
+                                    <Form.Item label="Nombre del Servicio">
+                                        <Input
+                                            value={newServicioName}
+                                            onChange={e => setNewServicioName(e.target.value)}
+                                            placeholder="Ingrese el nombre del servicio"
+                                        />
+                                    </Form.Item>
+                                </Form>
+                            </Modal>
+                        </TabPane>
+                    )}
+
+                    {/* Mostrar solo la pestaña de "Habitaciones" si el usuario no es Jefe de Enfermería */}
+                    {userRole !== 'jefe_enfermeria' && (
+                        <TabPane tab="Habitaciones" key="2">
+                            <Button type="primary" onClick={openCreateHabitacionModal} style={{ marginBottom: '20px' }}>
+                                Crear Habitación
+                            </Button>
+                            <Button type="primary" onClick={openCreateCamaModal} style={{ marginBottom: '20px' }}>
+                                Crear Cama
+                            </Button>
+                            <Table
+                                dataSource={habitaciones}
+                                columns={[
+                                    { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                    { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
+                                    {
+                                        title: 'Camas',
+                                        key: 'camas',
+                                        render: (_, habitacion) => (
+                                            <ul>
+                                                {habitacion.camas.map(cama => (
+                                                    <li key={cama.id}>
+                                                        {cama.nombre}
+                                                        <Switch
+                                                            checked={cama.activo}
+                                                            onChange={() => toggleActivo(cama, 'camas')}
+                                                            style={{ marginLeft: 8 }}
+                                                        />
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )
+                                    },
+                                    {
+                                        title: 'Activo',
+                                        key: 'activo',
+                                        render: (_, record) => (
+                                            <Switch
+                                                checked={record.activo}
+                                                onChange={() => toggleActivo(record, 'habitaciones')}
+                                            />
+                                        ),
+                                    }
+                                ]}
+                                rowKey="id"
+                                scroll={{ x: 10 }} // Añadir scroll lateral
+                            />
+
+                            {/* Modal para crear una nueva habitación */}
+                            <Modal
+                                title="Crear Nueva Habitación"
+                                open={isHabitacionModalOpen}
+                                onOk={handleCreateHabitacion}
+                                onCancel={closeCreateHabitacionModal}
+                                okText="Crear"
+                                cancelText="Cancelar"
+                            >
+                                <Form layout="vertical">
+                                    <Form.Item label="Nombre de la Habitación">
+                                        <Input
+                                            value={newHabitacionName}
+                                            onChange={e => setNewHabitacionName(e.target.value)}
+                                            placeholder="Ingrese el nombre de la habitación"
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="Servicio">
+                                        <Select
+                                            value={selectedServicio}
+                                            onChange={value => setSelectedServicio(value)}
+                                            placeholder="Seleccione un servicio"
+                                        >
+                                            {servicios.filter(s => s.activo).map(servicio => (
+                                                <Option key={servicio.id} value={servicio.id}>
+                                                    {servicio.nombre}
+                                                </Option>
                                             ))}
-                                        </ul>
-                                    )
-                                },
-                                {
-                                    title: 'Activo',
-                                    key: 'activo',
-                                    render: (_, record) => (
-                                        <Switch
-                                            checked={record.activo}
-                                            onChange={() => toggleActivo(record, 'habitaciones')}
+                                        </Select>
+                                    </Form.Item>
+                                </Form>
+                            </Modal>
+
+                            {/* Modal para crear una nueva cama */}
+                            <Modal
+                                title="Crear Nueva Cama"
+                                open={isCamaModalOpen}
+                                onOk={handleCreateCama}
+                                onCancel={closeCreateCamaModal}
+                                okText="Crear"
+                                cancelText="Cancelar"
+                            >
+                                <Form layout="vertical">
+                                    <Form.Item label="Nombre de la Cama">
+                                        <Input
+                                            value={newCamaName}
+                                            onChange={e => setNewCamaName(e.target.value)}
+                                            placeholder="Ingrese el nombre de la cama"
                                         />
-                                    ),
-                                }
-                            ]}
-                            rowKey="id"
-                            scroll={{ x: 10 }} // Añadir scroll lateral
-                        />
+                                    </Form.Item>
+                                    <Form.Item label="Habitación">
+                                        <Select
+                                            value={selectedHabitacion}
+                                            onChange={value => setSelectedHabitacion(value)}
+                                            placeholder="Seleccione una habitación"
+                                        >
+                                            {habitaciones.filter(h => h.activo).map(habitacion => (
+                                                <Option key={habitacion.id} value={habitacion.id}>
+                                                    {habitacion.nombre}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </Form>
+                            </Modal>
+                        </TabPane>
+                    )}
 
-                        {/* Modal para crear una nueva habitación */}
-                        <Modal
-                            title="Crear Nueva Habitación"
-                            open={isHabitacionModalOpen}
-                            onOk={handleCreateHabitacion}
-                            onCancel={closeCreateHabitacionModal}
-                            okText="Crear"
-                            cancelText="Cancelar"
-                        >
-                            <Form layout="vertical">
-                                <Form.Item label="Nombre de la Habitación">
-                                    <Input
-                                        value={newHabitacionName}
-                                        onChange={e => setNewHabitacionName(e.target.value)}
-                                        placeholder="Ingrese el nombre de la habitación"
-                                    />
-                                </Form.Item>
-                                <Form.Item label="Servicio">
-                                    <Select
-                                        value={selectedServicio}
-                                        onChange={value => setSelectedServicio(value)}
-                                        placeholder="Seleccione un servicio"
-                                    >
-                                        {servicios.filter(s => s.activo).map(servicio => (
-                                            <Option key={servicio.id} value={servicio.id}>
-                                                {servicio.nombre}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Form>
-                        </Modal>
-
-                        {/* Modal para crear una nueva cama */}
-                        <Modal
-                            title="Crear Nueva Cama"
-                            open={isCamaModalOpen}
-                            onOk={handleCreateCama}
-                            onCancel={closeCreateCamaModal}
-                            okText="Crear"
-                            cancelText="Cancelar"
-                        >
-                            <Form layout="vertical">
-                                <Form.Item label="Nombre de la Cama">
-                                    <Input
-                                        value={newCamaName}
-                                        onChange={e => setNewCamaName(e.target.value)}
-                                        placeholder="Ingrese el nombre de la cama"
-                                    />
-                                </Form.Item>
-                                <Form.Item label="Habitación">
-                                    <Select
-                                        value={selectedHabitacion}
-                                        onChange={value => setSelectedHabitacion(value)}
-                                        placeholder="Seleccione una habitación"
-                                    >
-                                        {habitaciones.filter(h => h.activo).map(habitacion => (
-                                            <Option key={habitacion.id} value={habitacion.id}>
-                                                {habitacion.nombre}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Form>
-                        </Modal>
-                    </TabPane>
+                    {/* La pestaña de "Pacientes" siempre está disponible */}
                     <TabPane tab="Pacientes" key="3">
                         <Button type="primary" onClick={openCreatePacienteModal} style={{ marginBottom: '20px' }}>
                             Crear Paciente
