@@ -10,7 +10,11 @@ let inactivityTime = function (showWarningCallback) {
 
     function startTimer() {
         // Mostrar alerta después de 30 minutos de inactividad
-        warningTimeout = setTimeout(() => showWarningCallback(true), 30 * 60 * 1000);
+        warningTimeout = setTimeout(() => {
+            if (typeof showWarningCallback === 'function') {
+                showWarningCallback(true);
+            }
+        }, 30 * 60 * 1000);
     }
 
     window.onload = resetTimer;
