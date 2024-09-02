@@ -3,48 +3,37 @@
 
 /* Estilos para el contenedor principal del layout */
 .layout {
-    /* Aplicamos la fuente 'Syne' a todo el layout */
     font-family: 'Syne', sans-serif;
-    /* Aseguramos que el contenedor ocupe al menos la altura completa de la ventana */
     min-height: 100vh;
-    /* Establecemos un color de fondo blanco para el layout */
     background-color: #FFFFFF;
 
-    /* Estilos para la sección principal del contenido */
     .main-content {
-        /* Hacemos que la sección principal ocupe el espacio disponible */
         flex: 1;
-        /* Utilizamos flexbox para organizar los elementos internos */
         display: flex;
-        /* Color de fondo gris claro para el área principal */
         background-color: #DEE2E6;
 
-        /* Estilos para la sección específica de contenido dentro de main-content */
         .content {
-            /* Hacemos que el contenido crezca para llenar el espacio disponible */
             flex-grow: 1;
-            /* Añadimos padding interno para separar el contenido de los bordes */
             padding: 15px;
-            /* Fondo blanco para la sección de contenido */
             background-color: #FFFFFF;
+            border-radius: 8px; /* Añadimos un borde redondeado para mejorar la estética */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Añadimos una sombra para dar profundidad */
         }
     }
 }
 
 /* Media query para dispositivos con un ancho máximo de 767px (dispositivos móviles) */
 @media (max-width: 767px) {
-    /* Ajustes en la estructura de la sección principal en pantallas pequeñas */
     .main-content {
-        /* Cambiamos la dirección de los elementos internos a una columna (de arriba hacia abajo) */
         flex-direction: column;
 
-        /* Ajustes en el padding de la sección de contenido en pantallas pequeñas */
         .content {
             padding: 10px;
+            border-radius: 0; /* Eliminamos el borde redondeado en pantallas pequeñas para maximizar el espacio */
+            box-shadow: none; /* Eliminamos la sombra en pantallas pequeñas para simplificar el diseño */
         }
     }
 
-    /* Ocultamos la barra lateral en dispositivos móviles */
     .sidebar {
         display: none;
     }

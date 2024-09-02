@@ -3,53 +3,35 @@
 
 /* Estilos para el contenedor principal del encabezado */
 .header {
-    /* Aplicamos la fuente 'Syne' a todo el contenedor del encabezado */
     font-family: 'Syne', sans-serif;
-    /* Establecemos el color de fondo institucional para el encabezado */
     background-color: #174288;
 
-    /* Estilos para el botón de la barra de navegación (hamburger menu) */
-    .navbar-toggler {
-        /* Establecemos el color del borde del botón al color secundario */
-        border-color: #00A7E2;
-    }
-
-    /* Estilos para el logotipo dentro del encabezado */
     .logo {
-        /* Definimos la altura del logotipo */
         height: 50px;
-        /* Añadimos un margen a la derecha para separar el logotipo de los demás elementos */
         margin-right: 15px;
+
+        /* Añadimos un fondo contrastante detrás del logo */
+        background-color: #FFFFFF;
+        padding: 5px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* Estilos para los enlaces de navegación dentro del encabezado */
     .nav-link {
-        /* Color blanco para los enlaces de navegación */
         color: #FFFFFF;
-
-        /* Estilos al pasar el cursor sobre los enlaces */
         &:hover {
-            /* Cambiamos el color del texto al gris claro cuando se hace hover */
             color: #DEE2E6;
         }
     }
 
-    /* Estilos adicionales para los enlaces dentro de .header-right */
-    .header-right .nav-link {
-        /* Color de fondo institucional para los enlaces en .header-right */
+    .header-right .logout-link {
         background-color: #174288;
-        /* Color blanco para el texto */
         color: #fff;
-        /* Padding interno para hacer los enlaces más grandes y fáciles de pulsar */
         padding: 10px 15px;
-        /* Bordes redondeados para los enlaces */
         border-radius: 5px;
-        /* Transición suave para el cambio de color de fondo */
         transition: background-color 0.3s;
 
-        /* Estilos al pasar el cursor sobre estos enlaces */
         &:hover {
-            /* Cambiamos el color de fondo al color secundario cuando se hace hover */
             background-color: #00A7E2;
         }
     }

@@ -1,6 +1,4 @@
-// src/utils/inactivityHandler.js
-
-let inactivityTime = function () {
+let inactivityTime = function (showWarningCallback) {
     let time;
     let warningTimeout;
 
@@ -22,13 +20,7 @@ let inactivityTime = function () {
     // Iniciar el temporizador de inactividad
     function startTimer() {
         // Mostrar alerta después de 50 minutos de inactividad
-        warningTimeout = setTimeout(showWarning, 50 * 60 * 1000);
-    }
-
-    // Mostrar alerta de confirmación
-    function showWarning() {
-        alert("Ha pasado un tiempo desde su última actividad. Por favor, confirme que sigue aquí.");
-        resetTimer();  // Si el usuario cierra la alerta, reiniciar el temporizador
+        warningTimeout = setTimeout(() => showWarningCallback(true), 50 * 60 * 1000);
     }
 
     startTimer();  // Iniciar el temporizador al cargar la página

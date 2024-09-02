@@ -13,6 +13,7 @@
         padding: 10px 15px;
         border-radius: 4px;
         margin: 5px 0;
+        cursor: pointer;
 
         &:hover {
             background-color: #00A7E2;
@@ -25,10 +26,9 @@
         }
     }
 
-    .pedidos-toggle {
+    .pedidos-toggle, .gestion-datos-toggle {
         position: relative;
 
-        /* Añadimos una animación de rotación al ícono del botón de Pedidos */
         &::after {
             content: '';
             display: inline-block;
@@ -57,7 +57,7 @@
 
     .submenu-open {
         opacity: 1;
-        max-height: 500px; /* un valor suficientemente grande para contener todo el contenido */
+        max-height: 500px;
     }
 
     .submenu-item {

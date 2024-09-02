@@ -23,11 +23,12 @@
         position: absolute;
         bottom: 60px;
         right: 0;
-        background-color: #fff;
+        background-color: #ffffff;
         border: 1px solid #dee2e6;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        padding: 10px;
+        padding: 15px;
+        width: 180px; /* Aumentamos el ancho del menú */
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
@@ -40,15 +41,26 @@
         .nav-link {
             color: #174288;
             position: relative;
+            cursor: pointer;
+            padding: 10px 15px; /* Ajustamos el padding para un diseño más compacto */
+            border-radius: 4px;
+            margin-bottom: 8px; /* Reducimos la separación entre elementos */
+            transition: background-color 0.3s ease, color 0.3s ease;
 
             &:hover {
-                color: #00A7E2;
+                background-color: #00A7E2;
+                color: #FFFFFF;
+            }
+
+            &.active {
+                background-color: #00A7E2;
+                color: #FFFFFF;
             }
         }
 
-        .pedidos-toggle {
+        .pedidos-toggle, .gestion-datos-toggle {
             position: relative;
-            cursor: pointer;
+
             &::after {
                 content: '';
                 display: inline-block;
@@ -57,11 +69,11 @@
                 border: solid #174288;
                 border-width: 0 2px 2px 0;
                 padding: 3px;
-                transform: rotate(45deg);
+                transform: rotate(45deg); /* Flecha en dirección de cerrado */
             }
 
             &.open::after {
-                transform: rotate(-135deg);
+                transform: rotate(-135deg); /* Flecha en dirección de abierto */
             }
         }
 
@@ -73,27 +85,27 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease, opacity 0.3s ease;
+
+            .submenu-item {
+                background-color: #f0f0f0;
+                border-radius: 4px;
+                margin: 5px 0;
+                padding: 8px 12px;
+
+                &:hover {
+                    background-color: #e0e0e0;
+                }
+
+                &.active {
+                    background-color: #cce0ff;
+                    color: #174288;
+                }
+            }
         }
 
         .submenu-open {
             opacity: 1;
             max-height: 500px;
-        }
-
-        .submenu-item {
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            margin: 3px 0;
-            padding: 8px 12px;
-
-            &:hover {
-                background-color: #e0e0e0;
-            }
-
-            &.active {
-                background-color: #cce0ff;
-                color: #174288;
-            }
         }
     }
 }
