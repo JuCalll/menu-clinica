@@ -92,7 +92,7 @@ const PedidosPendientes = () => {
             const optionsToRender = sectionsToShow[section.titulo];
 
             return optionsToRender && optionsToRender.length > 0 ? (
-                <div key={section.id}>
+                <div key={section.id} className="section">
                     <h4>{section.titulo}</h4>
                     {optionsToRender.map(optionType => (
                         <div key={optionType}>
@@ -107,6 +107,7 @@ const PedidosPendientes = () => {
                     <Button
                         onClick={() => handleSectionStatusChange(pedido.id, section.titulo)}
                         disabled={pedido.sectionStatus?.[section.titulo] === 'completado'}
+                        className="custom-button"
                     >
                         {pedido.sectionStatus?.[section.titulo] === 'completado' ? 'Completado' : 'Marcar como Completado'}
                     </Button>
@@ -123,7 +124,7 @@ const PedidosPendientes = () => {
                     pedidos.map(pedido => (
                         <Panel header={`Pedido ${pedido.id} - ${pedido.paciente.name}`} key={pedido.id}>
                             {renderSections(pedido)}
-                            <div>
+                            <div className="additional-options">
                                 <h4>Opciones Adicionales del Menú</h4>
                                 <div>Leche: {pedido.adicionales.leche}</div>
                                 <div>Bebida: {pedido.adicionales.bebida}</div>
@@ -131,7 +132,9 @@ const PedidosPendientes = () => {
                                 <div>Vegetales: {pedido.adicionales.vegetales}</div>
                                 <div>Golosina: {pedido.adicionales.golosina ? 'Sí' : 'No'}</div>
                             </div>
-                            <Button onClick={() => handlePrint(pedido)}>Imprimir</Button>
+                            <Button onClick={() => handlePrint(pedido)} className="custom-button">
+                                Imprimir
+                            </Button>
                         </Panel>
                     ))
                 ) : (

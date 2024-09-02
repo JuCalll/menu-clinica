@@ -1,72 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 .realizar-pedido {
-  /* Establece un ancho máximo de 600px y centra el contenedor */
+  font-family: 'Syne', sans-serif;
   max-width: 600px;
   margin: 0 auto;
-  /* Padding interno para espaciar el contenido */
   padding: 20px;
-  /* Fondo blanco para el contenedor */
   background: #fff;
-  /* Bordes redondeados */
   border-radius: 8px;
-  /* Sombra suave para darle un efecto de elevación */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
   h2 {
-    /* Centra el texto del encabezado */
     text-align: center;
-    /* Margen inferior para separar el encabezado del contenido siguiente */
     margin-bottom: 20px;
-    /* Color del texto en azul institucional */
     color: #174288;
   }
 
   .form-item {
-    /* Margen inferior para separar los elementos del formulario */
     margin-bottom: 20px;
   }
 
   .ant-select {
-    /* Asegura que el selector ocupe todo el ancho disponible */
     width: 100%;
   }
 
   .section-collapse {
-    /* Margen inferior para separar las secciones colapsables */
     margin-bottom: 20px;
   }
 
   .option-group {
-    /* Utiliza flexbox en dirección columna para apilar los elementos verticalmente */
     display: flex;
     flex-direction: column;
-    /* Margen izquierdo para dar sangría al grupo de opciones */
     margin-left: 20px;
 
     h4 {
-      /* Margen inferior para separar el título del contenido siguiente */
       margin-bottom: 10px;
-      /* Color del texto en azul institucional */
       color: #174288;
     }
 
     .ant-checkbox-wrapper {
-      /* Margen inferior para separar las opciones de checkbox */
       margin-bottom: 5px;
     }
   }
 
   .additional-options {
-    /* Margen superior para separar las opciones adicionales del contenido anterior */
     margin-top: 20px;
 
     .form-item {
-      /* Margen inferior más pequeño para separar los elementos de las opciones adicionales */
       margin-bottom: 10px;
     }
   }
 
-  .submit-button {
-    /* Asegura que el botón de envío ocupe todo el ancho disponible */
+  .custom-button {
     width: 100%;
+    background-color: #174288;
+    border-color: #174288;
+    font-weight: 700;
+
+    &:hover,
+    &:focus {
+      background-color: #00A7E2;
+      border-color: #00A7E2;
+    }
   }
 }

@@ -6,6 +6,7 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('El campo de correo electrónico debe estar configurado')
         email = self.normalize_email(email)
+        extra_fields.setdefault('activo', True)  # Por defecto, el usuario será activo
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -14,6 +15,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('activo', True)  # Asegurarse de que el superusuario esté activo
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('El superusuario debe tener is_staff=True')
@@ -26,6 +28,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
     cedula = models.CharField(max_length=20, unique=True)
+    activo = models.BooleanField(default=True)  # Nuevo campo para manejar el estado activo/inactivo
     
     ROLE_CHOICES = [
         ('admin', 'Administrador'),
@@ -33,7 +36,7 @@ class CustomUser(AbstractUser):
         ('auxiliar', 'Auxiliar de Cocina'),
         ('jefe_enfermeria', 'Jefe de Enfermería'),
     ]
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Agregar el campo de rol
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
     objects = CustomUserManager()
 

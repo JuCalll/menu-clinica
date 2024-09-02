@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Form, Input, Modal, Select, Pagination } from 'antd';
-import { registerUser, getUsuarios } from '../services/api';  // Asegúrate de tener estas funciones en tu API
-import '../styles/UserManagament.scss'
+import { registerUser, getUsuarios } from '../services/api';
+import '../styles/UserManagament.scss';
 
 const { Option } = Select;
 
@@ -11,7 +11,7 @@ const UserManagement = () => {
     const [visible, setVisible] = useState(false);
     const [form] = Form.useForm();
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize] = useState(10);  // Número de registros por página
+    const [pageSize] = useState(10);
 
     useEffect(() => {
         const fetchUsuarios = async () => {
@@ -30,26 +30,15 @@ const UserManagement = () => {
 
     const handleCreateUser = async (values) => {
         try {
-            console.log("Datos enviados:", values);  // Verifica los datos que se envían
-            const response = await registerUser(values);
-            console.log("Respuesta del servidor:", response);  // Muestra la respuesta del servidor si la creación fue exitosa
+            await registerUser(values);
             setVisible(false);
             form.resetFields();
             const updatedUsers = await getUsuarios();
             setUsuarios(updatedUsers);
         } catch (error) {
             console.error('Error creating user:', error);
-            if (error.response) {
-                console.error('Datos del error:', error.response.data);
-                console.error('Estado del error:', error.response.status);
-                console.error('Cabeceras del error:', error.response.headers);
-            } else if (error.request) {
-                console.error('Solicitud realizada pero sin respuesta:', error.request);
-            } else {
-                console.error('Error en la configuración de la solicitud:', error.message);
-            }
         }
-    };    
+    };
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
@@ -62,7 +51,7 @@ const UserManagement = () => {
         { title: 'Nombre', dataIndex: 'name', key: 'name' },
         { title: 'Cédula', dataIndex: 'cedula', key: 'cedula' },
         { title: 'Usuario', dataIndex: 'username', key: 'username' },
-        { title: 'Email', dataIndex: 'email', key: 'email' },  // Asegúrate de que el email esté siendo capturado
+        { title: 'Email', dataIndex: 'email', key: 'email' },
         { title: 'Rol', dataIndex: 'role', key: 'role' },
     ];
 
@@ -71,7 +60,16 @@ const UserManagement = () => {
             <Button className="custom-button" type="primary" onClick={() => setVisible(true)}>
                 Crear Usuario
             </Button>
-            <Table dataSource={paginatedUsuarios} columns={columns} loading={loading} rowKey="id" pagination={false} />
+            <div className="table-responsive">
+                <Table
+                    dataSource={paginatedUsuarios}
+                    columns={columns}
+                    loading={loading}
+                    rowKey="id"
+                    pagination={false}
+                    scroll={{ x: '100%' }}  // Habilitamos el scroll horizontal
+                />
+            </div>
 
             <Pagination
                 className="pagination"

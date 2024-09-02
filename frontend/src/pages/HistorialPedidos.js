@@ -16,7 +16,6 @@ const HistorialPedidos = () => {
         const fetchPacientes = async () => {
             try {
                 const response = await getPacientes();
-                console.log('Pacientes:', response); // Log para ver los pacientes obtenidos
                 setPacientes(response);
             } catch (error) {
                 console.error('Error fetching patients', error);
@@ -35,9 +34,7 @@ const HistorialPedidos = () => {
 
             setLoading(true);
             try {
-                console.log('Fetching pedidos completados for paciente ID:', selectedPaciente); // Log para ver la solicitud de pedidos completados
                 const response = await getPedidosCompletados(selectedPaciente);
-                console.log('Pedidos Completados:', response); // Log para ver los pedidos completados
                 setPedidosCompletados(response);
             } catch (error) {
                 console.error('Error fetching completed orders', error);
@@ -49,7 +46,6 @@ const HistorialPedidos = () => {
     }, [selectedPaciente]);
 
     const handlePacienteChange = (value) => {
-        console.log('Paciente seleccionado:', value); // Log para ver el paciente seleccionado
         setSelectedPaciente(value);
     };
 
@@ -62,7 +58,6 @@ const HistorialPedidos = () => {
     }
 
     const renderSections = (pedido) => {
-        console.log('Rendering sections for pedido:', pedido); // Log para ver el pedido y sus secciones
         const sectionsToShow = {
             'Adicional': ['adicionales'],
             'Algo': ['adicionales', 'bebidas'],
@@ -74,12 +69,11 @@ const HistorialPedidos = () => {
 
         return pedido.menu.sections.map(section => {
             const optionsToRender = sectionsToShow[section.titulo];
-            console.log('Section:', section, 'Options to render:', optionsToRender); // Log para ver cada sección y sus opciones
             return optionsToRender && optionsToRender.length > 0 ? (
-                <div key={section.id}>
+                <div key={section.id} className="section">
                     <h4>{section.titulo}</h4>
                     {optionsToRender.map(optionType => (
-                        <div key={optionType}>
+                        <div key={optionType} className="option-group">
                             <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
                             {section[optionType].map(option => (
                                 <div key={option.id}>

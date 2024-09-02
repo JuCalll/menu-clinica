@@ -252,7 +252,7 @@ const RealizarPedido = () => {
                     </Select>
                 </div>
                 <div className="form-item">
-                    <label>Azúcar y/o Panela</label>
+                    <label>Azúcar y/o Panela:</label>
                     <Checkbox.Group
                         value={additionalOptions.azucarPanela}
                         onChange={checkedValues => setAdditionalOptions(prev => ({ ...prev, azucarPanela: checkedValues }))}
@@ -273,7 +273,7 @@ const RealizarPedido = () => {
                     </Select>
                 </div>
                 <div className="form-item">
-                    <label>Golosina Opcional</label>
+                    <label>Golosina Opcional:</label>
                     <Checkbox
                         checked={additionalOptions.golosina}
                         onChange={e => setAdditionalOptions(prev => ({ ...prev, golosina: e.target.checked }))}
@@ -282,7 +282,7 @@ const RealizarPedido = () => {
                     </Checkbox>
                 </div>
             </div>
-            <Button onClick={showConfirmModal} type="primary" className="submit-button">
+            <Button onClick={showConfirmModal} type="primary" className="custom-button">
                 Realizar Pedido
             </Button>
             <Modal

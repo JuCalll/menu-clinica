@@ -1,125 +1,95 @@
-// DataManagement.scss
-
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-.data-management {
-    font-family: 'Syne', sans-serif;
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
+}
 
-    h2 {
-        color: #174288;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 20px;
-    }
+h2, h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
 
-    .ant-btn-primary {
-        background-color: #4CAF50;
-        border-color: #4CAF50;
-        margin-bottom: 20px;
+h4 {
+    font-weight: 700;
+    color: #34495e;
+    margin-bottom: 10px;
+}
 
-        &:hover {
-            background-color: #45A049;
-            border-color: #45A049;
-        }
-    }
+p {
+    margin-bottom: 5px;
+    font-size: 1rem;
+    line-height: 1.5;
+}
 
-    .ant-drawer-header {
-        background-color: #174288;
-        color: #ffffff;
-    }
+.section {
+    margin-bottom: 40px;
+}
 
-    .ant-drawer-title {
-        color: #ffffff;
-    }
+.section h3 {
+    border-bottom: 2px solid #e74c3c;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
 
-    .ant-drawer {
-        .ant-tabs-nav .ant-tabs-tab {
-            font-weight: 600;
-            color: #174288;
-        }
-    }
+.list-group-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+}
 
-    .active-data {
-        margin-top: 20px;
+.form-group {
+    margin-bottom: 15px;
+}
 
-        h3 {
-            color: #174288;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Syne', sans-serif;
+}
 
-        .list-group-item {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: #495057;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
 
-        .list-group {
-            padding-left: 0;
-            list-style: none;
-        }
 
-        ul {
-            margin-left: 20px;
+.btn-primary:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
 
-            li {
-                margin-bottom: 5px;
-                font-weight: 500;
-            }
-        }
-    }
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
 
-    .ant-collapse {
-        background-color: #ffffff;
-        border: 1px solid #dee2e6;
+.mt-5 {
+    margin-top: 3rem;
+}
 
-        .ant-collapse-header {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            font-weight: 600;
-        }
+.mb-3 {
+    margin-bottom: 1rem;
+}
 
-        .ant-collapse-content {
-            border-top: 1px solid #dee2e6;
+.list-group {
+    padding-left: 0;
+    margin-bottom: 20px;
+}
 
-            p {
-                margin-bottom: 10px;
-                font-weight: 500;
-            }
-        }
-    }
+.list-group-item h4 {
+    margin-bottom: 10px;
+}
 
-    .ant-modal {
-        .ant-modal-header {
-            background-color: #174288;
-            color: #ffffff;
-        }
-
-        .ant-modal-title {
-            color: #ffffff;
-        }
-
-        .ant-modal-footer .ant-btn-primary {
-            background-color: #4CAF50;
-            border-color: #4CAF50;
-
-            &:hover {
-                background-color: #45A049;
-                border-color: #45A049;
-            }
-        }
-    }
-
-    .ant-table-thead > tr > th {
-        background-color: #174288;
-        color: #ffffff;
-        font-weight: 600;
-    }
-
-    .ant-table-tbody > tr > td {
-        font-weight: 500;
-    }
+.list-group-item p {
+    margin: 0;
 }

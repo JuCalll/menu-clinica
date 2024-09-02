@@ -4,13 +4,13 @@ import { Input, Button, Alert, Modal } from 'antd';
 import api from '../services/api';
 import '../styles/Login.scss';
 import logo from '../assets/logo.png';
-import inactivityTime from '../utils/inactivityHandler';  // Importamos el manejador de inactividad
+import inactivityTime from '../utils/inactivityHandler';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [isWarningVisible, setIsWarningVisible] = useState(false);  // Estado para manejar la visibilidad de la advertencia
+    const [isWarningVisible, setIsWarningVisible] = useState(false);
 
     const navigate = useNavigate();
 
@@ -22,7 +22,7 @@ const Login = () => {
     }, []);
 
     useEffect(() => {
-        inactivityTime(setIsWarningVisible);  // Iniciamos el manejador de inactividad y pasamos la función para mostrar la advertencia
+        inactivityTime(setIsWarningVisible);
     }, []);
 
     const handleLogin = async (e) => {
@@ -40,19 +40,30 @@ const Login = () => {
                 setError('Login failed: Invalid response from server.');
             }
         } catch (error) {
+            if (error.response && error.response.data.error) {
+                setError(error.response.data.error);  // Captura y muestra el mensaje de error específico del backend
+            } else {
+                setError('Login failed');
+            }
             console.error('Error al intentar iniciar sesión:', error);
-            setError('Login failed');
         }
     };
 
     const handleWarningOk = () => {
-        setIsWarningVisible(false);  // Ocultamos el modal de advertencia y reiniciamos el temporizador de inactividad
+        setIsWarningVisible(false);
+    };
+
+    const handleWarningCancel = () => {
+        // Cerrar sesión y redirigir al login
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/login');
     };
 
     return (
         <div className="login-container">
             <div className="login-form">
-                <img src={logo} alt="Clínica San Juan de Dios" className="login-logo"/>  {/* Usamos la clase específica aquí */}
+                <img src={logo} alt="Clínica San Juan de Dios" className="login-logo"/>
                 <h2>Login</h2>
                 <form onSubmit={handleLogin}>
                     <Input 
@@ -72,12 +83,13 @@ const Login = () => {
                     {error && <Alert message={error} type="error" className="error-message" />}
                 </form>
             </div>
+
             {/* Modal para advertencia de inactividad */}
             <Modal
                 title="Advertencia de Inactividad"
                 visible={isWarningVisible}
                 onOk={handleWarningOk}
-                onCancel={handleWarningOk}
+                onCancel={handleWarningCancel}
                 okText="Estoy aquí"
                 cancelText="Cerrar sesión"
             >

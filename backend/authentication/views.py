@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import CustomUser
 from .serializers import UserSerializer, LoginSerializer
-from logs.models import LogEntry  # Importar el modelo de LogEntry
+from logs.models import LogEntry
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -35,7 +35,7 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
-        if user:
+        if user and user.activo:  # Solo permitir login si el usuario está activo
             refresh = RefreshToken.for_user(user)
             LogEntry.objects.create(
                 user=user,
@@ -50,12 +50,14 @@ class LoginView(generics.GenericAPIView):
                     'role': user.role,
                 }
             })
-        return Response({"error": "Credenciales inválidas"}, status=400)
+        return Response({"error": "Credenciales inválidas o usuario inactivo"}, status=400)
 
 class UserListView(generics.ListAPIView):
-    queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        return CustomUser.objects.filter(activo=True)  # Filtrar solo los usuarios activos
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)

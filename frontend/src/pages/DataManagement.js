@@ -401,107 +401,200 @@ const DataManagement = () => {
     }
 
     return (
-        <div className="data-management container mt-5">
-            <h2>Gestión de Pacientes, Servicios y Habitaciones</h2>
-
-            <Button type="primary" onClick={openDrawer}>
-                Panel de Gestión
-            </Button>
-
-            <Drawer
-                title="Gestión de Datos"
-                placement="right"
-                onClose={closeDrawer}
-                open={isDrawerOpen}
-                width={600}
-            >
-                <Tabs defaultActiveKey="1">
-                    {/* Mostrar solo la pestaña de "Servicios" si el usuario no es Jefe de Enfermería */}
-                    {userRole !== 'jefe_enfermeria' && (
-                        <TabPane tab="Servicios" key="1">
-                            <Button type="primary" onClick={openCreateServicioModal} style={{ marginBottom: '20px' }}>
-                                Crear Servicio
-                            </Button>
-                            <Table
-                                dataSource={servicios}
-                                columns={[
-                                    { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                                    {
-                                        title: 'Activo',
-                                        key: 'activo',
-                                        render: (_, record) => (
-                                            <Switch
-                                                checked={record.activo}
-                                                onChange={() => toggleActivo(record, 'servicios')}
+        <div className="data-management-container mt-5">
+            <div className="data-management">
+                <h2>Gestión de Pacientes, Servicios y Habitaciones</h2>
+    
+                <Button className="custom-button" onClick={openDrawer}>
+                    Panel de Gestión
+                </Button>
+    
+                <Drawer
+                    title="Gestión de Datos"
+                    placement="right"
+                    onClose={closeDrawer}
+                    open={isDrawerOpen}
+                    width={600}
+                >
+                    <Tabs defaultActiveKey="1">
+                        {userRole !== 'jefe_enfermeria' && (
+                            <TabPane tab="Servicios" key="1">
+                                <Button className="custom-button" onClick={openCreateServicioModal} style={{ marginBottom: '20px' }}>
+                                    Crear Servicio
+                                </Button>
+                                <Table
+                                    dataSource={servicios}
+                                    columns={[
+                                        { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                        {
+                                            title: 'Activo',
+                                            key: 'activo',
+                                            render: (_, record) => (
+                                                <Switch
+                                                    checked={record.activo}
+                                                    onChange={() => toggleActivo(record, 'servicios')}
+                                                />
+                                            ),
+                                        }
+                                    ]}
+                                    rowKey="id"
+                                    scroll={{ x: 10 }} // Añadir scroll lateral
+                                />
+    
+                                <Modal
+                                    title="Crear Nuevo Servicio"
+                                    open={isModalOpen}
+                                    onOk={handleCreateServicio}
+                                    onCancel={closeCreateServicioModal}
+                                    okText="Crear"
+                                    cancelText="Cancelar"
+                                >
+                                    <Form layout="vertical">
+                                        <Form.Item label="Nombre del Servicio">
+                                            <Input
+                                                value={newServicioName}
+                                                onChange={e => setNewServicioName(e.target.value)}
+                                                placeholder="Ingrese el nombre del servicio"
                                             />
-                                        ),
-                                    }
-                                ]}
-                                rowKey="id"
-                                scroll={{ x: 10 }} // Añadir scroll lateral
-                            />
-
-                            {/* Modal para crear un nuevo servicio */}
-                            <Modal
-                                title="Crear Nuevo Servicio"
-                                open={isModalOpen}
-                                onOk={handleCreateServicio}
-                                onCancel={closeCreateServicioModal}
-                                okText="Crear"
-                                cancelText="Cancelar"
-                            >
-                                <Form layout="vertical">
-                                    <Form.Item label="Nombre del Servicio">
-                                        <Input
-                                            value={newServicioName}
-                                            onChange={e => setNewServicioName(e.target.value)}
-                                            placeholder="Ingrese el nombre del servicio"
-                                        />
-                                    </Form.Item>
-                                </Form>
-                            </Modal>
-                        </TabPane>
-                    )}
-
-                    {/* Mostrar solo la pestaña de "Habitaciones" si el usuario no es Jefe de Enfermería */}
-                    {userRole !== 'jefe_enfermeria' && (
-                        <TabPane tab="Habitaciones" key="2">
-                            <Button type="primary" onClick={openCreateHabitacionModal} style={{ marginBottom: '20px' }}>
-                                Crear Habitación
-                            </Button>
-                            <Button type="primary" onClick={openCreateCamaModal} style={{ marginBottom: '20px' }}>
-                                Crear Cama
-                            </Button>
-                            <Table
-                                dataSource={habitaciones}
-                                columns={[
-                                    { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
-                                    { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
-                                    {
-                                        title: 'Camas',
-                                        key: 'camas',
-                                        render: (_, habitacion) => (
-                                            <ul>
-                                                {habitacion.camas.map(cama => (
-                                                    <li key={cama.id}>
-                                                        {cama.nombre}
-                                                        <Switch
-                                                            checked={cama.activo}
-                                                            onChange={() => toggleActivo(cama, 'camas')}
-                                                            style={{ marginLeft: 8 }}
-                                                        />
-                                                    </li>
+                                        </Form.Item>
+                                    </Form>
+                                </Modal>
+                            </TabPane>
+                        )}
+    
+                        {userRole !== 'jefe_enfermeria' && (
+                            <TabPane tab="Habitaciones" key="2">
+                                <Button className="custom-button" onClick={openCreateHabitacionModal} style={{ marginBottom: '20px' }}>
+                                    Crear Habitación
+                                </Button>
+                                <Button className="custom-button" onClick={openCreateCamaModal} style={{ marginBottom: '20px' }}>
+                                    Crear Cama
+                                </Button>
+                                <Table
+                                    dataSource={habitaciones}
+                                    columns={[
+                                        { title: 'Nombre', dataIndex: 'nombre', key: 'nombre' },
+                                        { title: 'Servicio', dataIndex: 'servicio', key: 'servicio' },
+                                        {
+                                            title: 'Camas',
+                                            key: 'camas',
+                                            render: (_, habitacion) => (
+                                                <ul>
+                                                    {habitacion.camas.map(cama => (
+                                                        <li key={cama.id}>
+                                                            {cama.nombre}
+                                                            <Switch
+                                                                checked={cama.activo}
+                                                                onChange={() => toggleActivo(cama, 'camas')}
+                                                                style={{ marginLeft: 8 }}
+                                                            />
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )
+                                        },
+                                        {
+                                            title: 'Activo',
+                                            key: 'activo',
+                                            render: (_, record) => (
+                                                <Switch
+                                                    checked={record.activo}
+                                                    onChange={() => toggleActivo(record, 'habitaciones')}
+                                                />
+                                            ),
+                                        }
+                                    ]}
+                                    rowKey="id"
+                                    scroll={{ x: 10 }} // Añadir scroll lateral
+                                />
+    
+                                <Modal
+                                    title="Crear Nueva Habitación"
+                                    open={isHabitacionModalOpen}
+                                    onOk={handleCreateHabitacion}
+                                    onCancel={closeCreateHabitacionModal}
+                                    okText="Crear"
+                                    cancelText="Cancelar"
+                                >
+                                    <Form layout="vertical">
+                                        <Form.Item label="Nombre de la Habitación">
+                                            <Input
+                                                value={newHabitacionName}
+                                                onChange={e => setNewHabitacionName(e.target.value)}
+                                                placeholder="Ingrese el nombre de la habitación"
+                                            />
+                                        </Form.Item>
+                                        <Form.Item label="Servicio">
+                                            <Select
+                                                value={selectedServicio}
+                                                onChange={value => setSelectedServicio(value)}
+                                                placeholder="Seleccione un servicio"
+                                            >
+                                                {servicios.filter(s => s.activo).map(servicio => (
+                                                    <Option key={servicio.id} value={servicio.id}>
+                                                        {servicio.nombre}
+                                                    </Option>
                                                 ))}
-                                            </ul>
-                                        )
-                                    },
+                                            </Select>
+                                        </Form.Item>
+                                    </Form>
+                                </Modal>
+    
+                                <Modal
+                                    title="Crear Nueva Cama"
+                                    open={isCamaModalOpen}
+                                    onOk={handleCreateCama}
+                                    onCancel={closeCreateCamaModal}
+                                    okText="Crear"
+                                    cancelText="Cancelar"
+                                >
+                                    <Form layout="vertical">
+                                        <Form.Item label="Nombre de la Cama">
+                                            <Input
+                                                value={newCamaName}
+                                                onChange={e => setNewCamaName(e.target.value)}
+                                                placeholder="Ingrese el nombre de la cama"
+                                            />
+                                        </Form.Item>
+                                        <Form.Item label="Habitación">
+                                            <Select
+                                                value={selectedHabitacion}
+                                                onChange={value => setSelectedHabitacion(value)}
+                                                placeholder="Seleccione una habitación"
+                                            >
+                                                {habitaciones.filter(h => h.activo).map(habitacion => (
+                                                    <Option key={habitacion.id} value={habitacion.id}>
+                                                        {habitacion.nombre}
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Form>
+                                </Modal>
+                            </TabPane>
+                        )}
+    
+                        <TabPane tab="Pacientes" key="3">
+                            <Button className="custom-button" onClick={openCreatePacienteModal} style={{ marginBottom: '20px' }}>
+                                Crear Paciente
+                            </Button>
+                            <Table
+                                dataSource={pacientes}
+                                columns={[
+                                    { title: 'Cédula', dataIndex: 'cedula', key: 'cedula' },
+                                    { title: 'Nombre', dataIndex: 'name', key: 'name' },
+                                    { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
+                                    { title: 'Habitación', dataIndex: ['cama', 'habitacion', 'nombre'], key: 'habitacion' },
+                                    { title: 'Servicio', dataIndex: ['cama', 'habitacion', 'servicio', 'nombre'], key: 'servicio' },
+                                    { title: 'Dieta Recomendada', dataIndex: 'recommended_diet', key: 'recommended_diet' },
                                     {
                                         title: 'Activo',
                                         key: 'activo',
+                                        align: 'center',
                                         render: (_, record) => (
                                             <Switch
                                                 checked={record.activo}
-                                                onChange={() => toggleActivo(record, 'habitaciones')}
+                                                onChange={() => toggleActivo(record, 'pacientes')}
                                             />
                                         ),
                                     }
@@ -509,203 +602,104 @@ const DataManagement = () => {
                                 rowKey="id"
                                 scroll={{ x: 10 }} // Añadir scroll lateral
                             />
-
-                            {/* Modal para crear una nueva habitación */}
+    
                             <Modal
-                                title="Crear Nueva Habitación"
-                                open={isHabitacionModalOpen}
-                                onOk={handleCreateHabitacion}
-                                onCancel={closeCreateHabitacionModal}
+                                title="Crear Nuevo Paciente"
+                                open={isPacienteModalOpen}
+                                onOk={handleCreatePaciente}
+                                onCancel={closeCreatePacienteModal}
                                 okText="Crear"
                                 cancelText="Cancelar"
                             >
                                 <Form layout="vertical">
-                                    <Form.Item label="Nombre de la Habitación">
+                                    <Form.Item label="Cédula">
                                         <Input
-                                            value={newHabitacionName}
-                                            onChange={e => setNewHabitacionName(e.target.value)}
-                                            placeholder="Ingrese el nombre de la habitación"
+                                            value={newPacienteID}
+                                            onChange={e => setNewPacienteID(e.target.value)}
+                                            placeholder="Ingrese la cédula del paciente"
                                         />
                                     </Form.Item>
-                                    <Form.Item label="Servicio">
+                                    <Form.Item label="Nombre">
+                                        <Input
+                                            value={newPacienteName}
+                                            onChange={e => setNewPacienteName(e.target.value)}
+                                            placeholder="Ingrese el nombre del paciente"
+                                        />
+                                    </Form.Item>
+                                    <Form.Item label="Cama">
                                         <Select
-                                            value={selectedServicio}
-                                            onChange={value => setSelectedServicio(value)}
-                                            placeholder="Seleccione un servicio"
+                                            value={selectedCama}
+                                            onChange={value => setSelectedCama(value)}
+                                            placeholder="Seleccione una cama"
                                         >
-                                            {servicios.filter(s => s.activo).map(servicio => (
-                                                <Option key={servicio.id} value={servicio.id}>
-                                                    {servicio.nombre}
+                                            {habitaciones.flatMap(h => h.camas.filter(c => c.activo && !pacientes.some(p => p.cama.id === c.id))).map(cama => (
+                                                <Option key={cama.id} value={cama.id}>
+                                                    {cama.nombre}
                                                 </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                </Form>
-                            </Modal>
-
-                            {/* Modal para crear una nueva cama */}
-                            <Modal
-                                title="Crear Nueva Cama"
-                                open={isCamaModalOpen}
-                                onOk={handleCreateCama}
-                                onCancel={closeCreateCamaModal}
-                                okText="Crear"
-                                cancelText="Cancelar"
-                            >
-                                <Form layout="vertical">
-                                    <Form.Item label="Nombre de la Cama">
+                                    <Form.Item label="Dieta Recomendada">
                                         <Input
-                                            value={newCamaName}
-                                            onChange={e => setNewCamaName(e.target.value)}
-                                            placeholder="Ingrese el nombre de la cama"
+                                            value={newRecommendedDiet}
+                                            onChange={e => setNewRecommendedDiet(e.target.value)}
+                                            placeholder="Ingrese la dieta recomendada"
                                         />
-                                    </Form.Item>
-                                    <Form.Item label="Habitación">
-                                        <Select
-                                            value={selectedHabitacion}
-                                            onChange={value => setSelectedHabitacion(value)}
-                                            placeholder="Seleccione una habitación"
-                                        >
-                                            {habitaciones.filter(h => h.activo).map(habitacion => (
-                                                <Option key={habitacion.id} value={habitacion.id}>
-                                                    {habitacion.nombre}
-                                                </Option>
-                                            ))}
-                                        </Select>
                                     </Form.Item>
                                 </Form>
                             </Modal>
                         </TabPane>
-                    )}
-
-                    {/* La pestaña de "Pacientes" siempre está disponible */}
-                    <TabPane tab="Pacientes" key="3">
-                        <Button type="primary" onClick={openCreatePacienteModal} style={{ marginBottom: '20px' }}>
-                            Crear Paciente
-                        </Button>
-                        <Table
-                            dataSource={pacientes}
-                            columns={[
-                                { title: 'Cédula', dataIndex: 'cedula', key: 'cedula' },
-                                { title: 'Nombre', dataIndex: 'name', key: 'name' },
-                                { title: 'Cama', dataIndex: ['cama', 'nombre'], key: 'cama' },
-                                { title: 'Habitación', dataIndex: ['cama', 'habitacion', 'nombre'], key: 'habitacion' },
-                                { title: 'Servicio', dataIndex: ['cama', 'habitacion', 'servicio', 'nombre'], key: 'servicio' },
-                                { title: 'Dieta Recomendada', dataIndex: 'recommended_diet', key: 'recommended_diet' },
-                                {
-                                    title: 'Activo',
-                                    key: 'activo',
-                                    align: 'center',
-                                    render: (_, record) => (
-                                        <Switch
-                                            checked={record.activo}
-                                            onChange={() => toggleActivo(record, 'pacientes')}
-                                        />
-                                    ),
-                                }
-                            ]}
-                            rowKey="id"
-                            scroll={{ x: 10 }} // Añadir scroll lateral
-                        />
-
-                        {/* Modal para crear un nuevo paciente */}
-                        <Modal
-                            title="Crear Nuevo Paciente"
-                            open={isPacienteModalOpen}
-                            onOk={handleCreatePaciente}
-                            onCancel={closeCreatePacienteModal}
-                            okText="Crear"
-                            cancelText="Cancelar"
-                        >
-                            <Form layout="vertical">
-                                <Form.Item label="Cédula">
-                                    <Input
-                                        value={newPacienteID}
-                                        onChange={e => setNewPacienteID(e.target.value)}
-                                        placeholder="Ingrese la cédula del paciente"
-                                    />
-                                </Form.Item>
-                                <Form.Item label="Nombre">
-                                    <Input
-                                        value={newPacienteName}
-                                        onChange={e => setNewPacienteName(e.target.value)}
-                                        placeholder="Ingrese el nombre del paciente"
-                                    />
-                                </Form.Item>
-                                <Form.Item label="Cama">
-                                    <Select
-                                        value={selectedCama}
-                                        onChange={value => setSelectedCama(value)}
-                                        placeholder="Seleccione una cama"
-                                    >
-                                        {habitaciones.flatMap(h => h.camas.filter(c => c.activo && !pacientes.some(p => p.cama.id === c.id))).map(cama => (
-                                            <Option key={cama.id} value={cama.id}>
+                    </Tabs>
+                </Drawer>
+    
+                <div className="active-data mt-4">
+                    <h3>Servicios Activos</h3>
+                    <ul className="list-group mb-4">
+                        {servicios.filter(s => s.activo).map(servicio => (
+                            <li key={servicio.id} className="list-group-item">
+                                {servicio.nombre}
+                            </li>
+                        ))}
+                    </ul>
+    
+                    <h3>Habitaciones Activas</h3>
+                    <ul className="list-group mb-4">
+                        {habitaciones.filter(h => h.activo).map(habitacion => (
+                            <li key={habitacion.id} className="list-group-item">
+                                {habitacion.nombre} - {habitacion.servicio}
+                                <ul>
+                                    {habitacion.camas.map(cama => (
+                                        cama.activo && (
+                                            <li key={cama.id}>
                                                 {cama.nombre}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                                <Form.Item label="Dieta Recomendada">
-                                    <Input
-                                        value={newRecommendedDiet}
-                                        onChange={e => setNewRecommendedDiet(e.target.value)}
-                                        placeholder="Ingrese la dieta recomendada"
-                                    />
-                                </Form.Item>
-                            </Form>
-                        </Modal>
-                    </TabPane>
-                </Tabs>
-            </Drawer>
-
-            {/* Visualización de Elementos Activos en la Página Principal */}
-            <div className="active-data mt-4">
-                <h3>Servicios Activos</h3>
-                <ul className="list-group mb-4">
-                    {servicios.filter(s => s.activo).map(servicio => (
-                        <li key={servicio.id} className="list-group-item">
-                            {servicio.nombre}
-                        </li>
-                    ))}
-                </ul>
-
-                <h3>Habitaciones Activas</h3>
-                <ul className="list-group mb-4">
-                    {habitaciones.filter(h => h.activo).map(habitacion => (
-                        <li key={habitacion.id} className="list-group-item">
-                            {habitacion.nombre} - {habitacion.servicio}
-                            <ul>
-                                {habitacion.camas.map(cama => (
-                                    cama.activo && (
-                                        <li key={cama.id}>
-                                            {cama.nombre}
-                                        </li>
-                                    )
-                                ))}
-                            </ul>
-                        </li>
-                    ))}
-                </ul>
-
-                <h3>Pacientes Activos</h3>
-                <Collapse>
-                    {pacientes.filter(p => p.activo).map(paciente => (
-                        <Panel
-                            header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
-                            key={paciente.id}
-                        >
-                            <p><strong>Cédula:</strong> {paciente.cedula}</p>
-                            <p><strong>Cama:</strong> {paciente.cama.nombre}</p>
-                            <p><strong>Habitación:</strong> {paciente.cama.habitacion.nombre}</p>
-                            <p><strong>Servicio:</strong> {paciente.cama.habitacion.servicio.nombre}</p>
-                            <p><strong>Dieta Recomendada:</strong> {paciente.recommended_diet}</p>
-                            <p><strong>Registrado en:</strong> {paciente.created_at}</p>
-                        </Panel>
-                    ))}
-                </Collapse>
+                                            </li>
+                                        )
+                                    ))}
+                                </ul>
+                            </li>
+                        ))}
+                    </ul>
+    
+                    <h3>Pacientes Activos</h3>
+                    <Collapse>
+                        {pacientes.filter(p => p.activo).map(paciente => (
+                            <Panel
+                                header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                                key={paciente.id}
+                            >
+                                <p><strong>Cédula:</strong> {paciente.cedula}</p>
+                                <p><strong>Cama:</strong> {paciente.cama.nombre}</p>
+                                <p><strong>Habitación:</strong> {paciente.cama.habitacion.nombre}</p>
+                                <p><strong>Servicio:</strong> {paciente.cama.habitacion.servicio.nombre}</p>
+                                <p><strong>Dieta Recomendada:</strong> {paciente.recommended_diet}</p>
+                                <p><strong>Registrado en:</strong> {paciente.created_at}</p>
+                            </Panel>
+                        ))}
+                    </Collapse>
+                </div>
             </div>
         </div>
-    );
+    );    
 };
 
 export default DataManagement;

@@ -5,12 +5,17 @@ from .models import CustomUser
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'password', 'email', 'name', 'cedula', 'role')  # Incluimos 'role'
+        fields = ('id', 'username', 'password', 'email', 'name', 'cedula', 'role', 'activo')  # Incluimos 'activo'
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
         return user
+
+    def validate_cedula(self, value):
+        if CustomUser.objects.filter(cedula=value).exists():
+            raise serializers.ValidationError("La cédula ya está en uso.")
+        return value
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()

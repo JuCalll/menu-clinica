@@ -1,16 +1,13 @@
-/* Importamos la fuente 'Syne' desde Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
-
-/* Estilos para el contenedor principal del encabezado */
 .header {
     font-family: 'Syne', sans-serif;
     background-color: #174288;
+    display: flex;
+    justify-content: space-between; /* Asegura que los elementos se distribuyan en el espacio disponible */
+    align-items: center; /* Centra los elementos verticalmente */
 
     .logo {
         height: 50px;
         margin-right: 15px;
-
-        /* Añadimos un fondo contrastante detrás del logo */
         background-color: #FFFFFF;
         padding: 5px;
         border-radius: 8px;

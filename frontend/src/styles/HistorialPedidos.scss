@@ -1,16 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 .historial-pedidos {
-    margin-top: 40px;
+    font-family: 'Syne', sans-serif;
+    padding: 20px;
 
     h2 {
-        font-size: 20px;
+        text-align: center;
         margin-bottom: 20px;
+        color: #174288;
     }
 
     .ant-collapse-header {
+        background-color: #e6f7ff;
         font-weight: bold;
     }
 
-    .option-group {
-        margin-bottom: 15px;
+    .ant-collapse-content-box {
+        padding: 15px;
+        background-color: #f9f9f9;
+    }
+
+    .section {
+        margin-bottom: 20px;
+
+        h4 {
+            color: #174288;
+            margin-bottom: 10px;
+        }
+
+        h5 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .option-group {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+    }
+
+    .adicionales {
+        margin-top: 20px;
+
+        h4 {
+            color: #174288;
+            margin-bottom: 10px;
+        }
+
+        div {
+            margin-bottom: 5px;
+        }
     }
 }

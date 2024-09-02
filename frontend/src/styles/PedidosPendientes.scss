@@ -1,38 +1,72 @@
-// src/components/PedidosPendientes.scss
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 .pedidos-pendientes {
-    .pedido {
-        border: 1px solid #ccc;
+    font-family: 'Syne', sans-serif;
+    padding: 20px;
+
+    h2 {
+        text-align: center;
         margin-bottom: 20px;
-        padding: 20px;
+        color: #174288;
+    }
+
+    .ant-collapse-header {
+        background-color: #e6f7ff;
+        font-weight: bold;
+    }
+
+    .ant-collapse-content-box {
+        padding: 15px;
         background-color: #f9f9f9;
+    }
 
-        .section {
+    .section {
+        margin-bottom: 20px;
+
+        h4 {
+            color: #174288;
             margin-bottom: 10px;
+        }
 
-            h4 {
-                color: #333;
+        h5 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .ant-checkbox-wrapper {
+            margin-bottom: 5px;
+        }
+
+        .custom-button {
+            margin-top: 10px;
+            background-color: #174288;
+            border-color: #174288;
+            font-weight: 700;
+
+            &:hover,
+            &:focus {
+                background-color: #00A7E2;
+                border-color: #00A7E2;
             }
 
-            ul {
-                padding-left: 20px;
-
-                li {
-                    list-style-type: disc;
-                }
+            &:disabled {
+                background-color: #6c757d;
+                border-color: #6c757d;
+                cursor: not-allowed;
             }
+        }
+    }
 
-            button {
-                padding: 10px;
-                background-color: #007bff;
-                color: #fff;
-                border: none;
-                cursor: pointer;
+    .additional-options {
+        margin-top: 20px;
 
-                &:disabled {
-                    background-color: #6c757d;
-                    cursor: not-allowed;
-                }
-            }
+        h4 {
+            color: #174288;
+            margin-bottom: 10px;
+        }
+
+        div {
+            margin-bottom: 5px;
         }
     }
 }
