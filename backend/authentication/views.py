@@ -26,7 +26,6 @@ class RegisterView(generics.CreateAPIView):
             object_id=instance.id,
             changes=serializer.validated_data,
         )
-
 class LoginView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = LoginSerializer
@@ -35,22 +34,18 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
-        if user and user.activo:  # Solo permitir login si el usuario está activo
+
+        if user and user.activo:
             refresh = RefreshToken.for_user(user)
-            LogEntry.objects.create(
-                user=user,
-                action='LOGIN',
-                model='Authentication',
-                object_id=user.id,
-            )
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'user': {
-                    'role': user.role,
+                    'role': user.role,  # Devolver el rol del usuario
                 }
             })
-        return Response({"error": "Credenciales inválidas o usuario inactivo"}, status=400)
+        else:
+            return Response({"error": "Invalid credentials or user inactive"}, status=400)
 
 class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer

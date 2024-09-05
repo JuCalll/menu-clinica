@@ -18,7 +18,7 @@ const Sidebar = () => {
   return (
     <div className="sidebar vh-100">
       <nav className="nav flex-column">
-        <NavLink to="/" className="nav-link">Inicio</NavLink>
+        <NavLink to="/home" className="nav-link">Inicio</NavLink>
         
         {(userRole === 'admin' || userRole === 'coordinador') && (
           <NavLink to="/menus" className="nav-link">Menús</NavLink>

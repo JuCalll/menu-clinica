@@ -10,10 +10,13 @@ const PedidosPendientes = () => {
     const [pedidos, setPedidos] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Log para asegurarnos de que se está llamando correctamente a la API
     useEffect(() => {
         const fetchPedidos = async () => {
+            console.log('Fetching pedidos...');
             try {
                 const response = await getPedidos();
+                console.log('Pedidos fetched:', response);
                 setPedidos(response.filter(pedido => pedido.status !== 'completado'));
                 setLoading(false);
             } catch (error) {
@@ -26,9 +29,9 @@ const PedidosPendientes = () => {
     }, []);
 
     const handleSectionStatusChange = async (pedidoId, sectionTitle) => {
+        console.log(`Changing section status for pedido ID: ${pedidoId}, section: ${sectionTitle}`);
         try {
             const pedido = pedidos.find(p => p.id === pedidoId);
-
             const updatedSections = { ...pedido.sectionStatus, [sectionTitle]: 'completado' };
 
             const allSectionsCompleted = Object.values(updatedSections).length === pedido.menu.sections.length &&
@@ -57,13 +60,9 @@ const PedidosPendientes = () => {
 
     const handlePrint = async (pedido) => {
         const url = `/pedidos/${pedido.id}/print/`;
-        console.log("URL de la solicitud:", url);
-    
+        console.log("Imprimiendo pedido ID:", pedido.id);
         try {
             const response = await api.post(url);
-    
-            console.log("Respuesta completa:", response);
-    
             if (response.status === 200) {
                 console.log("Pedido impreso con éxito.");
             } else {
@@ -72,11 +71,19 @@ const PedidosPendientes = () => {
         } catch (error) {
             console.error("Error al intentar imprimir el pedido:", error);
         }
-    };            
-    
-    if (loading) {
-        return <Spin />;
-    }
+    };
+
+    const renderSelectedOptions = (section, optionsType, pedido) => {
+        return section[optionsType]
+            .filter(option => 
+                pedido.opciones.some(o => o.menu_option.id === option.id && o.selected)
+            )
+            .map(option => (
+                <div key={option.id}>
+                    {option.texto}
+                </div>
+            ));
+    };
 
     const renderSections = (pedido) => {
         const sectionsToShow = {
@@ -87,34 +94,39 @@ const PedidosPendientes = () => {
             'Almuerzo': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas'],
             'Cena': ['adicionales', 'platos_principales', 'acompanantes', 'bebidas']
         };
-
+    
         return pedido.menu.sections.map(section => {
             const optionsToRender = sectionsToShow[section.titulo];
-
+    
             return optionsToRender && optionsToRender.length > 0 ? (
-                <div key={section.id} className="section">
+                <div key={section.id} className='section'>
                     <h4>{section.titulo}</h4>
                     {optionsToRender.map(optionType => (
                         <div key={optionType}>
                             <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
-                            {section[optionType].map(option => (
-                                <div key={option.id}>
-                                    {option.texto}
-                                </div>
-                            ))}
+                            {renderSelectedOptions(section, optionType, pedido)}
                         </div>
                     ))}
-                    <Button
-                        onClick={() => handleSectionStatusChange(pedido.id, section.titulo)}
-                        disabled={pedido.sectionStatus?.[section.titulo] === 'completado'}
-                        className="custom-button"
-                    >
-                        {pedido.sectionStatus?.[section.titulo] === 'completado' ? 'Completado' : 'Marcar como Completado'}
-                    </Button>
+                    <div className="buttons-container">
+                        <Button
+                            onClick={() => handleSectionStatusChange(pedido.id, section.titulo)}
+                            disabled={pedido.sectionStatus?.[section.titulo] === 'completado'}
+                            className='custom-button'
+                        >
+                            {pedido.sectionStatus?.[section.titulo] === 'completado' ? 'Completado' : 'Marcar como Completado'}
+                        </Button>
+                        <Button onClick={() => handlePrint(pedido)} className="custom-button">
+                            Imprimir
+                        </Button>
+                    </div>
                 </div>
             ) : null;
         });
-    };
+    };    
+                              
+    if (loading) {
+        return <Spin />;
+    }
 
     return (
         <div className="pedidos-pendientes">
@@ -122,7 +134,7 @@ const PedidosPendientes = () => {
             <Collapse>
                 {pedidos.length > 0 ? (
                     pedidos.map(pedido => (
-                        <Panel header={`Pedido ${pedido.id} - ${pedido.paciente.name}`} key={pedido.id}>
+                        <Panel header={`Pedido ${pedido.id} - ${pedido.paciente.name} (Hab: ${pedido.paciente.cama.habitacion.nombre}, Cama: ${pedido.paciente.cama.nombre})`}  key={pedido.id}>
                             {renderSections(pedido)}
                             <div className="additional-options">
                                 <h4>Opciones Adicionales del Menú</h4>
@@ -132,9 +144,6 @@ const PedidosPendientes = () => {
                                 <div>Vegetales: {pedido.adicionales.vegetales}</div>
                                 <div>Golosina: {pedido.adicionales.golosina ? 'Sí' : 'No'}</div>
                             </div>
-                            <Button onClick={() => handlePrint(pedido)} className="custom-button">
-                                Imprimir
-                            </Button>
                         </Panel>
                     ))
                 ) : (

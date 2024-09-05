@@ -57,6 +57,18 @@ const HistorialPedidos = () => {
         return <Spin />;
     }
 
+    const renderSelectedOptions = (section, optionsType, pedido) => {
+        return section[optionsType]
+            .filter(option => 
+                pedido.opciones.some(o => o.menu_option.id === option.id && o.selected)
+            )
+            .map(option => (
+                <div key={option.id}>
+                    {option.texto}
+                </div>
+            ));
+    };
+
     const renderSections = (pedido) => {
         const sectionsToShow = {
             'Adicional': ['adicionales'],
@@ -70,16 +82,12 @@ const HistorialPedidos = () => {
         return pedido.menu.sections.map(section => {
             const optionsToRender = sectionsToShow[section.titulo];
             return optionsToRender && optionsToRender.length > 0 ? (
-                <div key={section.id} className="section">
+                <div key={section.id}>
                     <h4>{section.titulo}</h4>
                     {optionsToRender.map(optionType => (
-                        <div key={optionType} className="option-group">
+                        <div key={optionType}>
                             <h5>{optionType.charAt(0).toUpperCase() + optionType.slice(1)}</h5>
-                            {section[optionType].map(option => (
-                                <div key={option.id}>
-                                    {option.texto}
-                                </div>
-                            ))}
+                            {renderSelectedOptions(section, optionType, pedido)}
                         </div>
                     ))}
                 </div>

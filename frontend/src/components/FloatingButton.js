@@ -28,7 +28,7 @@ const FloatingButton = () => {
             </button>
 
             <div className={`floating-menu ${isOpen ? 'show' : ''}`}>
-                <NavLink to="/" className="nav-link" onClick={toggleMenu}>Inicio</NavLink>
+                <NavLink to="/home" className="nav-link" onClick={toggleMenu}>Inicio</NavLink>
 
                 {(userRole === 'admin' || userRole === 'coordinador') && (
                     <NavLink to="/menus" className="nav-link" onClick={toggleMenu}>Menús</NavLink>

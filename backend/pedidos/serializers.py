@@ -6,11 +6,10 @@ from menus.models import Menu, MenuOption
 from menus.serializers import MenuSerializer, MenuOptionSerializer
 
 class PedidoMenuOptionSerializer(serializers.ModelSerializer):
-    texto = serializers.CharField(source='menu_option.texto', read_only=True)
-
+    menu_option = MenuOptionSerializer()
     class Meta:
         model = PedidoMenuOption
-        fields = ['id', 'texto', 'selected']
+        fields = ['menu_option', 'selected']
 
 class PedidoSerializer(serializers.ModelSerializer):
     paciente = PacienteSerializer(read_only=True)
@@ -28,34 +27,21 @@ class PedidoSerializer(serializers.ModelSerializer):
         paciente_id = self.initial_data.get('paciente')
         menu_id = self.initial_data.get('menu')
 
-        print(f"Creando pedido para paciente ID: {paciente_id} con menú ID: {menu_id}")
-
         paciente = Paciente.objects.get(id=paciente_id)
         menu = Menu.objects.get(id=menu_id)
 
-        # Validamos que el paciente esté activo
-        if not paciente.activo:
-            raise serializers.ValidationError("El paciente seleccionado no está activo.")
-
         pedido = Pedido.objects.create(paciente=paciente, menu=menu, sectionStatus=section_status_data, **validated_data)
-
-        print(f"Pedido creado con ID: {pedido.id}")
 
         for opcion_data in opciones_data:
             opcion_id = opcion_data.get('id')
             if opcion_id is not None:
                 selected = opcion_data.get('selected', False)
-                try:
-                    menu_option = MenuOption.objects.get(id=opcion_id)
-                    PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
-                except MenuOption.DoesNotExist:
-                    print(f"MenuOption con ID {opcion_id} no existe. Saltando esta opción.")
-                    continue
+                menu_option = MenuOption.objects.get(id=opcion_id)
+                PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
 
         pedido.adicionales = adicionales_data
         pedido.save()
 
-        print(f"Pedido guardado con adicionales: {pedido.adicionales}")
         return pedido
 
     def update(self, instance, validated_data):

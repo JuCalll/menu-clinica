@@ -3,23 +3,24 @@ let inactivityTime = function (showWarningCallback) {
     let warningTimeout;
 
     function resetTimer() {
+        console.log("Timer reset."); // Log para depuración
         clearTimeout(time);
         clearTimeout(warningTimeout);
         startTimer();
     }
 
     function startTimer() {
-        // Mostrar alerta después de 30 minutos de inactividad
+        // Mostrar alerta después de 50 minutos de inactividad
         warningTimeout = setTimeout(() => {
+            console.log("Inactivity detected, showing warning."); // Log para depuración
             if (typeof showWarningCallback === 'function') {
                 showWarningCallback(true);
             }
-        }, 30 * 60 * 1000);
+        }, 50 * 60 * 1000);  // 50 minutos antes de mostrar la alerta
     }
 
     window.onload = resetTimer;
     document.onmousemove = resetTimer;
-    document.onkeypress = resetTimer;
     document.onclick = resetTimer;
     document.onscroll = resetTimer;
     document.onresize = resetTimer;

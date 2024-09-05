@@ -27,13 +27,14 @@ class LoginSerializer(serializers.Serializer):
 
         if username and password:
             user = authenticate(username=username, password=password)
-            if user:
-                # Añadimos el rol del usuario al contexto de la respuesta
-                data['user'] = user
-                data['role'] = user.role
-            else:
-                raise serializers.ValidationError("Credenciales incorrectas.")
+            if not user:
+                raise serializers.ValidationError("Invalid credentials.")
+            if not user.is_active:
+                raise serializers.ValidationError("User is inactive.")
+            # Add user and role to validated data
+            data['user'] = user
+            data['role'] = user.role
         else:
-            raise serializers.ValidationError("Debe incluir 'username' y 'password'.")
+            raise serializers.ValidationError("Both username and password are required.")
         
         return data

@@ -1,16 +1,23 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 const PrivateRoute = ({ children, requiredRoles }) => {
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('role');  // Obtenemos el rol desde el localStorage
-    
-    // Si el token existe y el rol del usuario está en el arreglo de roles requeridos, renderizamos los componentes hijos
-    // Si no, redirigimos al usuario a la página de inicio de sesión
-    if (token && (!requiredRoles || requiredRoles.includes(userRole))) {
-        return children;
+    const location = useLocation();
+
+    // Si no hay token, redirigir al login
+    if (!token) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
-    return <Navigate to="/login" />;
+
+    // Si se requiere un rol específico y el usuario no lo tiene, redirigir al login
+    if (requiredRoles && !requiredRoles.includes(userRole)) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // Si todo es correcto, renderizar el componente hijo
+    return children;
 };
 
 export default PrivateRoute;

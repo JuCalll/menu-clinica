@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import inactivityTime from './utils/inactivityHandler';
@@ -29,30 +29,46 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Ruta raíz redirige al Login */}
+        <Route path="/" element={<Navigate to="/login" />} />
+
+        {/* Ruta para Login */}
         <Route path="/login" element={<Login />} />
 
+        {/* Rutas Protegidas */}
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-          <Route path="/" element={<Home />} />
+          <Route 
+            path="/home" 
+            element={<PrivateRoute><Home /></PrivateRoute>} 
+          />
           <Route 
             path="/menus" 
-            element={<PrivateRoute requiredRoles={["admin", "coordinador"]}><MenuPage /></PrivateRoute>} />
+            element={<PrivateRoute requiredRoles={["admin", "coordinador"]}><MenuPage /></PrivateRoute>} 
+          />
           <Route 
             path="/realizar-pedido" 
-            element={<PrivateRoute requiredRoles={["admin", "jefe_enfermeria", "coordinador"]}><RealizarPedido /></PrivateRoute>} />
+            element={<PrivateRoute requiredRoles={["admin", "jefe_enfermeria", "coordinador"]}><RealizarPedido /></PrivateRoute>} 
+          />
           <Route 
             path="/pedidos/pendientes" 
-            element={<PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}><PedidosPendientes /></PrivateRoute>} />
+            element={<PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}><PedidosPendientes /></PrivateRoute>} 
+          />
           <Route 
             path="/pedidos/historial" 
-            element={<PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}><HistorialPedidos /></PrivateRoute>} />
+            element={<PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}><HistorialPedidos /></PrivateRoute>} 
+          />
           <Route 
             path="/gestion-datos" 
-            element={<PrivateRoute requiredRoles={["admin", "jefe_enfermeria"]}><DataManagement /></PrivateRoute>} />
+            element={<PrivateRoute requiredRoles={["admin", "jefe_enfermeria"]}><DataManagement /></PrivateRoute>} 
+          />
           <Route 
             path="/gestion-usuarios" 
             element={<PrivateRoute requiredRoles={["admin"]}><UserManagement /></PrivateRoute>} 
-          />  {/* Nueva ruta para la gestión de usuarios protegida por rol */}
+          />
         </Route>
+
+        {/* Redireccionar a /home después del login */}
+        <Route path="/home" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );

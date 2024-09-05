@@ -40,12 +40,14 @@ const RealizarPedido = () => {
 
     const handlePacienteChange = value => {
         setSelectedPaciente(value);
+        console.log("Selected Paciente:", value);  // Log para verificar paciente seleccionado
     };
 
     const handleMenuChange = value => {
         const menu = menus.find(menu => menu.id === value);
         setSelectedMenu(menu);
         setSelectedOptions({});
+        console.log("Selected Menu:", menu);  // Log para verificar menú seleccionado
     };
 
     const handleOptionChange = (sectionName, optionType, optionId, checked) => {
@@ -72,6 +74,7 @@ const RealizarPedido = () => {
                 newOptions[sectionName][optionType] = newOptions[sectionName][optionType].filter(id => id !== optionId);
             }
 
+            console.log("Updated Selected Options:", newOptions);  // Log para verificar opciones seleccionadas
             return newOptions;
         });
     };
@@ -130,26 +133,28 @@ const RealizarPedido = () => {
                             const selected = selectedOptions[section.titulo]?.[key]?.includes(option.id) || false;
                             opciones.push({
                                 id: option.id,
-                                selected: selected,
+                                selected: selected,  // Correctly assign the selected status
                             });
                         });
                     }
                 }
             }
-
+   
             const pedido = {
                 paciente: selectedPaciente,
                 menu: selectedMenu.id,
-                opciones: opciones,
+                opciones: opciones,  // Pass correct options with IDs
                 adicionales: additionalOptions,
             };
-
+   
+            console.log("Final Pedido Data:", pedido);  // Check if the correct IDs are being sent
+   
             await createPedido(pedido);
             resetForm();
         } catch (error) {
             console.error('Error creating pedido', error);
         }
-    };
+    };   
 
     const resetForm = () => {
         setSelectedPaciente(null);
@@ -162,6 +167,7 @@ const RealizarPedido = () => {
             vegetales: '',
             golosina: false
         });
+        console.log("Form Reset.");  // Log para verificar que el formulario ha sido reiniciado
     };
 
     const handleCancel = () => {
@@ -287,7 +293,7 @@ const RealizarPedido = () => {
             </Button>
             <Modal
                 title="Confirmación de Pedido"
-                visible={confirmVisible}
+                open={confirmVisible}
                 onOk={handleOk}
                 onCancel={handleCancel}
             >

@@ -22,6 +22,7 @@ const Login = () => {
     }, []);
 
     useEffect(() => {
+        console.log("Starting inactivity timer.");  // Log para depuración
         inactivityTime(setIsWarningVisible);
     }, []);
 
@@ -29,33 +30,39 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await api.post('/auth/login/', { username, password });
-            const token = response.data.access;
+            const access = response.data.access;
+            const refresh = response.data.refresh;
             const role = response.data.user.role;
 
-            if (token && role) {
-                localStorage.setItem('token', token);
+            if (access && role) {
+                localStorage.setItem('token', access);
+                localStorage.setItem('refresh', refresh);  // Guardar el refresh token
                 localStorage.setItem('role', role);
-                navigate('/');
+                api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
+                navigate('/home');
             } else {
                 setError('Login failed: Invalid response from server.');
             }
         } catch (error) {
             if (error.response && error.response.data.error) {
-                setError(error.response.data.error);  // Captura y muestra el mensaje de error específico del backend
+                setError(error.response.data.error);  // Mostrar el mensaje de error específico
             } else {
                 setError('Login failed');
             }
-            console.error('Error al intentar iniciar sesión:', error);
+            console.error('Error logging in:', error);
         }
     };
 
     const handleWarningOk = () => {
+        console.log("User confirmed presence.");  // Log para depuración
         setIsWarningVisible(false);
     };
 
     const handleWarningCancel = () => {
+        console.log("User chose to log out.");  // Log para depuración
         // Cerrar sesión y redirigir al login
         localStorage.removeItem('token');
+        localStorage.removeItem('refresh');
         localStorage.removeItem('role');
         navigate('/login');
     };
@@ -63,18 +70,18 @@ const Login = () => {
     return (
         <div className="login-container">
             <div className="login-form">
-                <img src={logo} alt="Clínica San Juan de Dios" className="login-logo"/>
+                <img src={logo} alt="Clínica San Juan de Dios" className="login-logo" />
                 <h2>Login</h2>
                 <form onSubmit={handleLogin}>
-                    <Input 
-                        type="text" 
-                        placeholder="Username" 
+                    <Input
+                        type="text"
+                        placeholder="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="input-field"
                     />
-                    <Input.Password 
-                        placeholder="Password" 
+                    <Input.Password
+                        placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="input-field"
@@ -84,10 +91,9 @@ const Login = () => {
                 </form>
             </div>
 
-            {/* Modal para advertencia de inactividad */}
             <Modal
                 title="Advertencia de Inactividad"
-                visible={isWarningVisible}
+                open={isWarningVisible}
                 onOk={handleWarningOk}
                 onCancel={handleWarningCancel}
                 okText="Estoy aquí"

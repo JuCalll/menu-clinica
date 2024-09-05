@@ -1,28 +1,38 @@
-// Importamos axios para realizar solicitudes HTTP
 import axios from 'axios';
 
-// Creamos una instancia de axios con la URL base de la API
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api', // URL base para las solicitudes
+    baseURL: 'http://127.0.0.1:8000/api',  // La URL base para la API
 });
 
-// Agregamos un interceptor de solicitudes a la instancia de axios
-api.interceptors.request.use(
-    (config) => {
-        // Obtenemos el token de autenticación del almacenamiento local
-        const token = localStorage.getItem('token');
-        
-        // Si el token existe, lo agregamos al encabezado de la solicitud
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+// Interceptores de respuestas para manejar el error 401 (token expirado)
+api.interceptors.response.use(
+    response => response,  // Retorna la respuesta directamente si es exitosa
+    async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response.status === 401 && error.response.data.code === 'token_not_valid') {
+            const refreshToken = localStorage.getItem('refresh');
+
+            if (refreshToken) {
+                try {
+                    const { data } = await axios.post('/auth/token/refresh/', { refresh: refreshToken });
+
+                    localStorage.setItem('token', data.access);
+                    api.defaults.headers.common['Authorization'] = `Bearer ${data.access}`;
+                    originalRequest.headers['Authorization'] = `Bearer ${data.access}`;
+
+                    return api(originalRequest);  // Reintenta la solicitud original
+                } catch (refreshError) {
+                    console.error('Error al refrescar el token:', refreshError);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refresh');
+                    window.location.href = '/login';  // Redirige al login si falla el refresco
+                }
+            }
         }
-        
-        // Retornamos la configuración de la solicitud
-        return config;
-    },
-    // Manejo de errores en la solicitud
-    (error) => Promise.reject(error) // Rechazamos la promesa en caso de error
+
+        return Promise.reject(error);  // Si no es un error de token, lo propaga
+    }
 );
 
-// Exportamos la instancia de axios configurada
 export default api;
