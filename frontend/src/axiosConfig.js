@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api',  // La URL base para la API
+    baseURL: process.env.NODE_ENV === 'development'
+        ? 'http://127.0.0.1:8000/api'  // En desarrollo, usa localhost
+        : 'http://172.168.11.176:8000/api',  // En producción o red local, usa la IP del servidor
 });
 
 // Interceptores de respuestas para manejar el error 401 (token expirado)
