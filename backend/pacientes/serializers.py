@@ -31,7 +31,7 @@ class PacienteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Paciente
-        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 'recommended_diet', 'activo', 'created_at']  # Se añade el campo `created_at`
+        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 'recommended_diet', 'activo', 'created_at']  
 
     def create(self, validated_data):
         return Paciente.objects.create(**validated_data)
@@ -45,6 +45,6 @@ class PacienteSerializer(serializers.ModelSerializer):
         try:
             instance.save()
         except ValidationError as e:
-            raise DRFValidationError({"detail": e.messages})  # Se lanza el mensaje específico como una excepción de DRF
+            raise DRFValidationError({"detail": e.messages})  
 
         return instance

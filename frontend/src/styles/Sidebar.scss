@@ -1,82 +1,81 @@
-/* Importamos la fuente 'Syne' desde Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-/* Estilos principales para la barra lateral (sidebar) */
 .sidebar {
-    font-family: 'Syne', sans-serif;
-    background-color: #174288;
-    color: #FFFFFF;
-    padding: 15px;
+  font-family: "Syne", sans-serif;
+  background-color: #174288;
+  color: #ffffff;
+  padding: 15px;
 
-    .nav-link {
-        color: #FFFFFF;
-        padding: 10px 15px;
-        border-radius: 4px;
-        margin: 5px 0;
-        cursor: pointer;
+  .nav-link {
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 5px 0;
+    cursor: pointer;
 
-        &:hover {
-            background-color: #00A7E2;
-            color: #DEE2E6;
-        }
-
-        &.active {
-            background-color: #00A7E2;
-            color: #DEE2E6;
-        }
+    &:hover {
+      background-color: #00a7e2;
+      color: #dee2e6;
     }
 
-    .pedidos-toggle, .gestion-datos-toggle {
-        position: relative;
+    &.active {
+      background-color: #00a7e2;
+      color: #dee2e6;
+    }
+  }
 
-        &::after {
-            content: '';
-            display: inline-block;
-            margin-left: 10px;
-            transition: transform 0.3s ease;
-            border: solid #FFFFFF;
-            border-width: 0 2px 2px 0;
-            padding: 3px;
-            transform: rotate(45deg);
-        }
+  .pedidos-toggle,
+  .gestion-datos-toggle {
+    position: relative;
 
-        &.open::after {
-            transform: rotate(-135deg);
-        }
+    &::after {
+      content: "";
+      display: inline-block;
+      margin-left: 10px;
+      transition: transform 0.3s ease;
+      border: solid #ffffff;
+      border-width: 0 2px 2px 0;
+      padding: 3px;
+      transform: rotate(45deg);
     }
 
-    .submenu {
-        margin-left: 20px;
-        padding-left: 10px;
-        border-left: 2px solid #00A7E2;
-        opacity: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease, opacity 0.3s ease;
+    &.open::after {
+      transform: rotate(-135deg);
+    }
+  }
+
+  .submenu {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid #00a7e2;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+  }
+
+  .submenu-open {
+    opacity: 1;
+    max-height: 500px;
+  }
+
+  .submenu-item {
+    background-color: #0056a2;
+    border-radius: 4px;
+    margin: 3px 0;
+    padding: 8px 12px;
+
+    &:hover {
+      background-color: #0074d9;
     }
 
-    .submenu-open {
-        opacity: 1;
-        max-height: 500px;
+    &.active {
+      background-color: #0074d9;
+      color: #ffffff;
     }
+  }
 
-    .submenu-item {
-        background-color: #0056A2;
-        border-radius: 4px;
-        margin: 3px 0;
-        padding: 8px 12px;
-
-        &:hover {
-            background-color: #0074D9;
-        }
-
-        &.active {
-            background-color: #0074D9;
-            color: #FFFFFF;
-        }
-    }
-
-    @media (max-width: 767px) {
-        display: none;
-    }
+  @media (max-width: 767px) {
+    display: none;
+  }
 }

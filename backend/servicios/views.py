@@ -1,7 +1,7 @@
 from rest_framework import generics
 from .models import Servicio
 from .serializers import ServicioSerializer
-from logs.models import LogEntry  # Importar el modelo de LogEntry
+from logs.models import LogEntry  
 
 class ServicioListCreateView(generics.ListCreateAPIView):
     serializer_class = ServicioSerializer

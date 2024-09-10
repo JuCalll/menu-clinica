@@ -1,0 +1,4335 @@
+frontend:
+
+    build
+
+    node_modules
+
+    public
+
+    src:
+        assets:
+            logo.png
+        components:
+            FloatingButton.js:
+                import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { FaBars } from "react-icons/fa";
+import "../styles/FloatingButton.scss";
+
+const FloatingButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPedidosOpen, setIsPedidosOpen] = useState(false);
+  const [isGestionDatosOpen, setIsGestionDatosOpen] = useState(false);
+  const userRole = localStorage.getItem("role");
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const togglePedidosMenu = () => {
+    setIsPedidosOpen(!isPedidosOpen);
+  };
+
+  const toggleGestionDatosMenu = () => {
+    setIsGestionDatosOpen(!isGestionDatosOpen);
+  };
+
+  return (
+    <div className="floating-button">
+      <button className="btn" onClick={toggleMenu}>
+        <FaBars />
+      </button>
+
+      <div className={`floating-menu ${isOpen ? "show" : ""}`}>
+        <NavLink to="/home" className="nav-link" onClick={toggleMenu}>
+          Inicio
+        </NavLink>
+
+        {(userRole === "admin" || userRole === "coordinador") && (
+          <NavLink to="/menus" className="nav-link" onClick={toggleMenu}>
+            Menús
+          </NavLink>
+        )}
+
+        {(userRole === "admin" ||
+          userRole === "coordinador" ||
+          userRole === "auxiliar" ||
+          userRole === "jefe_enfermeria") && (
+          <>
+            <div
+              className={`nav-link pedidos-toggle ${
+                isPedidosOpen ? "open" : ""
+              }`}
+              onClick={togglePedidosMenu}
+            >
+              Pedidos
+            </div>
+            {isPedidosOpen && (
+              <div className="submenu submenu-open">
+                {(userRole === "admin" ||
+                  userRole === "jefe_enfermeria" ||
+                  userRole === "coordinador") && (
+                  <NavLink
+                    to="/realizar-pedido"
+                    className="nav-link submenu-item"
+                    onClick={toggleMenu}
+                  >
+                    Realizar Pedido
+                  </NavLink>
+                )}
+                {(userRole === "admin" ||
+                  userRole === "coordinador" ||
+                  userRole === "auxiliar") && (
+                  <>
+                    <NavLink
+                      to="/pedidos/pendientes"
+                      className="nav-link submenu-item"
+                      onClick={toggleMenu}
+                    >
+                      Pedidos Pendientes
+                    </NavLink>
+                    <NavLink
+                      to="/pedidos/historial"
+                      className="nav-link submenu-item"
+                      onClick={toggleMenu}
+                    >
+                      Historial de Pedidos
+                    </NavLink>
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {(userRole === "admin" || userRole === "jefe_enfermeria") && (
+          <>
+            <div
+              className={`nav-link gestion-datos-toggle ${
+                isGestionDatosOpen ? "open" : ""
+              }`}
+              onClick={toggleGestionDatosMenu}
+            >
+              Gestión de Datos
+            </div>
+            {isGestionDatosOpen && (
+              <div className="submenu submenu-open">
+                <NavLink
+                  to="/gestion-datos"
+                  className="nav-link submenu-item"
+                  onClick={toggleMenu}
+                >
+                  Datos Generales
+                </NavLink>
+                {userRole === "admin" && (
+                  <NavLink
+                    to="/gestion-usuarios"
+                    className="nav-link submenu-item"
+                    onClick={toggleMenu}
+                  >
+                    Gestión de Usuarios
+                  </NavLink>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FloatingButton;
+
+            Header.js:
+                import React from "react";
+import { Link } from "react-router-dom";
+import "../styles/Header.scss";
+import logo from "../assets/logo.png";
+
+const Header = () => {
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+  };
+
+  return (
+    <header className="header">
+      <div className="container d-flex justify-content-between align-items-center">
+        <div className="header-left d-flex align-items-center">
+          <img src={logo} alt="Logo" className="logo" />
+        </div>
+        <div className="header-right">
+          <Link
+            to="/login"
+            className="nav-link logout-link"
+            onClick={handleLogout}
+          >
+            Cerrar sesión
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
+
+            Layout.js:
+                import React from "react";
+import Header from "./Header";
+import Sidebar from "./Sidebar";
+import FloatingButton from "./FloatingButton";
+import { Outlet } from "react-router-dom";
+import "../styles/Layout.scss";
+
+const Layout = () => {
+  return (
+    <div className="layout d-flex flex-column">
+      <Header />
+      <div className="main-content d-flex flex-grow-1">
+        <Sidebar />
+        <div className="content flex-grow-1 p-3">
+          <Outlet />
+        </div>
+      </div>
+      <FloatingButton />
+    </div>
+  );
+};
+
+export default Layout;
+
+            PrivateRoute.js:
+                import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+
+const PrivateRoute = ({ children, requiredRoles }) => {
+  const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("role");
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (requiredRoles && !requiredRoles.includes(userRole)) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
+export default PrivateRoute;
+
+            Sidebar.js:
+                import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
+import "../styles/Sidebar.scss";
+
+const Sidebar = () => {
+  const [isPedidosOpen, setIsPedidosOpen] = useState(false);
+  const [isGestionDatosOpen, setIsGestionDatosOpen] = useState(false);
+  const userRole = localStorage.getItem("role");
+
+  const togglePedidosMenu = () => {
+    setIsPedidosOpen(!isPedidosOpen);
+  };
+
+  const toggleGestionDatosMenu = () => {
+    setIsGestionDatosOpen(!isGestionDatosOpen);
+  };
+
+  return (
+    <div className="sidebar vh-100">
+      <nav className="nav flex-column">
+        <NavLink to="/home" className="nav-link">
+          Inicio
+        </NavLink>
+
+        {(userRole === "admin" || userRole === "coordinador") && (
+          <NavLink to="/menus" className="nav-link">
+            Menús
+          </NavLink>
+        )}
+
+        {(userRole === "admin" ||
+          userRole === "coordinador" ||
+          userRole === "auxiliar" ||
+          userRole === "jefe_enfermeria") && (
+          <>
+            <div
+              className={`nav-link pedidos-toggle ${
+                isPedidosOpen ? "open" : ""
+              }`}
+              onClick={togglePedidosMenu}
+            >
+              Pedidos
+            </div>
+            {isPedidosOpen && (
+              <div className="submenu submenu-open">
+                {(userRole === "admin" ||
+                  userRole === "jefe_enfermeria" ||
+                  userRole === "coordinador") && (
+                  <NavLink
+                    to="/realizar-pedido"
+                    className="nav-link submenu-item"
+                  >
+                    Realizar Pedido
+                  </NavLink>
+                )}
+                {(userRole === "admin" ||
+                  userRole === "coordinador" ||
+                  userRole === "auxiliar") && (
+                  <>
+                    <NavLink
+                      to="/pedidos/pendientes"
+                      className="nav-link submenu-item"
+                    >
+                      Pedidos Pendientes
+                    </NavLink>
+                    <NavLink
+                      to="/pedidos/historial"
+                      className="nav-link submenu-item"
+                    >
+                      Historial de Pedidos
+                    </NavLink>
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {(userRole === "admin" || userRole === "jefe_enfermeria") && (
+          <>
+            <div
+              className={`nav-link gestion-datos-toggle ${
+                isGestionDatosOpen ? "open" : ""
+              }`}
+              onClick={toggleGestionDatosMenu}
+            >
+              Gestión de Datos
+            </div>
+            {isGestionDatosOpen && (
+              <div className="submenu submenu-open">
+                {(userRole === "admin" || userRole === "jefe_enfermeria") && (
+                  <NavLink
+                    to="/gestion-datos"
+                    className="nav-link submenu-item"
+                  >
+                    Datos Generales
+                  </NavLink>
+                )}
+                {userRole === "admin" && (
+                  <NavLink
+                    to="/gestion-usuarios"
+                    className="nav-link submenu-item"
+                  >
+                    Gestión de Usuarios
+                  </NavLink>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </nav>
+    </div>
+  );
+};
+
+export default Sidebar;
+
+        pages:
+            DataManagement.js:
+                import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Drawer,
+  Tabs,
+  Table,
+  Switch,
+  Modal,
+  Form,
+  Input,
+  notification,
+  Select,
+  Collapse,
+} from "antd";
+import api, {
+  createServicio,
+  createHabitacion,
+  createCama,
+  createPaciente,
+} from "../services/api";
+import "../styles/DataManagement.scss";
+
+const { TabPane } = Tabs;
+const { Option } = Select;
+const { Panel } = Collapse;
+const { confirm } = Modal;
+
+const DataManagement = () => {
+  const [pacientes, setPacientes] = useState([]);
+  const [servicios, setServicios] = useState([]);
+  const [habitaciones, setHabitaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHabitacionModalOpen, setIsHabitacionModalOpen] = useState(false);
+  const [isCamaModalOpen, setIsCamaModalOpen] = useState(false);
+  const [isPacienteModalOpen, setIsPacienteModalOpen] = useState(false);
+  const [newServicioName, setNewServicioName] = useState("");
+  const [newHabitacionName, setNewHabitacionName] = useState("");
+  const [newCamaName, setNewCamaName] = useState("");
+  const [newPacienteID, setNewPacienteID] = useState("");
+  const [newPacienteName, setNewPacienteName] = useState("");
+  const [newRecommendedDiet, setNewRecommendedDiet] = useState("");
+  const [selectedServicio, setSelectedServicio] = useState(null);
+  const [selectedHabitacion, setSelectedHabitacion] = useState(null);
+  const [selectedCama, setSelectedCama] = useState(null);
+
+  const userRole = localStorage.getItem("role");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [pacientesResponse, serviciosResponse, habitacionesResponse] =
+          await Promise.all([
+            api.get("/pacientes/"),
+            api.get("/servicios/"),
+            api.get("/habitaciones/"),
+          ]);
+
+        setPacientes(pacientesResponse.data);
+        setServicios(serviciosResponse.data);
+        setHabitaciones(habitacionesResponse.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const openDrawer = () => setIsDrawerOpen(true);
+  const closeDrawer = () => setIsDrawerOpen(false);
+
+  const toggleActivo = async (item, type) => {
+    const showConfirm = (isActivating) => {
+      let title = "";
+      let content = "";
+
+      if (isActivating) {
+        switch (type) {
+          case "servicios":
+            title = "¿Estás seguro de que deseas activar este servicio?";
+            content =
+              "Esta acción activará el servicio y permitirá activar habitaciones y camas relacionadas a él.";
+            break;
+          case "habitaciones":
+            title = "¿Estás seguro de que deseas activar esta habitación?";
+            content =
+              "Esta acción activará la habitación y permitirá activar las camas relacionadas a ella.";
+            break;
+          case "camas":
+            title = "¿Estás seguro de que deseas activar esta cama?";
+            content =
+              "Esta acción activará la cama para ser asignada a un paciente.";
+            break;
+          case "pacientes":
+            title = "¿Estás seguro de que deseas activar a este paciente?";
+            content =
+              "Esta acción activará al paciente y asignará su cama asociada.";
+            break;
+          default:
+            title = "¿Estás seguro de que deseas continuar?";
+            content =
+              "Esta acción cambiará el estado del elemento seleccionado a activo.";
+            break;
+        }
+      } else {
+        switch (type) {
+          case "servicios":
+            title = "¿Estás seguro de que deseas desactivar este servicio?";
+            content =
+              "Esta acción desactivará el servicio y todas las habitaciones y camas asociadas a él. El servicio permanecerá en la base de datos como inactivo.";
+            break;
+          case "habitaciones":
+            title = "¿Estás seguro de que deseas desactivar esta habitación?";
+            content =
+              "Esta acción desactivará la habitación y todas las camas asociadas a ella. La habitación permanecerá en la base de datos como inactiva.";
+            break;
+          case "camas":
+            title = "¿Estás seguro de que deseas desactivar esta cama?";
+            content =
+              "Esta acción desactivará la cama y quedará disponible para ser asignada a un nuevo paciente. La cama permanecerá en la base de datos como inactiva.";
+            break;
+          case "pacientes":
+            title = "¿Estás seguro de que deseas desactivar a este paciente?";
+            content =
+              "Esta acción desactivará al paciente y liberará su cama asociada. El paciente permanecerá en la base de datos como inactivo.";
+            break;
+          default:
+            title = "¿Estás seguro de que deseas continuar?";
+            content =
+              "Esta acción cambiará el estado del elemento seleccionado a inactivo.";
+            break;
+        }
+      }
+
+      confirm({
+        title: title,
+        content: content,
+        onOk: async () => {
+          try {
+            console.log("Datos antes de actualizar:", item);
+
+            const updatedItem = { ...item, activo: !item.activo };
+
+            if (type === "habitaciones") {
+              let servicioId = item.servicio_id;
+              if (!servicioId) {
+                const servicio = servicios.find(
+                  (s) => s.nombre === item.servicio
+                );
+                if (servicio) {
+                  servicioId = servicio.id;
+                }
+              }
+              updatedItem.servicio_id = servicioId;
+              console.log("Servicio ID extraído:", updatedItem.servicio_id);
+            }
+
+            if (type === "camas") {
+              const habitacion = habitaciones.find(
+                (h) => h.id === item.habitacion
+              );
+              console.log("Habitación encontrada:", habitacion);
+              if (!habitacion || !habitacion.activo) {
+                alert(
+                  "No se puede activar la cama porque la habitación no está activa."
+                );
+                return;
+              }
+
+              updatedItem.habitacion_id = habitacion.id;
+              console.log("Habitación ID extraído:", updatedItem.habitacion_id);
+            }
+
+            if (type === "pacientes") {
+              const cama = item.cama ? item.cama : null;
+              console.log("Cama obtenida:", cama);
+
+              if (!cama) {
+                console.error(
+                  "Error: No se encontró la cama asociada al paciente."
+                );
+                return;
+              }
+
+              const habitacion = cama.habitacion ? cama.habitacion : null;
+              console.log("Habitación obtenida desde cama:", habitacion);
+
+              if (!habitacion) {
+                console.error(
+                  "Error: No se encontró la habitación asociada a la cama."
+                );
+                return;
+              }
+
+              const servicio = habitacion.servicio ? habitacion.servicio : null;
+              console.log("Servicio obtenido desde habitación:", servicio);
+
+              if (!servicio) {
+                console.error(
+                  "Error: No se encontró el servicio asociado a la habitación."
+                );
+                return;
+              }
+
+              // Verificación de estados
+              const camaActiva =
+                cama.activo !== undefined ? cama.activo : "no definido";
+              const habitacionActiva =
+                habitacion.activo !== undefined
+                  ? habitacion.activo
+                  : "no definido";
+              const servicioActivo =
+                servicio.activo !== undefined ? servicio.activo : "no definido";
+
+              console.log("Estado de cama:", camaActiva);
+              console.log("Estado de habitación:", habitacionActiva);
+              console.log("Estado de servicio:", servicioActivo);
+
+              if (
+                camaActiva === null ||
+                habitacionActiva === null ||
+                servicioActivo === null
+              ) {
+                console.error(
+                  "Error: Estado indefinido para cama, habitación o servicio."
+                );
+                return;
+              }
+
+              if (!camaActiva || !habitacionActiva || !servicioActivo) {
+                alert(
+                  "No se puede activar el paciente porque la cama, habitación o servicio no están activos."
+                );
+                return;
+              }
+
+              updatedItem.cama_id = cama.id;
+              console.log("Cama ID extraído:", updatedItem.cama_id);
+            }
+
+            const response = await api.put(`/${type}/${item.id}/`, updatedItem);
+            console.log("Respuesta del backend:", response.data);
+            refreshData();
+          } catch (error) {
+            if (error.response && error.response.status === 400) {
+              const errorMessage =
+                error.response.data.detail ||
+                "No se puede activar el paciente debido a restricciones en la lógica de activación.";
+              alert(`Error: ${errorMessage}`);
+            } else {
+              console.error(
+                "Error toggling activo:",
+                error.response ? error.response.data : error
+              );
+            }
+          }
+        },
+        onCancel() {
+          console.log("Acción cancelada por el usuario");
+        },
+      });
+    };
+
+    if (item.activo) {
+      showConfirm(false);
+    } else {
+      showConfirm(true);
+    }
+  };
+
+  const refreshData = async () => {
+    setLoading(true);
+    try {
+      const [pacientesResponse, serviciosResponse, habitacionesResponse] =
+        await Promise.all([
+          api.get("/pacientes/"),
+          api.get("/servicios/"),
+          api.get("/habitaciones/"),
+        ]);
+
+      setPacientes(pacientesResponse.data);
+      setServicios(serviciosResponse.data);
+      setHabitaciones(habitacionesResponse.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setLoading(false);
+    }
+  };
+
+  const handleCreateServicio = async () => {
+    if (!newServicioName) {
+      notification.error({
+        message: "Error",
+        description: "El nombre del servicio es obligatorio",
+      });
+      return;
+    }
+
+    try {
+      await createServicio({ nombre: newServicioName });
+      notification.success({ message: "Servicio creado exitosamente" });
+      setIsModalOpen(false);
+      setNewServicioName("");
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error al crear el servicio",
+        description: error.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const handleCreateHabitacion = async () => {
+    if (!newHabitacionName || !selectedServicio) {
+      notification.error({
+        message: "Error",
+        description:
+          "El nombre de la habitación y la selección de un servicio son obligatorios",
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        nombre: newHabitacionName,
+        servicio_id: selectedServicio,
+        activo: false,
+        camas: [],
+      };
+
+      await createHabitacion(payload);
+      notification.success({ message: "Habitación creada exitosamente" });
+      setIsHabitacionModalOpen(false);
+      setNewHabitacionName("");
+      setSelectedServicio(null);
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error al crear la habitación",
+        description: error.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const handleCreateCama = async () => {
+    if (!newCamaName || !selectedHabitacion) {
+      notification.error({
+        message: "Error",
+        description:
+          "El nombre de la cama y la selección de una habitación son obligatorios",
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        nombre: newCamaName,
+        habitacion: selectedHabitacion,
+        activo: false,
+      };
+
+      await createCama(payload);
+      notification.success({ message: "Cama creada exitosamente" });
+      setIsCamaModalOpen(false);
+      setNewCamaName("");
+      setSelectedHabitacion(null);
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error al crear la cama",
+        description: error.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const handleCreatePaciente = async () => {
+    if (
+      !newPacienteID ||
+      !newPacienteName ||
+      !selectedCama ||
+      !newRecommendedDiet
+    ) {
+      notification.error({
+        message: "Error",
+        description: "Todos los campos son obligatorios para crear un paciente",
+      });
+      return;
+    }
+
+    try {
+      const payload = {
+        cedula: newPacienteID,
+        name: newPacienteName,
+        cama_id: selectedCama,
+        recommended_diet: newRecommendedDiet,
+        activo: true,
+      };
+
+      await createPaciente(payload);
+      notification.success({ message: "Paciente creado exitosamente" });
+      setIsPacienteModalOpen(false);
+      setNewPacienteID("");
+      setNewPacienteName("");
+      setNewRecommendedDiet("");
+      setSelectedCama(null);
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error al crear el paciente",
+        description: error.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const openCreateServicioModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeCreateServicioModal = () => {
+    setIsModalOpen(false);
+    setNewServicioName("");
+  };
+
+  const openCreateHabitacionModal = () => {
+    const activeServices = servicios.filter((s) => s.activo);
+    if (activeServices.length === 0) {
+      notification.warning({
+        message: "Advertencia",
+        description:
+          "No se pueden crear habitaciones porque no hay servicios activos",
+      });
+      return;
+    }
+    setIsHabitacionModalOpen(true);
+  };
+
+  const closeCreateHabitacionModal = () => {
+    setIsHabitacionModalOpen(false);
+    setNewHabitacionName("");
+    setSelectedServicio(null);
+  };
+
+  const openCreateCamaModal = () => {
+    const activeHabitaciones = habitaciones.filter((h) => h.activo);
+    if (activeHabitaciones.length === 0) {
+      notification.warning({
+        message: "Advertencia",
+        description:
+          "No se pueden crear camas porque no hay habitaciones activas",
+      });
+      return;
+    }
+    setIsCamaModalOpen(true);
+  };
+
+  const closeCreateCamaModal = () => {
+    setIsCamaModalOpen(false);
+    setNewCamaName("");
+    setSelectedHabitacion(null);
+  };
+
+  const openCreatePacienteModal = () => {
+    const activeCamas = habitaciones.flatMap((h) =>
+      h.camas.filter(
+        (c) => c.activo && !pacientes.some((p) => p.cama.id === c.id)
+      )
+    );
+    if (activeCamas.length === 0) {
+      notification.warning({
+        message: "Advertencia",
+        description:
+          "No se pueden crear pacientes porque no hay camas disponibles sin pacientes",
+      });
+      return;
+    }
+    setIsPacienteModalOpen(true);
+  };
+
+  const closeCreatePacienteModal = () => {
+    setIsPacienteModalOpen(false);
+    setNewPacienteID("");
+    setNewPacienteName("");
+    setNewRecommendedDiet("");
+    setSelectedCama(null);
+  };
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  return (
+    <div className="data-management-container mt-5">
+      <div className="data-management">
+        <h2>Gestión de Pacientes, Servicios y Habitaciones</h2>
+
+        <Button className="custom-button" onClick={openDrawer}>
+          Panel de Gestión
+        </Button>
+
+        <Drawer
+          title="Gestión de Datos"
+          placement="right"
+          onClose={closeDrawer}
+          open={isDrawerOpen}
+          width={600}
+        >
+          <Tabs defaultActiveKey="1">
+            {userRole !== "jefe_enfermeria" && (
+              <TabPane tab="Servicios" key="1">
+                <Button
+                  className="custom-button"
+                  onClick={openCreateServicioModal}
+                  style={{ marginBottom: "20px" }}
+                >
+                  Crear Servicio
+                </Button>
+                <Table
+                  dataSource={servicios}
+                  columns={[
+                    { title: "Nombre", dataIndex: "nombre", key: "nombre" },
+                    {
+                      title: "Activo",
+                      key: "activo",
+                      render: (_, record) => (
+                        <Switch
+                          checked={record.activo}
+                          onChange={() => toggleActivo(record, "servicios")}
+                        />
+                      ),
+                    },
+                  ]}
+                  rowKey="id"
+                  scroll={{ x: 10 }}
+                />
+
+                <Modal
+                  title="Crear Nuevo Servicio"
+                  open={isModalOpen}
+                  onOk={handleCreateServicio}
+                  onCancel={closeCreateServicioModal}
+                  okText="Crear"
+                  cancelText="Cancelar"
+                >
+                  <Form layout="vertical">
+                    <Form.Item label="Nombre del Servicio">
+                      <Input
+                        value={newServicioName}
+                        onChange={(e) => setNewServicioName(e.target.value)}
+                        placeholder="Ingrese el nombre del servicio"
+                      />
+                    </Form.Item>
+                  </Form>
+                </Modal>
+              </TabPane>
+            )}
+
+            {userRole !== "jefe_enfermeria" && (
+              <TabPane tab="Habitaciones" key="2">
+                <Button
+                  className="custom-button"
+                  onClick={openCreateHabitacionModal}
+                  style={{ marginBottom: "20px" }}
+                >
+                  Crear Habitación
+                </Button>
+                <Button
+                  className="custom-button"
+                  onClick={openCreateCamaModal}
+                  style={{ marginBottom: "20px" }}
+                >
+                  Crear Cama
+                </Button>
+                <Table
+                  dataSource={habitaciones}
+                  columns={[
+                    { title: "Nombre", dataIndex: "nombre", key: "nombre" },
+                    {
+                      title: "Servicio",
+                      dataIndex: "servicio",
+                      key: "servicio",
+                    },
+                    {
+                      title: "Camas",
+                      key: "camas",
+                      render: (_, habitacion) => (
+                        <ul>
+                          {habitacion.camas.map((cama) => (
+                            <li key={cama.id}>
+                              {cama.nombre}
+                              <Switch
+                                checked={cama.activo}
+                                onChange={() => toggleActivo(cama, "camas")}
+                                style={{ marginLeft: 8 }}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      ),
+                    },
+                    {
+                      title: "Activo",
+                      key: "activo",
+                      render: (_, record) => (
+                        <Switch
+                          checked={record.activo}
+                          onChange={() => toggleActivo(record, "habitaciones")}
+                        />
+                      ),
+                    },
+                  ]}
+                  rowKey="id"
+                  scroll={{ x: 10 }}
+                />
+
+                <Modal
+                  title="Crear Nueva Habitación"
+                  open={isHabitacionModalOpen}
+                  onOk={handleCreateHabitacion}
+                  onCancel={closeCreateHabitacionModal}
+                  okText="Crear"
+                  cancelText="Cancelar"
+                >
+                  <Form layout="vertical">
+                    <Form.Item label="Nombre de la Habitación">
+                      <Input
+                        value={newHabitacionName}
+                        onChange={(e) => setNewHabitacionName(e.target.value)}
+                        placeholder="Ingrese el nombre de la habitación"
+                      />
+                    </Form.Item>
+                    <Form.Item label="Servicio">
+                      <Select
+                        value={selectedServicio}
+                        onChange={(value) => setSelectedServicio(value)}
+                        placeholder="Seleccione un servicio"
+                      >
+                        {servicios
+                          .filter((s) => s.activo)
+                          .map((servicio) => (
+                            <Option key={servicio.id} value={servicio.id}>
+                              {servicio.nombre}
+                            </Option>
+                          ))}
+                      </Select>
+                    </Form.Item>
+                  </Form>
+                </Modal>
+
+                <Modal
+                  title="Crear Nueva Cama"
+                  open={isCamaModalOpen}
+                  onOk={handleCreateCama}
+                  onCancel={closeCreateCamaModal}
+                  okText="Crear"
+                  cancelText="Cancelar"
+                >
+                  <Form layout="vertical">
+                    <Form.Item label="Nombre de la Cama">
+                      <Input
+                        value={newCamaName}
+                        onChange={(e) => setNewCamaName(e.target.value)}
+                        placeholder="Ingrese el nombre de la cama"
+                      />
+                    </Form.Item>
+                    <Form.Item label="Habitación">
+                      <Select
+                        value={selectedHabitacion}
+                        onChange={(value) => setSelectedHabitacion(value)}
+                        placeholder="Seleccione una habitación"
+                      >
+                        {habitaciones
+                          .filter((h) => h.activo)
+                          .map((habitacion) => (
+                            <Option key={habitacion.id} value={habitacion.id}>
+                              {habitacion.nombre}
+                            </Option>
+                          ))}
+                      </Select>
+                    </Form.Item>
+                  </Form>
+                </Modal>
+              </TabPane>
+            )}
+
+            <TabPane tab="Pacientes" key="3">
+              <Button
+                className="custom-button"
+                onClick={openCreatePacienteModal}
+                style={{ marginBottom: "20px" }}
+              >
+                Crear Paciente
+              </Button>
+              <Table
+                dataSource={pacientes}
+                columns={[
+                  { title: "Cédula", dataIndex: "cedula", key: "cedula" },
+                  { title: "Nombre", dataIndex: "name", key: "name" },
+                  { title: "Cama", dataIndex: ["cama", "nombre"], key: "cama" },
+                  {
+                    title: "Habitación",
+                    dataIndex: ["cama", "habitacion", "nombre"],
+                    key: "habitacion",
+                  },
+                  {
+                    title: "Servicio",
+                    dataIndex: ["cama", "habitacion", "servicio", "nombre"],
+                    key: "servicio",
+                  },
+                  {
+                    title: "Dieta Recomendada",
+                    dataIndex: "recommended_diet",
+                    key: "recommended_diet",
+                  },
+                  {
+                    title: "Activo",
+                    key: "activo",
+                    align: "center",
+                    render: (_, record) => (
+                      <Switch
+                        checked={record.activo}
+                        onChange={() => toggleActivo(record, "pacientes")}
+                      />
+                    ),
+                  },
+                ]}
+                rowKey="id"
+                scroll={{ x: 10 }}
+              />
+
+              <Modal
+                title="Crear Nuevo Paciente"
+                open={isPacienteModalOpen}
+                onOk={handleCreatePaciente}
+                onCancel={closeCreatePacienteModal}
+                okText="Crear"
+                cancelText="Cancelar"
+              >
+                <Form layout="vertical">
+                  <Form.Item label="Cédula">
+                    <Input
+                      value={newPacienteID}
+                      onChange={(e) => setNewPacienteID(e.target.value)}
+                      placeholder="Ingrese la cédula del paciente"
+                    />
+                  </Form.Item>
+                  <Form.Item label="Nombre">
+                    <Input
+                      value={newPacienteName}
+                      onChange={(e) => setNewPacienteName(e.target.value)}
+                      placeholder="Ingrese el nombre del paciente"
+                    />
+                  </Form.Item>
+                  <Form.Item label="Cama">
+                    <Select
+                      value={selectedCama}
+                      onChange={(value) => setSelectedCama(value)}
+                      placeholder="Seleccione una cama"
+                    >
+                      {habitaciones
+                        .flatMap((h) =>
+                          h.camas.filter(
+                            (c) =>
+                              c.activo &&
+                              !pacientes.some((p) => p.cama.id === c.id)
+                          )
+                        )
+                        .map((cama) => (
+                          <Option key={cama.id} value={cama.id}>
+                            {cama.nombre}
+                          </Option>
+                        ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item label="Dieta Recomendada">
+                    <Input
+                      value={newRecommendedDiet}
+                      onChange={(e) => setNewRecommendedDiet(e.target.value)}
+                      placeholder="Ingrese la dieta recomendada"
+                    />
+                  </Form.Item>
+                </Form>
+              </Modal>
+            </TabPane>
+          </Tabs>
+        </Drawer>
+
+        <div className="active-data mt-4">
+          <h3>Servicios Activos</h3>
+          <ul className="list-group mb-4">
+            {servicios
+              .filter((s) => s.activo)
+              .map((servicio) => (
+                <li key={servicio.id} className="list-group-item">
+                  {servicio.nombre}
+                </li>
+              ))}
+          </ul>
+
+          <h3>Habitaciones Activas</h3>
+          <ul className="list-group mb-4">
+            {habitaciones
+              .filter((h) => h.activo)
+              .map((habitacion) => (
+                <li key={habitacion.id} className="list-group-item">
+                  {habitacion.nombre} - {habitacion.servicio}
+                  <ul>
+                    {habitacion.camas.map(
+                      (cama) =>
+                        cama.activo && <li key={cama.id}>{cama.nombre}</li>
+                    )}
+                  </ul>
+                </li>
+              ))}
+          </ul>
+
+          <h3>Pacientes Activos</h3>
+          <Collapse>
+            {pacientes
+              .filter((p) => p.activo)
+              .map((paciente) => (
+                <Panel
+                  header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                  key={paciente.id}
+                >
+                  <p>
+                    <strong>Cédula:</strong> {paciente.cedula}
+                  </p>
+                  <p>
+                    <strong>Cama:</strong> {paciente.cama.nombre}
+                  </p>
+                  <p>
+                    <strong>Habitación:</strong>{" "}
+                    {paciente.cama.habitacion.nombre}
+                  </p>
+                  <p>
+                    <strong>Servicio:</strong>{" "}
+                    {paciente.cama.habitacion.servicio.nombre}
+                  </p>
+                  <p>
+                    <strong>Dieta Recomendada:</strong>{" "}
+                    {paciente.recommended_diet}
+                  </p>
+                  <p>
+                    <strong>Registrado en:</strong> {paciente.created_at}
+                  </p>
+                </Panel>
+              ))}
+          </Collapse>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DataManagement;
+
+            HistorialPedidos.js:
+                import React, { useState, useEffect } from "react";
+import { Collapse, Spin, Select } from "antd";
+import { getPacientes, getPedidosCompletados } from "../services/api";
+import "../styles/HistorialPedidos.scss";
+
+const { Panel } = Collapse;
+const { Option } = Select;
+
+const HistorialPedidos = () => {
+  const [pacientes, setPacientes] = useState([]);
+  const [pedidosCompletados, setPedidosCompletados] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedPaciente, setSelectedPaciente] = useState(null);
+
+  useEffect(() => {
+    const fetchPacientes = async () => {
+      try {
+        const response = await getPacientes();
+        setPacientes(response);
+      } catch (error) {
+        console.error("Error fetching patients", error);
+      }
+    };
+
+    fetchPacientes();
+  }, []);
+
+  useEffect(() => {
+    const fetchPedidosCompletados = async () => {
+      if (!selectedPaciente) {
+        setPedidosCompletados([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await getPedidosCompletados(selectedPaciente);
+        setPedidosCompletados(response);
+      } catch (error) {
+        console.error("Error fetching completed orders", error);
+      }
+      setLoading(false);
+    };
+
+    fetchPedidosCompletados();
+  }, [selectedPaciente]);
+
+  const handlePacienteChange = (value) => {
+    setSelectedPaciente(value);
+  };
+
+  const filterOption = (input, option) => {
+    return (
+      option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >=
+      0
+    );
+  };
+
+  if (loading) {
+    return <Spin />;
+  }
+
+  const renderSelectedOptions = (section, optionsType, pedido) => {
+    return section[optionsType]
+      .filter((option) =>
+        pedido.opciones.some(
+          (o) => o.menu_option.id === option.id && o.selected
+        )
+      )
+      .map((option) => <div key={option.id}>{option.texto}</div>);
+  };
+
+  const renderSections = (pedido) => {
+    const sectionsToShow = {
+      Adicional: ["adicionales"],
+      Algo: ["adicionales", "bebidas"],
+      Onces: ["adicionales"],
+      Desayuno: [
+        "adicionales",
+        "platos_principales",
+        "acompanantes",
+        "bebidas",
+      ],
+      Almuerzo: [
+        "adicionales",
+        "platos_principales",
+        "acompanantes",
+        "bebidas",
+      ],
+      Cena: ["adicionales", "platos_principales", "acompanantes", "bebidas"],
+    };
+
+    return pedido.menu.sections.map((section) => {
+      const optionsToRender = sectionsToShow[section.titulo];
+      return optionsToRender && optionsToRender.length > 0 ? (
+        <div key={section.id}>
+          <h4>{section.titulo}</h4>
+          {optionsToRender.map((optionType) => (
+            <div key={optionType}>
+              <h5>
+                {optionType.charAt(0).toUpperCase() + optionType.slice(1)}
+              </h5>
+              {renderSelectedOptions(section, optionType, pedido)}
+            </div>
+          ))}
+        </div>
+      ) : null;
+    });
+  };
+
+  return (
+    <div className="historial-pedidos">
+      <h2>Historial de Pedidos Completados</h2>
+      <Select
+        showSearch
+        placeholder="Seleccionar Paciente"
+        value={selectedPaciente}
+        onChange={handlePacienteChange}
+        style={{ width: 300, marginBottom: 20 }}
+        filterOption={filterOption}
+      >
+        {pacientes.map((paciente) => (
+          <Option key={paciente.id} value={paciente.id}>
+            {paciente.name} (Cama: {paciente.cama.nombre}, Hab:{" "}
+            {paciente.cama.habitacion.nombre}, Serv:{" "}
+            {paciente.cama.habitacion.servicio.nombre})
+          </Option>
+        ))}
+      </Select>
+
+      {pedidosCompletados.length > 0 ? (
+        <Collapse>
+          {pedidosCompletados.map((pedido) => (
+            <Panel
+              header={`Pedido ${pedido.id} - ${pedido.paciente.name}`}
+              key={pedido.id}
+            >
+              <h4>
+                Fecha del Pedido:{" "}
+                {new Date(pedido.fecha_pedido).toLocaleString()}
+              </h4>
+              {renderSections(pedido)}
+              <div className="adicionales">
+                <h4>Opciones Adicionales del Menú</h4>
+                <div>Leche: {pedido.adicionales.leche}</div>
+                <div>Bebida: {pedido.adicionales.bebida}</div>
+                <div>
+                  Azúcar/Panela: {pedido.adicionales.azucarPanela.join(", ")}
+                </div>
+                <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                <div>Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}</div>
+              </div>
+            </Panel>
+          ))}
+        </Collapse>
+      ) : (
+        <p>No hay pedidos completados para este paciente.</p>
+      )}
+    </div>
+  );
+};
+
+export default HistorialPedidos;
+
+            Home.js:
+                import React from "react";
+import "../styles/Home.scss";
+
+const Home = () => {
+  return (
+    <div className="home text-center">
+      <h1>Menú Preferencial - Clínica San Juan de Dios</h1>
+    </div>
+  );
+};
+
+export default Home;
+
+            Login.js:
+                import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Input, Button, Alert, Modal } from "antd";
+import api from "../services/api";
+import "../styles/Login.scss";
+import logo from "../assets/logo.png";
+import inactivityTime from "../utils/inactivityHandler";
+
+const Login = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isWarningVisible, setIsWarningVisible] = useState(false);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add("login-page");
+    return () => {
+      document.body.classList.remove("login-page");
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("Starting inactivity timer.");
+    inactivityTime(setIsWarningVisible);
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post("/auth/login/", { username, password });
+      const access = response.data.access;
+      const refresh = response.data.refresh;
+      const role = response.data.user.role;
+
+      if (access && role) {
+        localStorage.setItem("token", access);
+        localStorage.setItem("refresh", refresh);
+        localStorage.setItem("role", role);
+        api.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+        navigate("/home");
+      } else {
+        setError("Login failed: Invalid response from server.");
+      }
+    } catch (error) {
+      if (error.response && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError("Login failed");
+      }
+      console.error("Error logging in:", error);
+    }
+  };
+
+  const handleWarningOk = () => {
+    console.log("User confirmed presence.");
+    setIsWarningVisible(false);
+  };
+
+  const handleWarningCancel = () => {
+    console.log("User chose to log out.");
+    // Cerrar sesión y redirigir al login
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("role");
+    navigate("/login");
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-form">
+        <img src={logo} alt="Clínica San Juan de Dios" className="login-logo" />
+        <h2>Login</h2>
+        <form onSubmit={handleLogin}>
+          <Input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="input-field"
+          />
+          <Input.Password
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input-field"
+          />
+          <Button type="primary" htmlType="submit" className="login-button">
+            Login
+          </Button>
+          {error && (
+            <Alert message={error} type="error" className="error-message" />
+          )}
+        </form>
+      </div>
+
+      <Modal
+        title="Advertencia de Inactividad"
+        open={isWarningVisible}
+        onOk={handleWarningOk}
+        onCancel={handleWarningCancel}
+        okText="Estoy aquí"
+        cancelText="Cerrar sesión"
+      >
+        <p>
+          Ha pasado un tiempo desde su última actividad. Por favor, confirme que
+          sigue aquí.
+        </p>
+      </Modal>
+    </div>
+  );
+};
+
+export default Login;
+
+            MenuPage.js:
+                import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Modal,
+  Form,
+  Input,
+  notification,
+  Spin,
+  Alert,
+  List,
+  Typography,
+  Collapse,
+} from "antd";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
+import { createMenu, getMenus, deleteMenu, updateMenu } from "../services/api";
+import "../styles/Menus.scss";
+
+const { Title } = Typography;
+const { Panel } = Collapse;
+const { confirm } = Modal;
+
+const MenuPage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [menuName, setMenuName] = useState("");
+  const [currentMenu, setCurrentMenu] = useState(null);
+  const [options, setOptions] = useState({
+    adicional: { adicionales: [] },
+    algo: { adicionales: [], bebidas: [] },
+    onces: { adicionales: [] },
+    desayuno: {
+      adicionales: [],
+      platos_principales: [],
+      acompanantes: [],
+      bebidas: [],
+    },
+    almuerzo: {
+      adicionales: [],
+      platos_principales: [],
+      acompanantes: [],
+      bebidas: [],
+    },
+    cena: {
+      adicionales: [],
+      platos_principales: [],
+      acompanantes: [],
+      bebidas: [],
+    },
+  });
+  const [newOptionText, setNewOptionText] = useState("");
+  const [currentOptionType, setCurrentOptionType] = useState({});
+  const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
+  const [menus, setMenus] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+    setCurrentMenu(null);
+    setMenuName("");
+    setOptions({
+      adicional: { adicionales: [] },
+      algo: { adicionales: [], bebidas: [] },
+      onces: { adicionales: [] },
+      desayuno: {
+        adicionales: [],
+        platos_principales: [],
+        acompanantes: [],
+        bebidas: [],
+      },
+      almuerzo: {
+        adicionales: [],
+        platos_principales: [],
+        acompanantes: [],
+        bebidas: [],
+      },
+      cena: {
+        adicionales: [],
+        platos_principales: [],
+        acompanantes: [],
+        bebidas: [],
+      },
+    });
+  };
+
+  const showDetailModal = (menu) => {
+    setCurrentMenu(menu);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleOk = async () => {
+    if (!menuName) {
+      notification.error({
+        message: "Error",
+        description: "El nombre del menú es obligatorio",
+      });
+      return;
+    }
+
+    const sections = Object.keys(options).map((key) => {
+      if (key === "adicional") {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales:
+            options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+        };
+      } else if (key === "algo") {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales:
+            options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+          bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || [],
+        };
+      } else if (key === "onces") {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales:
+            options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+        };
+      } else {
+        return {
+          titulo: key.charAt(0).toUpperCase() + key.slice(1),
+          adicionales:
+            options[key].adicionales.map(({ id, ...rest }) => rest) || [],
+          platos_principales:
+            options[key].platos_principales.map(({ id, ...rest }) => rest) ||
+            [],
+          acompanantes:
+            options[key].acompanantes.map(({ id, ...rest }) => rest) || [],
+          bebidas: options[key].bebidas.map(({ id, ...rest }) => rest) || [],
+        };
+      }
+    });
+
+    for (let section of sections) {
+      if (section.adicionales && section.adicionales.length < 2) {
+        notification.error({
+          message: "Error",
+          description: `La sección ${section.titulo} debe tener al menos dos opciones en Adicionales`,
+        });
+        return;
+      }
+      if (section.platos_principales && section.platos_principales.length < 2) {
+        notification.error({
+          message: "Error",
+          description: `La sección ${section.titulo} debe tener al menos dos opciones en Platos Principales`,
+        });
+        return;
+      }
+      if (section.acompanantes && section.acompanantes.length < 2) {
+        notification.error({
+          message: "Error",
+          description: `La sección ${section.titulo} debe tener al menos dos opciones en Acompañantes`,
+        });
+        return;
+      }
+      if (section.bebidas && section.bebidas.length < 2) {
+        notification.error({
+          message: "Error",
+          description: `La sección ${section.titulo} debe tener al menos dos opciones en Bebidas`,
+        });
+        return;
+      }
+    }
+
+    const payload = {
+      nombre: menuName,
+      sections,
+    };
+
+    console.log("Payload:", JSON.stringify(payload, null, 2));
+
+    try {
+      let response;
+      if (currentMenu) {
+        response = await updateMenu(currentMenu.id, payload);
+        notification.success({ message: "Menú actualizado exitosamente" });
+      } else {
+        response = await createMenu(payload);
+        notification.success({ message: "Menú creado exitosamente" });
+      }
+      console.log("Response:", response);
+      setIsModalOpen(false);
+      fetchMenus();
+    } catch (error) {
+      console.error("Error:", error.response?.data?.message || error.message);
+      notification.error({
+        message: "Error al crear/actualizar el menú",
+        description: error.response?.data?.message || error.message,
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setIsDetailModalOpen(false);
+    setCurrentMenu(null);
+    setMenuName("");
+    setOptions({
+      adicional: { adicionales: [] },
+      algo: { adicionales: [], bebidas: [] },
+      onces: { adicionales: [] },
+      desayuno: {
+        adicionales: [],
+        platos_principales: [],
+        acompanantes: [],
+        bebidas: [],
+      },
+      almuerzo: {
+        adicionales: [],
+        platos_principales: [],
+        acompanantes: [],
+        bebidas: [],
+      },
+      cena: {
+        adicionales: [],
+        platos_principales: [],
+        acompanantes: [],
+        bebidas: [],
+      },
+    });
+  };
+
+  const openOptionModal = (section, type) => {
+    setCurrentOptionType({ section, type });
+    setNewOptionText("");
+    setIsOptionModalOpen(true);
+  };
+
+  const handleAddOption = () => {
+    if (!newOptionText) {
+      notification.error({
+        message: "Error",
+        description: "Debe ingresar un texto para la opción",
+      });
+      return;
+    }
+
+    setOptions((prev) => {
+      const newOptions = { ...prev };
+      newOptions[currentOptionType.section][currentOptionType.type].push({
+        texto: newOptionText,
+        tipo: currentOptionType.type,
+      });
+      return newOptions;
+    });
+
+    setIsOptionModalOpen(false);
+  };
+
+  const removeOption = (section, type, index) => {
+    setOptions((prev) => {
+      const newOptions = { ...prev };
+      newOptions[section][type].splice(index, 1);
+      return newOptions;
+    });
+  };
+
+  const fetchMenus = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getMenus();
+      setMenus(data);
+      console.log("Fetched menus:", data);
+    } catch (error) {
+      setError("Error fetching menus: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteMenu = async (id) => {
+    confirm({
+      title: "¿Está seguro de que desea eliminar este menú?",
+      icon: <ExclamationCircleOutlined />,
+      content: "Esta acción no se puede deshacer",
+      okText: "Sí",
+      okType: "danger",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          await deleteMenu(id);
+          notification.success({ message: "Menú eliminado exitosamente" });
+          fetchMenus();
+        } catch (error) {
+          notification.error({
+            message: "Error al eliminar el menú",
+            description: error.response?.data?.message || error.message,
+          });
+        }
+      },
+    });
+  };
+
+  const handleEditMenu = (menu) => {
+    setCurrentMenu(menu);
+    setMenuName(menu.nombre);
+    setOptions(
+      menu.sections.reduce((acc, section) => {
+        acc[section.titulo.toLowerCase()] = {
+          adicionales: section.adicionales || [],
+          platos_principales: section.platos_principales || [],
+          acompanantes: section.acompanantes || [],
+          bebidas: section.bebidas || [],
+        };
+        return acc;
+      }, {})
+    );
+    setIsModalOpen(true);
+    console.log("Editing menu:", menu);
+  };
+
+  useEffect(() => {
+    fetchMenus();
+  }, []);
+
+  return (
+    <div className="menu-page">
+      <Title level={2}>Menús</Title>
+      <Button
+        className="custom-button"
+        type="primary"
+        onClick={showModal}
+        icon={<PlusOutlined />}
+      >
+        Crear Menú
+      </Button>
+      <Modal
+        title={currentMenu ? "Editar Menú" : "Crear Menú"}
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        footer={
+          <div className="modal-footer">
+            <Button
+              key="back"
+              className="custom-button save-button"
+              onClick={handleCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              key="submit"
+              type="primary"
+              className="custom-button save-button"
+              onClick={handleOk}
+            >
+              {currentMenu ? "Actualizar Menú" : "Guardar Menú"}
+            </Button>
+          </div>
+        }
+      >
+        <Form layout="vertical">
+          <Form.Item label="Nombre del Menú">
+            <Input
+              value={menuName}
+              onChange={(e) => setMenuName(e.target.value)}
+            />
+          </Form.Item>
+          <Collapse>
+            {["adicional", "algo", "onces"].map((section) => (
+              <Panel
+                header={section.charAt(0).toUpperCase() + section.slice(1)}
+                key={section}
+              >
+                <div className="button-group vertical-buttons">
+                  <Button
+                    className="custom-button"
+                    onClick={() => openOptionModal(section, "adicionales")}
+                    icon={<PlusOutlined />}
+                  >
+                    Agregar Adicional
+                  </Button>
+                  {section === "algo" && (
+                    <Button
+                      className="custom-button"
+                      onClick={() => openOptionModal(section, "bebidas")}
+                      icon={<PlusOutlined />}
+                    >
+                      Agregar Bebida
+                    </Button>
+                  )}
+                </div>
+                <List
+                  header={<div>Adicionales</div>}
+                  bordered
+                  dataSource={options[section]?.adicionales || []}
+                  renderItem={(opt, index) => (
+                    <List.Item
+                      actions={[
+                        <Button
+                          type="link"
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            removeOption(section, "adicionales", index)
+                          }
+                        />,
+                      ]}
+                    >
+                      {opt.texto}
+                    </List.Item>
+                  )}
+                />
+                {section === "algo" && (
+                  <List
+                    header={<div>Bebidas</div>}
+                    bordered
+                    dataSource={options[section]?.bebidas || []}
+                    renderItem={(opt, index) => (
+                      <List.Item
+                        actions={[
+                          <Button
+                            type="link"
+                            icon={<DeleteOutlined />}
+                            onClick={() =>
+                              removeOption(section, "bebidas", index)
+                            }
+                          />,
+                        ]}
+                      >
+                        {opt.texto}
+                      </List.Item>
+                    )}
+                  />
+                )}
+              </Panel>
+            ))}
+            {["desayuno", "almuerzo", "cena"].map((section) => (
+              <Panel
+                header={section.charAt(0).toUpperCase() + section.slice(1)}
+                key={section}
+              >
+                <div className="button-group vertical-buttons">
+                  <Button
+                    className="custom-button"
+                    onClick={() => openOptionModal(section, "adicionales")}
+                    icon={<PlusOutlined />}
+                  >
+                    Agregar Adicional
+                  </Button>
+                  <Button
+                    className="custom-button"
+                    onClick={() =>
+                      openOptionModal(section, "platos_principales")
+                    }
+                    icon={<PlusOutlined />}
+                  >
+                    Agregar Plato Principal
+                  </Button>
+                  <Button
+                    className="custom-button"
+                    onClick={() => openOptionModal(section, "acompanantes")}
+                    icon={<PlusOutlined />}
+                  >
+                    Agregar Acompañante
+                  </Button>
+                  <Button
+                    className="custom-button"
+                    onClick={() => openOptionModal(section, "bebidas")}
+                    icon={<PlusOutlined />}
+                  >
+                    Agregar Bebida
+                  </Button>
+                </div>
+                <List
+                  header={<div>Adicionales</div>}
+                  bordered
+                  dataSource={options[section]?.adicionales || []}
+                  renderItem={(opt, index) => (
+                    <List.Item
+                      actions={[
+                        <Button
+                          type="link"
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            removeOption(section, "adicionales", index)
+                          }
+                        />,
+                      ]}
+                    >
+                      {opt.texto}
+                    </List.Item>
+                  )}
+                />
+                <List
+                  header={<div>Platos Principales</div>}
+                  bordered
+                  dataSource={options[section]?.platos_principales || []}
+                  renderItem={(opt, index) => (
+                    <List.Item
+                      actions={[
+                        <Button
+                          type="link"
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            removeOption(section, "platos_principales", index)
+                          }
+                        />,
+                      ]}
+                    >
+                      {opt.texto}
+                    </List.Item>
+                  )}
+                />
+                <List
+                  header={<div>Acompañantes</div>}
+                  bordered
+                  dataSource={options[section]?.acompanantes || []}
+                  renderItem={(opt, index) => (
+                    <List.Item
+                      actions={[
+                        <Button
+                          type="link"
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            removeOption(section, "acompanantes", index)
+                          }
+                        />,
+                      ]}
+                    >
+                      {opt.texto}
+                    </List.Item>
+                  )}
+                />
+                <List
+                  header={<div>Bebidas</div>}
+                  bordered
+                  dataSource={options[section]?.bebidas || []}
+                  renderItem={(opt, index) => (
+                    <List.Item
+                      actions={[
+                        <Button
+                          type="link"
+                          icon={<DeleteOutlined />}
+                          onClick={() =>
+                            removeOption(section, "bebidas", index)
+                          }
+                        />,
+                      ]}
+                    >
+                      {opt.texto}
+                    </List.Item>
+                  )}
+                />
+              </Panel>
+            ))}
+          </Collapse>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Añadir opción"
+        open={isOptionModalOpen}
+        onOk={handleAddOption}
+        onCancel={() => setIsOptionModalOpen(false)}
+        footer={
+          <div className="modal-footer">
+            <Button
+              key="back"
+              className="custom-button save-button"
+              onClick={() => setIsOptionModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              key="submit"
+              type="primary"
+              className="custom-button save-button"
+              onClick={handleAddOption}
+            >
+              OK
+            </Button>
+          </div>
+        }
+      >
+        <Form layout="vertical">
+          <Form.Item label={`Añadir ${currentOptionType.type}`}>
+            <Input
+              value={newOptionText}
+              onChange={(e) => setNewOptionText(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Detalles del Menú"
+        open={isDetailModalOpen}
+        onOk={() => setIsDetailModalOpen(false)}
+        onCancel={() => setIsDetailModalOpen(false)}
+        footer={[
+          <Button
+            key="back"
+            className="custom-button save-button"
+            onClick={() => setIsDetailModalOpen(false)}
+          >
+            Cerrar
+          </Button>,
+        ]}
+      >
+        {currentMenu && (
+          <div className="menu-details">
+            <Title level={3}>{currentMenu.nombre}</Title>
+            {currentMenu.sections.map((section) => (
+              <div key={section.id}>
+                <Title level={4}>{section.titulo}</Title>
+                {section.adicionales?.length > 0 && (
+                  <>
+                    <Title level={5}>Adicionales</Title>
+                    <List
+                      bordered
+                      dataSource={section.adicionales}
+                      renderItem={(adicional) => (
+                        <List.Item>{adicional.texto}</List.Item>
+                      )}
+                    />
+                  </>
+                )}
+                {section.platos_principales?.length > 0 && (
+                  <>
+                    <Title level={5}>Platos Principales</Title>
+                    <List
+                      bordered
+                      dataSource={section.platos_principales}
+                      renderItem={(plato) => (
+                        <List.Item>{plato.texto}</List.Item>
+                      )}
+                    />
+                  </>
+                )}
+                {section.acompanantes?.length > 0 && (
+                  <>
+                    <Title level={5}>Acompañantes</Title>
+                    <List
+                      bordered
+                      dataSource={section.acompanantes}
+                      renderItem={(acompanante) => (
+                        <List.Item>{acompanante.texto}</List.Item>
+                      )}
+                    />
+                  </>
+                )}
+                {section.bebidas?.length > 0 && (
+                  <>
+                    <Title level={5}>Bebidas</Title>
+                    <List
+                      bordered
+                      dataSource={section.bebidas}
+                      renderItem={(bebida) => (
+                        <List.Item>{bebida.texto}</List.Item>
+                      )}
+                    />
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
+
+      <div className="menu-list">
+        {loading ? (
+          <div className="loading-container">
+            <Spin tip="Cargando menús..." />
+          </div>
+        ) : error ? (
+          <Alert message="Error" description={error} type="error" />
+        ) : menus.length > 0 ? (
+          <List
+            itemLayout="horizontal"
+            dataSource={menus}
+            renderItem={(menu) => (
+              <List.Item
+                actions={[
+                  <Button
+                    type="link"
+                    icon={<EyeOutlined />}
+                    onClick={() => showDetailModal(menu)}
+                  />,
+                  <Button
+                    type="link"
+                    icon={<EditOutlined />}
+                    onClick={() => handleEditMenu(menu)}
+                  />,
+                  <Button
+                    type="link"
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDeleteMenu(menu.id)}
+                  />,
+                ]}
+              >
+                <List.Item.Meta
+                  title={<span className="menu-title">{menu.nombre}</span>}
+                />
+              </List.Item>
+            )}
+          />
+        ) : (
+          <p>No hay menús disponibles.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MenuPage;
+
+            PadidosPendientes.js:
+                import React, { useState, useEffect } from "react";
+import { Button, Spin, Collapse } from "antd";
+import { getPedidos, updatePedido } from "../services/api";
+import "../styles/PedidosPendientes.scss";
+import api from "../axiosConfig";
+
+const { Panel } = Collapse;
+
+const PedidosPendientes = () => {
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      console.log("Fetching pedidos...");
+      try {
+        const response = await getPedidos();
+        console.log("Pedidos fetched:", response);
+        setPedidos(response.filter((pedido) => pedido.status !== "completado"));
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching pedidos", error);
+        setLoading(false);
+      }
+    };
+
+    fetchPedidos();
+  }, []);
+
+  const handleSectionStatusChange = async (pedidoId, sectionTitle) => {
+    console.log(
+      `Changing section status for pedido ID: ${pedidoId}, section: ${sectionTitle}`
+    );
+    try {
+      const pedido = pedidos.find((p) => p.id === pedidoId);
+      const updatedSections = {
+        ...pedido.sectionStatus,
+        [sectionTitle]: "completado",
+      };
+
+      const allSectionsCompleted =
+        Object.values(updatedSections).length === pedido.menu.sections.length &&
+        Object.values(updatedSections).every(
+          (status) => status === "completado"
+        );
+
+      const updatedPedido = {
+        ...pedido,
+        status: allSectionsCompleted ? "completado" : "en_proceso",
+        sectionStatus: updatedSections,
+      };
+
+      await updatePedido(pedidoId, updatedPedido);
+
+      setPedidos((prevPedidos) =>
+        prevPedidos
+          .map((p) =>
+            p.id === pedidoId
+              ? {
+                  ...p,
+                  sectionStatus: updatedSections,
+                  status: updatedPedido.status,
+                }
+              : p
+          )
+          .filter((p) => p.status !== "completado")
+      );
+    } catch (error) {
+      console.error("Error updating section status", error);
+    }
+  };
+
+  const handlePrint = async (pedido) => {
+    const url = `/pedidos/${pedido.id}/print/`;
+    console.log("Imprimiendo pedido ID:", pedido.id);
+    try {
+      const response = await api.post(url);
+      if (response.status === 200) {
+        console.log("Pedido impreso con éxito.");
+      } else {
+        console.error(
+          "Error al intentar imprimir el pedido:",
+          response.status,
+          response.statusText
+        );
+      }
+    } catch (error) {
+      console.error("Error al intentar imprimir el pedido:", error);
+    }
+  };
+
+  const renderSelectedOptions = (section, optionsType, pedido) => {
+    return section[optionsType]
+      .filter((option) =>
+        pedido.opciones.some(
+          (o) => o.menu_option.id === option.id && o.selected
+        )
+      )
+      .map((option) => <div key={option.id}>{option.texto}</div>);
+  };
+
+  const renderSections = (pedido) => {
+    const sectionsToShow = {
+      Adicional: ["adicionales"],
+      Algo: ["adicionales", "bebidas"],
+      Onces: ["adicionales"],
+      Desayuno: [
+        "adicionales",
+        "platos_principales",
+        "acompanantes",
+        "bebidas",
+      ],
+      Almuerzo: [
+        "adicionales",
+        "platos_principales",
+        "acompanantes",
+        "bebidas",
+      ],
+      Cena: ["adicionales", "platos_principales", "acompanantes", "bebidas"],
+    };
+
+    return pedido.menu.sections.map((section) => {
+      const optionsToRender = sectionsToShow[section.titulo];
+
+      return optionsToRender && optionsToRender.length > 0 ? (
+        <div key={section.id} className="section">
+          <h4>{section.titulo}</h4>
+          {optionsToRender.map((optionType) => (
+            <div key={optionType}>
+              <h5>
+                {optionType.charAt(0).toUpperCase() + optionType.slice(1)}
+              </h5>
+              {renderSelectedOptions(section, optionType, pedido)}
+            </div>
+          ))}
+          <div className="buttons-container">
+            <Button
+              onClick={() =>
+                handleSectionStatusChange(pedido.id, section.titulo)
+              }
+              disabled={pedido.sectionStatus?.[section.titulo] === "completado"}
+              className="custom-button"
+            >
+              {pedido.sectionStatus?.[section.titulo] === "completado"
+                ? "Completado"
+                : "Marcar como Completado"}
+            </Button>
+            <Button
+              onClick={() => handlePrint(pedido)}
+              className="custom-button"
+            >
+              Imprimir
+            </Button>
+          </div>
+        </div>
+      ) : null;
+    });
+  };
+
+  if (loading) {
+    return <Spin />;
+  }
+
+  return (
+    <div className="pedidos-pendientes">
+      <h2>Pedidos Pendientes</h2>
+      <Collapse>
+        {pedidos.length > 0 ? (
+          pedidos.map((pedido) => (
+            <Panel
+              header={`Pedido ${pedido.id} - ${pedido.paciente.name} (Hab: ${pedido.paciente.cama.habitacion.nombre}, Cama: ${pedido.paciente.cama.nombre})`}
+              key={pedido.id}
+            >
+              {renderSections(pedido)}
+              <div className="additional-options">
+                <h4>Opciones Adicionales del Menú</h4>
+                <div>Leche: {pedido.adicionales.leche}</div>
+                <div>Bebida: {pedido.adicionales.bebida}</div>
+                <div>
+                  Azúcar/Panela: {pedido.adicionales.azucarPanela.join(", ")}
+                </div>
+                <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                <div>Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}</div>
+              </div>
+            </Panel>
+          ))
+        ) : (
+          <p>No hay pedidos pendientes.</p>
+        )}
+      </Collapse>
+    </div>
+  );
+};
+
+export default PedidosPendientes;
+
+            RealizarPedido.js:
+                import React, { useEffect, useState } from "react";
+import { Select, Button, Checkbox, Spin, Collapse, Modal } from "antd";
+import { getPacientes, getMenus, createPedido } from "../services/api";
+import "../styles/RealizarPedido.scss";
+
+const { Option } = Select;
+const { Panel } = Collapse;
+
+const RealizarPedido = () => {
+  const [pacientes, setPacientes] = useState([]);
+  const [menus, setMenus] = useState([]);
+  const [selectedPaciente, setSelectedPaciente] = useState(null);
+  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [additionalOptions, setAdditionalOptions] = useState({
+    leche: "",
+    bebida: "",
+    azucarPanela: [],
+    vegetales: "",
+    golosina: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const pacientesResponse = await getPacientes();
+        const menusResponse = await getMenus();
+        setPacientes(pacientesResponse);
+        setMenus(menusResponse);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data", error);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handlePacienteChange = (value) => {
+    setSelectedPaciente(value);
+    console.log("Selected Paciente:", value);
+  };
+
+  const handleMenuChange = (value) => {
+    const menu = menus.find((menu) => menu.id === value);
+    setSelectedMenu(menu);
+    setSelectedOptions({});
+    console.log("Selected Menu:", menu);
+  };
+
+  const handleOptionChange = (sectionName, optionType, optionId, checked) => {
+    setSelectedOptions((prevOptions) => {
+      const newOptions = { ...prevOptions };
+
+      if (!newOptions[sectionName]) {
+        newOptions[sectionName] = {};
+      }
+
+      if (!newOptions[sectionName][optionType]) {
+        newOptions[sectionName][optionType] = [];
+      }
+
+      if (checked) {
+        if (optionType === "acompanantes") {
+          if (newOptions[sectionName][optionType].length < 2) {
+            newOptions[sectionName][optionType].push(optionId);
+          }
+        } else {
+          newOptions[sectionName][optionType] = [optionId];
+        }
+      } else {
+        newOptions[sectionName][optionType] = newOptions[sectionName][
+          optionType
+        ].filter((id) => id !== optionId);
+      }
+
+      console.log("Updated Selected Options:", newOptions);
+      return newOptions;
+    });
+  };
+
+  const validateSelections = () => {
+    const errors = [];
+
+    const sectionsValidation = {
+      Adicional: { adicionales: { max: 1 } },
+      Algo: { adicionales: { max: 1 }, bebidas: { max: 1 } },
+      Onces: { adicionales: { max: 1 } },
+      Desayuno: {
+        adicionales: { max: 1 },
+        platos_principales: { max: 1 },
+        acompanantes: { max: 2 },
+        bebidas: { max: 1 },
+      },
+      Almuerzo: {
+        adicionales: { max: 1 },
+        platos_principales: { max: 1 },
+        acompanantes: { max: 2 },
+        bebidas: { max: 1 },
+      },
+      Cena: {
+        adicionales: { max: 1 },
+        platos_principales: { max: 1 },
+        acompanantes: { max: 2 },
+        bebidas: { max: 1 },
+      },
+    };
+
+    for (const [sectionName, rules] of Object.entries(sectionsValidation)) {
+      const sectionOptions = selectedOptions[sectionName] || {};
+      for (const [optionType, rule] of Object.entries(rules)) {
+        const selectedCount = (sectionOptions[optionType] || []).length;
+        if (rule.max !== undefined && selectedCount > rule.max) {
+          errors.push(
+            `${sectionName} - ${optionType}: Máximo ${rule.max} opciones`
+          );
+        }
+      }
+    }
+
+    return errors;
+  };
+
+  const showConfirmModal = () => {
+    const validationErrors = validateSelections();
+    if (validationErrors.length > 0) {
+      Modal.error({
+        title: "Errores de Validación",
+        content: (
+          <ul>
+            {validationErrors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        ),
+      });
+    } else {
+      setConfirmVisible(true);
+    }
+  };
+
+  const handleOk = async () => {
+    setConfirmVisible(false);
+    try {
+      const opciones = [];
+      for (const section of selectedMenu.sections) {
+        for (const key in section) {
+          if (section[key] instanceof Array) {
+            section[key].forEach((option) => {
+              const selected =
+                selectedOptions[section.titulo]?.[key]?.includes(option.id) ||
+                false;
+              opciones.push({
+                id: option.id,
+                selected: selected,
+              });
+            });
+          }
+        }
+      }
+
+      const pedido = {
+        paciente: selectedPaciente,
+        menu: selectedMenu.id,
+        opciones: opciones,
+        adicionales: additionalOptions,
+      };
+
+      console.log("Final Pedido Data:", pedido);
+
+      await createPedido(pedido);
+      resetForm();
+    } catch (error) {
+      console.error("Error creating pedido", error);
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedPaciente(null);
+    setSelectedMenu(null);
+    setSelectedOptions({});
+    setAdditionalOptions({
+      leche: "",
+      bebida: "",
+      azucarPanela: [],
+      vegetales: "",
+      golosina: false,
+    });
+    console.log("Form Reset.");
+  };
+
+  const handleCancel = () => {
+    setConfirmVisible(false);
+  };
+
+  const filterOption = (input, option) => {
+    return (
+      option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >=
+      0
+    );
+  };
+
+  if (loading) {
+    return <Spin />;
+  }
+
+  return (
+    <div className="realizar-pedido">
+      <h2>Realizar un Pedido</h2>
+      <div className="form-item">
+        <label>Paciente</label>
+        <Select
+          showSearch
+          filterOption={filterOption}
+          value={selectedPaciente}
+          onChange={handlePacienteChange}
+          style={{ width: "100%" }}
+        >
+          {pacientes.map((paciente) => (
+            <Option key={paciente.id} value={paciente.id}>
+              {paciente.name} (Cama: {paciente.cama.nombre}, Hab:{" "}
+              {paciente.cama.habitacion.nombre}, Serv:{" "}
+              {paciente.cama.habitacion.servicio.nombre})
+            </Option>
+          ))}
+        </Select>
+      </div>
+      <div className="form-item">
+        <label>Menú</label>
+        <Select
+          value={selectedMenu?.id}
+          onChange={handleMenuChange}
+          style={{ width: "100%" }}
+        >
+          {menus.map((menu) => (
+            <Option key={menu.id} value={menu.id}>
+              {menu.nombre}
+            </Option>
+          ))}
+        </Select>
+      </div>
+      {selectedMenu &&
+        selectedMenu.sections.map((section) => (
+          <Collapse key={section.id} className="section-collapse">
+            <Panel header={section.titulo}>
+              {Object.keys(section).map(
+                (key) =>
+                  key !== "id" &&
+                  key !== "titulo" &&
+                  section[key].length > 0 && (
+                    <div key={key} className="option-group">
+                      <h4>{key.charAt(0).toUpperCase() + key.slice(1)}</h4>
+                      {section[key].map((option) => (
+                        <Checkbox
+                          key={option.id}
+                          checked={selectedOptions[section.titulo]?.[
+                            key
+                          ]?.includes(option.id)}
+                          onChange={(e) =>
+                            handleOptionChange(
+                              section.titulo,
+                              key,
+                              option.id,
+                              e.target.checked
+                            )
+                          }
+                        >
+                          {option.texto}
+                        </Checkbox>
+                      ))}
+                    </div>
+                  )
+              )}
+            </Panel>
+          </Collapse>
+        ))}
+      <div className="additional-options">
+        <h3>Opciones Adicionales</h3>
+        <div className="form-item">
+          <label>Leche</label>
+          <Select
+            value={additionalOptions.leche}
+            onChange={(value) =>
+              setAdditionalOptions((prev) => ({ ...prev, leche: value }))
+            }
+            style={{ width: "100%" }}
+          >
+            <Option value="entera">Leche entera</Option>
+            <Option value="deslactosada">Leche deslactosada</Option>
+          </Select>
+        </div>
+        <div className="form-item">
+          <label>Bebida</label>
+          <Select
+            value={additionalOptions.bebida}
+            onChange={(value) =>
+              setAdditionalOptions((prev) => ({ ...prev, bebida: value }))
+            }
+            style={{ width: "100%" }}
+          >
+            <Option value="leche">Bebida en leche</Option>
+            <Option value="agua">Bebida en agua</Option>
+          </Select>
+        </div>
+        <div className="form-item">
+          <label>Azúcar y/o Panela:</label>
+          <Checkbox.Group
+            value={additionalOptions.azucarPanela}
+            onChange={(checkedValues) =>
+              setAdditionalOptions((prev) => ({
+                ...prev,
+                azucarPanela: checkedValues,
+              }))
+            }
+          >
+            <Checkbox value="azucar">Azúcar</Checkbox>
+            <Checkbox value="panela">Panela</Checkbox>
+          </Checkbox.Group>
+        </div>
+        <div className="form-item">
+          <label>Vegetales</label>
+          <Select
+            value={additionalOptions.vegetales}
+            onChange={(value) =>
+              setAdditionalOptions((prev) => ({ ...prev, vegetales: value }))
+            }
+            style={{ width: "100%" }}
+          >
+            <Option value="crudos">Vegetales Crudos</Option>
+            <Option value="calientes">Vegetales Calientes</Option>
+          </Select>
+        </div>
+        <div className="form-item">
+          <label>Golosina Opcional:</label>
+          <Checkbox
+            checked={additionalOptions.golosina}
+            onChange={(e) =>
+              setAdditionalOptions((prev) => ({
+                ...prev,
+                golosina: e.target.checked,
+              }))
+            }
+          >
+            Golosina
+          </Checkbox>
+        </div>
+      </div>
+      <Button
+        onClick={showConfirmModal}
+        type="primary"
+        className="custom-button"
+      >
+        Realizar Pedido
+      </Button>
+      <Modal
+        title="Confirmación de Pedido"
+        open={confirmVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+      >
+        <p>
+          Pacientes con restricción de azúcares o dieta hipoglúcida no deben
+          consumir alimentos con mermelada, galletas dulces, ni harinas
+          adicionales.
+        </p>
+        <p>
+          Prima la dieta recomendada por el médico tratante con las
+          restricciones.
+        </p>
+        <p>
+          Asegúrese de los elementos seleccionados según las restricciones del
+          paciente.
+        </p>
+      </Modal>
+    </div>
+  );
+};
+
+export default RealizarPedido;
+
+            UserManagement.js:
+                import React, { useState, useEffect } from "react";
+import { Button, Table, Form, Input, Modal, Select, Pagination } from "antd";
+import { registerUser, getUsuarios } from "../services/api";
+import "../styles/UserManagament.scss";
+
+const { Option } = Select;
+
+const UserManagement = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [form] = Form.useForm();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const response = await getUsuarios();
+        setUsuarios(response);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsuarios();
+  }, []);
+
+  const handleCreateUser = async (values) => {
+    try {
+      await registerUser(values);
+      setVisible(false);
+      form.resetFields();
+      const updatedUsers = await getUsuarios();
+      setUsuarios(updatedUsers);
+    } catch (error) {
+      console.error("Error creating user:", error);
+    }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedUsuarios = usuarios.slice(startIndex, startIndex + pageSize);
+
+  const columns = [
+    { title: "Nombre", dataIndex: "name", key: "name" },
+    { title: "Cédula", dataIndex: "cedula", key: "cedula" },
+    { title: "Usuario", dataIndex: "username", key: "username" },
+    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "Rol", dataIndex: "role", key: "role" },
+  ];
+
+  return (
+    <div className="user-management">
+      <Button
+        className="custom-button"
+        type="primary"
+        onClick={() => setVisible(true)}
+      >
+        Crear Usuario
+      </Button>
+      <div className="table-responsive">
+        <Table
+          dataSource={paginatedUsuarios}
+          columns={columns}
+          loading={loading}
+          rowKey="id"
+          pagination={false}
+          scroll={{ x: "100%" }}
+        />
+      </div>
+
+      <Pagination
+        className="pagination"
+        current={currentPage}
+        pageSize={pageSize}
+        total={usuarios.length}
+        onChange={handlePageChange}
+        showSizeChanger={false}
+        hideOnSinglePage
+      />
+
+      <Modal
+        title="Crear Usuario"
+        open={visible}
+        onCancel={() => setVisible(false)}
+        footer={null}
+      >
+        <Form form={form} onFinish={handleCreateUser} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Nombre"
+            rules={[
+              {
+                required: true,
+                message: "Por favor ingrese el nombre del usuario",
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="cedula"
+            label="Cédula"
+            rules={[{ required: true, message: "Por favor ingrese la cédula" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="username"
+            label="Usuario"
+            rules={[
+              {
+                required: true,
+                message: "Por favor ingrese el nombre de usuario",
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[{ required: true, message: "Por favor ingrese el email" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Contraseña"
+            rules={[
+              { required: true, message: "Por favor ingrese la contraseña" },
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name="role"
+            label="Rol"
+            rules={[{ required: true, message: "Por favor seleccione un rol" }]}
+          >
+            <Select placeholder="Selecciona un rol">
+              <Option value="admin">Administrador</Option>
+              <Option value="coordinador">Coordinadora de Alimentos</Option>
+              <Option value="auxiliar">Auxiliar de Cocina</Option>
+              <Option value="jefe_enfermeria">Jefe de Enfermería</Option>
+            </Select>
+          </Form.Item>
+          <Button className="custom-button" type="primary" htmlType="submit">
+            Crear
+          </Button>
+        </Form>
+      </Modal>
+    </div>
+  );
+};
+
+export default UserManagement;
+
+        services:
+            api.js
+                import api from "../axiosConfig";
+
+export const registerUser = async (userData) => {
+  const response = await api.post("/auth/register/", userData);
+  return response.data;
+};
+
+export const loginUser = async (userData) => {
+  const response = await api.post("/auth/login/", userData);
+  return response.data;
+};
+
+export const getUsuarios = async () => {
+  const response = await api.get("/auth/users/");
+  return response.data;
+};
+
+export const createUser = async (userData) => {
+  const response = await api.post("/auth/users/", userData);
+  return response.data;
+};
+
+export const getMenus = async () => {
+  const response = await api.get("/menus/");
+  return response.data;
+};
+
+export const createMenu = async (menuData) => {
+  const response = await api.post("/menus/", menuData);
+  return response.data;
+};
+
+export const updateMenu = async (id, menuData) => {
+  const response = await api.put(`/menus/${id}/`, menuData);
+  return response.data;
+};
+
+export const deleteMenu = async (id) => {
+  const response = await api.delete(`/menus/${id}/`);
+  return response.data;
+};
+
+export const getMenuOptions = async () => {
+  const response = await api.get("/menus/options/");
+  return response.data;
+};
+
+export const createMenuOption = async (optionData) => {
+  const response = await api.post("/menus/options/", optionData);
+  return response.data;
+};
+
+export const getPacientes = async () => {
+  const response = await api.get("/pacientes/");
+  return response.data;
+};
+
+export const createPaciente = async (pacienteData) => {
+  const response = await api.post("/pacientes/", pacienteData);
+  return response.data;
+};
+
+export const getPedidos = async () => {
+  const response = await api.get("/pedidos/");
+  return response.data;
+};
+
+export const createPedido = async (pedidoData) => {
+  const response = await api.post("/pedidos/", pedidoData);
+  return response.data;
+};
+
+export const updatePedido = async (id, pedidoData) => {
+  const response = await api.put(`/pedidos/${id}/`, pedidoData);
+  return response.data;
+};
+
+export const deletePedido = async (id) => {
+  const response = await api.delete(`/pedidos/${id}/`);
+  return response.data;
+};
+
+export const getPedidosCompletados = async (searchTerm = "") => {
+  const response = await api.get(
+    `/pedidos/completados/?paciente=${searchTerm}`
+  );
+  return response.data;
+};
+
+export const updateServicio = async (id, servicioData) => {
+  const response = await api.put(`/servicios/${id}/`, servicioData);
+  return response.data;
+};
+
+export const createServicio = async (servicioData) => {
+  const response = await api.post("/servicios/", servicioData);
+  return response.data;
+};
+
+export const createHabitacion = async (habitacionData) => {
+  const response = await api.post("/habitaciones/", habitacionData);
+  return response.data;
+};
+
+export const updateHabitacion = async (id, habitacionData) => {
+  const response = await api.put(`/habitaciones/${id}/`, habitacionData);
+  return response.data;
+};
+
+export const getCamas = async () => {
+  const response = await api.get("/camas/");
+  return response.data;
+};
+
+export const createCama = async (camaData) => {
+  const response = await api.post("/camas/", camaData);
+  return response.data;
+};
+
+export const updateCama = async (id, camaData) => {
+  const response = await api.put(`/camas/${id}/`, camaData);
+  return response.data;
+};
+
+export const deleteCama = async (id) => {
+  const response = await api.delete(`/camas/${id}/`);
+  return response.data;
+};
+
+export const updatePaciente = async (id, pacienteData) => {
+  const response = await api.put(`/pacientes/${id}/`, pacienteData);
+  return response.data;
+};
+
+export default api;
+
+        styles:
+            App.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+$primary-color: #174288;
+$secondary-color: #00a7e2;
+$background-color: #f8f9fa;
+$text-color: #333;
+$font-family: "Syne", sans-serif;
+
+body {
+  font-family: $font-family;
+  margin: 0;
+  padding: 0;
+  background-color: $background-color;
+  color: $text-color;
+}
+
+h1 {
+  color: $primary-color;
+  text-align: center;
+  margin-top: 20px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+
+  li {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      border-color: $secondary-color;
+      box-shadow: 0 0 10px rgba(0, 167, 226, 0.5);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 24px;
+    margin-top: 15px;
+  }
+
+  ul li {
+    padding: 8px;
+    margin: 8px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  h1 {
+    font-size: 28px;
+  }
+
+  ul li {
+    padding: 10px;
+    margin: 10px;
+  }
+}
+
+@media (min-width: 1025px) {
+  h1 {
+    font-size: 32px;
+  }
+
+  ul li {
+    padding: 12px;
+    margin: 12px;
+  }
+}
+
+            DataManagement.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h2,
+h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+h4 {
+  font-weight: 700;
+  color: #34495e;
+  margin-bottom: 10px;
+}
+
+p {
+  margin-bottom: 5px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.section {
+  margin-bottom: 40px;
+}
+
+.section h3 {
+  border-bottom: 2px solid #e74c3c;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.list-group-item {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: #fff;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-family: "Syne", sans-serif;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.btn-primary:hover {
+  background-color: #c0392b;
+  border-color: #c0392b;
+}
+
+.btn-primary:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+.mt-5 {
+  margin-top: 3rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.list-group {
+  padding-left: 0;
+  margin-bottom: 20px;
+}
+
+.list-group-item h4 {
+  margin-bottom: 10px;
+}
+
+.list-group-item p {
+  margin: 0;
+}
+
+            FloatingButton.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.floating-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+
+  .btn {
+    background-color: #174288;
+    border: none;
+    font-size: 24px;
+    padding: 15px;
+    border-radius: 50%;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.3s;
+
+    &:hover {
+      background-color: #00a7e2;
+      transform: scale(1.1);
+    }
+  }
+
+  .floating-menu {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+
+    &.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .nav-link {
+      color: #174288;
+      position: relative;
+      cursor: pointer;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+
+      &:hover {
+        background-color: #00a7e2;
+        color: #ffffff;
+      }
+
+      &.active {
+        background-color: #00a7e2;
+        color: #ffffff;
+      }
+    }
+
+    .pedidos-toggle,
+    .gestion-datos-toggle {
+      position: relative;
+
+      &::after {
+        content: "";
+        display: inline-block;
+        margin-left: 10px;
+        transition: transform 0.3s ease;
+        border: solid #174288;
+        border-width: 0 2px 2px 0;
+        padding: 3px;
+        transform: rotate(45deg);
+      }
+
+      &.open::after {
+        transform: rotate(-135deg);
+      }
+    }
+
+    .submenu {
+      margin-left: 20px;
+      padding-left: 10px;
+      border-left: 2px solid #00a7e2;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+
+      .submenu-item {
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        margin: 5px 0;
+        padding: 8px 12px;
+
+        &:hover {
+          background-color: #e0e0e0;
+        }
+
+        &.active {
+          background-color: #cce0ff;
+          color: #174288;
+        }
+      }
+    }
+
+    .submenu-open {
+      opacity: 1;
+      max-height: 500px;
+    }
+  }
+}
+
+@media (min-width: 992px) {
+  .floating-button {
+    display: none;
+  }
+}
+
+            Header.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.header {
+  font-family: "Syne", sans-serif;
+  background-color: #174288;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .logo {
+    height: 50px;
+    margin-right: 15px;
+    background-color: #ffffff;
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-link {
+    color: #ffffff;
+    &:hover {
+      color: #dee2e6;
+    }
+  }
+
+  .header-right .logout-link {
+    background-color: #174288;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: #00a7e2;
+    }
+  }
+}
+
+            Layout.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.layout {
+  font-family: "Syne", sans-serif;
+  min-height: 100vh;
+  background-color: #ffffff;
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    background-color: #dee2e6;
+
+    .content {
+      flex-grow: 1;
+      padding: 15px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .main-content {
+    flex-direction: column;
+
+    .content {
+      padding: 10px;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  .sidebar {
+    display: none;
+  }
+}
+
+            Login.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+body.login-page {
+  font-family: "Syne", sans-serif;
+  background: linear-gradient(135deg, #174288, #00a7e2);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.login-form {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.login-logo {
+  width: 120px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #174288;
+  font-weight: 700;
+}
+
+.input-field {
+  margin-bottom: 15px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #d9d9d9;
+}
+
+.login-button {
+  width: 100%;
+  background-color: #174288;
+  border-color: #174288;
+  font-weight: 700;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+
+  &:hover,
+  &:focus {
+    background-color: #00a7e2;
+    border-color: #00a7e2;
+  }
+}
+
+.error-message {
+  margin-top: 15px;
+  text-align: left;
+  color: #ff4d4f;
+}
+
+.ant-modal {
+  .ant-modal-content {
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .ant-modal-header {
+    background-color: #e6f7ff;
+    border-bottom: none;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .ant-modal-title {
+    font-weight: 700;
+    color: #174288;
+  }
+
+  .ant-modal-body {
+    font-size: 16px;
+    color: #333;
+  }
+
+  .ant-btn-primary {
+    background-color: #174288;
+    border-color: #174288;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 5px;
+
+    &:hover,
+    &:focus {
+      background-color: #00a7e2;
+      border-color: #00a7e2;
+    }
+  }
+
+  .ant-btn-default {
+    background-color: #fff;
+    border-color: #d9d9d9;
+    color: #174288;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 5px;
+
+    &:hover,
+    &:focus {
+      background-color: #f0f0f0;
+      border-color: #d9d9d9;
+    }
+  }
+}
+
+            Menus.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.menu-page {
+  padding: 20px;
+}
+
+.custom-button {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #1890ff, #40a9ff);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(90deg, #40a9ff, #69c0ff);
+    transform: translateY(-2px);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.save-button {
+  width: calc(50% - 5px);
+  margin-right: 10px;
+}
+
+.vertical-buttons,
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.menu-details {
+  .ant-typography {
+    margin-top: 20px;
+  }
+}
+
+.menu-list {
+  margin-top: 20px;
+
+  .ant-list-item-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .ant-list-item-actions > li {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ant-list-item-actions .ant-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    font-size: 1.25rem;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: #00a7e2;
+    }
+  }
+
+  .menu-title {
+    font-weight: bold;
+    margin-left: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+}
+
+.loading-container {
+  text-align: center;
+  padding: 50px 0;
+}
+
+.menu-title {
+  font-weight: bold;
+}
+
+            Sidebar.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.sidebar {
+  font-family: "Syne", sans-serif;
+  background-color: #174288;
+  color: #ffffff;
+  padding: 15px;
+
+  .nav-link {
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 5px 0;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #00a7e2;
+      color: #dee2e6;
+    }
+
+    &.active {
+      background-color: #00a7e2;
+      color: #dee2e6;
+    }
+  }
+
+  .pedidos-toggle,
+  .gestion-datos-toggle {
+    position: relative;
+
+    &::after {
+      content: "";
+      display: inline-block;
+      margin-left: 10px;
+      transition: transform 0.3s ease;
+      border: solid #ffffff;
+      border-width: 0 2px 2px 0;
+      padding: 3px;
+      transform: rotate(45deg);
+    }
+
+    &.open::after {
+      transform: rotate(-135deg);
+    }
+  }
+
+  .submenu {
+    margin-left: 20px;
+    padding-left: 10px;
+    border-left: 2px solid #00a7e2;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+  }
+
+  .submenu-open {
+    opacity: 1;
+    max-height: 500px;
+  }
+
+  .submenu-item {
+    background-color: #0056a2;
+    border-radius: 4px;
+    margin: 3px 0;
+    padding: 8px 12px;
+
+    &:hover {
+      background-color: #0074d9;
+    }
+
+    &.active {
+      background-color: #0074d9;
+      color: #ffffff;
+    }
+  }
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+            UserManagement.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.user-management {
+  font-family: "Syne", sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  .custom-button {
+    background-color: #174288;
+    border-color: #174288;
+    font-weight: 700;
+    margin-bottom: 20px;
+
+    &:hover,
+    &:focus {
+      background-color: #00a7e2;
+      border-color: #00a7e2;
+    }
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .ant-table {
+    margin-top: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    .ant-table-thead > tr > th {
+      background-color: #e6f7ff;
+      font-weight: bold;
+      padding: 12px;
+    }
+
+    .ant-table-tbody > tr > td {
+      padding: 10px;
+    }
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .ant-modal {
+    &-header {
+      font-family: "Syne", sans-serif;
+      background-color: #fafafa;
+      border-bottom: 1px solid #d9d9d9;
+    }
+
+    &-footer {
+      display: none;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: bold;
+    }
+
+    .ant-input,
+    .ant-select-selector {
+      border-radius: 5px;
+      padding: 10px;
+    }
+
+    .custom-button {
+      width: 100%;
+      margin-top: 10px;
+      background-color: #174288;
+      border-color: #174288;
+      font-weight: 700;
+
+      &:hover,
+      &:focus {
+        background-color: #00a7e2;
+        border-color: #00a7e2;
+      }
+    }
+  }
+}
+
+            RealizarPedido.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.realizar-pedido {
+  font-family: "Syne", sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #174288;
+  }
+
+  .form-item {
+    margin-bottom: 20px;
+  }
+
+  .ant-select {
+    width: 100%;
+  }
+
+  .section-collapse {
+    margin-bottom: 20px;
+  }
+
+  .option-group {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+
+    h4 {
+      margin-bottom: 10px;
+      color: #174288;
+    }
+
+    .ant-checkbox-wrapper {
+      margin-bottom: 5px;
+    }
+  }
+
+  .additional-options {
+    margin-top: 20px;
+
+    .form-item {
+      margin-bottom: 10px;
+    }
+  }
+
+  .custom-button {
+    width: 100%;
+    background-color: #174288;
+    border-color: #174288;
+    font-weight: 700;
+
+    &:hover,
+    &:focus {
+      background-color: #00a7e2;
+      border-color: #00a7e2;
+    }
+  }
+}
+
+            HistorialPedidos.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.historial-pedidos {
+  font-family: "Syne", sans-serif;
+  padding: 20px;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #174288;
+  }
+
+  .ant-collapse-header {
+    background-color: #e6f7ff;
+    font-weight: bold;
+  }
+
+  .ant-collapse-content-box {
+    padding: 15px;
+    background-color: #f9f9f9;
+  }
+
+  .section {
+    margin-bottom: 20px;
+
+    h4 {
+      color: #174288;
+      margin-bottom: 10px;
+    }
+
+    h5 {
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .option-group {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+  }
+
+  .adicionales {
+    margin-top: 20px;
+
+    h4 {
+      color: #174288;
+      margin-bottom: 10px;
+    }
+
+    div {
+      margin-bottom: 5px;
+    }
+  }
+}
+
+            Home.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.home {
+  font-family: "Syne", sans-serif;
+  background-color: #dee2e6;
+  color: #174288;
+  padding: 50px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 50px auto;
+  h1 {
+    font-size: 2.5rem;
+    color: #174288;
+    position: relative;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 767px) {
+    padding: 30px 10px;
+
+    h1 {
+      font-size: 2rem;
+    }
+  }
+}
+
+            PadidosPendientes.scss:
+                @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+.pedidos-pendientes {
+  font-family: "Syne", sans-serif;
+  padding: 20px;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #174288;
+  }
+
+  .ant-collapse-header {
+    background-color: #e6f7ff;
+    font-weight: bold;
+  }
+
+  .ant-collapse-content-box {
+    padding: 15px;
+    background-color: #f9f9f9;
+  }
+
+  .section {
+    margin-bottom: 20px;
+
+    h4 {
+      color: #174288;
+      margin-bottom: 10px;
+    }
+
+    h5 {
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .custom-button {
+      margin-top: 10px;
+      background-color: #174288;
+      border-color: #174288;
+      font-weight: 700;
+
+      &:hover,
+      &:focus {
+        background-color: #00a7e2;
+        border-color: #00a7e2;
+      }
+
+      &:disabled {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        cursor: not-allowed;
+      }
+    }
+
+    .buttons-container {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  }
+
+  .additional-options {
+    margin-top: 20px;
+
+    h4 {
+      color: #174288;
+      margin-bottom: 10px;
+    }
+
+    div {
+      margin-bottom: 5px;
+    }
+  }
+}
+
+
+        utils:
+            inactivityHandler.js:
+                let inactivityTime = function (showWarningCallback) {
+  let time;
+  let warningTimeout;
+
+  function resetTimer() {
+    console.log("Timer reset.");
+    clearTimeout(time);
+    clearTimeout(warningTimeout);
+    startTimer();
+  }
+
+  function startTimer() {
+    warningTimeout = setTimeout(() => {
+      console.log("Inactivity detected, showing warning.");
+      if (typeof showWarningCallback === "function") {
+        showWarningCallback(true);
+      }
+    }, 50 * 60 * 1000);
+  }
+
+  window.onload = resetTimer;
+  document.onmousemove = resetTimer;
+  document.onclick = resetTimer;
+  document.onscroll = resetTimer;
+  document.onresize = resetTimer;
+
+  startTimer();
+};
+
+export default inactivityTime;
+
+        App.js:
+            import React, { useEffect } from "react";
+import {
+  HashRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min";
+import inactivityTime from "./utils/inactivityHandler";
+
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import RealizarPedido from "./pages/RealizarPedido";
+import DataManagement from "./pages/DataManagement";
+import MenuPage from "./pages/MenuPage";
+import PedidosPendientes from "./pages/PedidosPendientes";
+import HistorialPedidos from "./pages/HistorialPedidos";
+import UserManagement from "./pages/UserManagement";
+
+import Layout from "./components/Layout";
+import PrivateRoute from "./components/PrivateRoute";
+
+import "./styles/App.scss";
+
+function App() {
+  useEffect(() => {
+    inactivityTime();
+  }, []);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+
+        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Layout />
+            </PrivateRoute>
+          }
+        >
+          <Route
+            path="/home"
+            element={
+              <PrivateRoute>
+                <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/menus"
+            element={
+              <PrivateRoute requiredRoles={["admin", "coordinador"]}>
+                <MenuPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/realizar-pedido"
+            element={
+              <PrivateRoute
+                requiredRoles={["admin", "jefe_enfermeria", "coordinador"]}
+              >
+                <RealizarPedido />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pedidos/pendientes"
+            element={
+              <PrivateRoute
+                requiredRoles={["admin", "coordinador", "auxiliar"]}
+              >
+                <PedidosPendientes />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/pedidos/historial"
+            element={
+              <PrivateRoute
+                requiredRoles={["admin", "coordinador", "auxiliar"]}
+              >
+                <HistorialPedidos />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/gestion-datos"
+            element={
+              <PrivateRoute requiredRoles={["admin", "jefe_enfermeria"]}>
+                <DataManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/gestion-usuarios"
+            element={
+              <PrivateRoute requiredRoles={["admin"]}>
+                <UserManagement />
+              </PrivateRoute>
+            }
+          />
+        </Route>
+
+        <Route path="/home" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
+
+        axiosConfig.js:
+            import axios from "axios";
+
+const api = axios.create({
+  baseURL:
+    process.env.NODE_ENV === "development"
+      ? "http://127.0.0.1:8000/api"
+      : "http://172.168.11.176:8000/api",
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.response.data.code === "token_not_valid"
+    ) {
+      const refreshToken = localStorage.getItem("refresh");
+
+      if (refreshToken) {
+        try {
+          const response = await axios.post("/auth/token/refresh/", {
+            refresh: refreshToken,
+          });
+
+          if (response.data && response.data.access) {
+            localStorage.setItem("token", response.data.access);
+            api.defaults.headers.common[
+              "Authorization"
+            ] = `Bearer ${response.data.access}`;
+            originalRequest.headers[
+              "Authorization"
+            ] = `Bearer ${response.data.access}`;
+
+            console.log("Token refreshed successfully");
+
+            return await api(originalRequest);
+          } else {
+            console.error("Invalid response from token refresh endpoint");
+            throw error;
+          }
+        } catch (refreshError) {
+          console.error("Error refreshing token:", refreshError);
+          localStorage.removeItem("token");
+          localStorage.removeItem("refresh");
+          window.location.href = "/login";
+        }
+      }
+    }
+
+    // Handle non-401 errors
+    console.error("Error:", error);
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+
+        index.js:
+            import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+reportWebVitals();
+
+
+    .gitignore
+
+    package.json
+

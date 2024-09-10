@@ -1,117 +1,120 @@
-.floating-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-    .btn {
-        background-color: #174288;
-        border: none;
-        font-size: 24px;
-        padding: 15px;
-        border-radius: 50%;
-        color: #fff;
-        transition: background-color 0.3s, transform 0.3s;
+.floating-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+
+  .btn {
+    background-color: #174288;
+    border: none;
+    font-size: 24px;
+    padding: 15px;
+    border-radius: 50%;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.3s;
+
+    &:hover {
+      background-color: #00a7e2;
+      transform: scale(1.1);
+    }
+  }
+
+  .floating-menu {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+
+    &.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .nav-link {
+      color: #174288;
+      position: relative;
+      cursor: pointer;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+
+      &:hover {
+        background-color: #00a7e2;
+        color: #ffffff;
+      }
+
+      &.active {
+        background-color: #00a7e2;
+        color: #ffffff;
+      }
+    }
+
+    .pedidos-toggle,
+    .gestion-datos-toggle {
+      position: relative;
+
+      &::after {
+        content: "";
+        display: inline-block;
+        margin-left: 10px;
+        transition: transform 0.3s ease;
+        border: solid #174288;
+        border-width: 0 2px 2px 0;
+        padding: 3px;
+        transform: rotate(45deg);
+      }
+
+      &.open::after {
+        transform: rotate(-135deg);
+      }
+    }
+
+    .submenu {
+      margin-left: 20px;
+      padding-left: 10px;
+      border-left: 2px solid #00a7e2;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+
+      .submenu-item {
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        margin: 5px 0;
+        padding: 8px 12px;
 
         &:hover {
-            background-color: #00A7E2;
-            transform: scale(1.1);
+          background-color: #e0e0e0;
         }
+
+        &.active {
+          background-color: #cce0ff;
+          color: #174288;
+        }
+      }
     }
 
-    .floating-menu {
-        position: absolute;
-        bottom: 60px;
-        right: 0;
-        background-color: #ffffff;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        width: 180px; /* Aumentamos el ancho del menú */
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-
-        &.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .nav-link {
-            color: #174288;
-            position: relative;
-            cursor: pointer;
-            padding: 10px 15px; /* Ajustamos el padding para un diseño más compacto */
-            border-radius: 4px;
-            margin-bottom: 8px; /* Reducimos la separación entre elementos */
-            transition: background-color 0.3s ease, color 0.3s ease;
-
-            &:hover {
-                background-color: #00A7E2;
-                color: #FFFFFF;
-            }
-
-            &.active {
-                background-color: #00A7E2;
-                color: #FFFFFF;
-            }
-        }
-
-        .pedidos-toggle, .gestion-datos-toggle {
-            position: relative;
-
-            &::after {
-                content: '';
-                display: inline-block;
-                margin-left: 10px;
-                transition: transform 0.3s ease;
-                border: solid #174288;
-                border-width: 0 2px 2px 0;
-                padding: 3px;
-                transform: rotate(45deg); /* Flecha en dirección de cerrado */
-            }
-
-            &.open::after {
-                transform: rotate(-135deg); /* Flecha en dirección de abierto */
-            }
-        }
-
-        .submenu {
-            margin-left: 20px;
-            padding-left: 10px;
-            border-left: 2px solid #00A7E2;
-            opacity: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.3s ease;
-
-            .submenu-item {
-                background-color: #f0f0f0;
-                border-radius: 4px;
-                margin: 5px 0;
-                padding: 8px 12px;
-
-                &:hover {
-                    background-color: #e0e0e0;
-                }
-
-                &.active {
-                    background-color: #cce0ff;
-                    color: #174288;
-                }
-            }
-        }
-
-        .submenu-open {
-            opacity: 1;
-            max-height: 500px;
-        }
+    .submenu-open {
+      opacity: 1;
+      max-height: 500px;
     }
+  }
 }
 
 @media (min-width: 992px) {
-    .floating-button {
-        display: none;
-    }
+  .floating-button {
+    display: none;
+  }
 }

@@ -1,40 +1,37 @@
-/* Importamos la fuente 'Syne' desde Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-/* Estilos para el contenedor principal del layout */
 .layout {
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    background-color: #FFFFFF;
+  font-family: "Syne", sans-serif;
+  min-height: 100vh;
+  background-color: #ffffff;
 
-    .main-content {
-        flex: 1;
-        display: flex;
-        background-color: #DEE2E6;
+  .main-content {
+    flex: 1;
+    display: flex;
+    background-color: #dee2e6;
 
-        .content {
-            flex-grow: 1;
-            padding: 15px;
-            background-color: #FFFFFF;
-            border-radius: 8px; /* Añadimos un borde redondeado para mejorar la estética */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Añadimos una sombra para dar profundidad */
-        }
+    .content {
+      flex-grow: 1;
+      padding: 15px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
+  }
 }
 
-/* Media query para dispositivos con un ancho máximo de 767px (dispositivos móviles) */
 @media (max-width: 767px) {
-    .main-content {
-        flex-direction: column;
+  .main-content {
+    flex-direction: column;
 
-        .content {
-            padding: 10px;
-            border-radius: 0; /* Eliminamos el borde redondeado en pantallas pequeñas para maximizar el espacio */
-            box-shadow: none; /* Eliminamos la sombra en pantallas pequeñas para simplificar el diseño */
-        }
+    .content {
+      padding: 10px;
+      border-radius: 0;
+      box-shadow: none;
     }
+  }
 
-    .sidebar {
-        display: none;
-    }
+  .sidebar {
+    display: none;
+  }
 }

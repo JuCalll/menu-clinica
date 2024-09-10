@@ -1,7 +1,7 @@
 from rest_framework import generics
 from .models import Cama
 from .serializers import CamaSerializer
-from logs.models import LogEntry  # Importar el modelo de LogEntry
+from logs.models import LogEntry  
 
 class CamaListCreateView(generics.ListCreateAPIView):
     queryset = Cama.objects.all()
@@ -9,7 +9,6 @@ class CamaListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        # Serializar manualmente los cambios
         changes = {
             'nombre': instance.nombre,
             'habitacion_id': instance.habitacion.id,
@@ -20,7 +19,7 @@ class CamaListCreateView(generics.ListCreateAPIView):
             action='CREATE',
             model=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,  # Usar la versión serializada
+            changes=changes,  
         )
 
 class CamaDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -29,7 +28,6 @@ class CamaDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        # Serializar manualmente los cambios
         changes = {
             'nombre': instance.nombre,
             'habitacion_id': instance.habitacion.id,
@@ -40,7 +38,7 @@ class CamaDetailView(generics.RetrieveUpdateDestroyAPIView):
             action='UPDATE',
             model=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,  # Usar la versión serializada
+            changes=changes,  
         )
 
     def perform_destroy(self, instance):

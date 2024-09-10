@@ -1,4 +1,3 @@
-# logs/middleware.py
 from .models import LogEntry
 
 class AuthenticationLoggingMiddleware:

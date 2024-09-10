@@ -1,7 +1,7 @@
 from rest_framework import generics
 from .models import Habitacion
 from .serializers import HabitacionSerializer
-from logs.models import LogEntry  # Importar el modelo de LogEntry
+from logs.models import LogEntry  
 
 class HabitacionListCreateView(generics.ListCreateAPIView):
     serializer_class = HabitacionSerializer
@@ -11,7 +11,6 @@ class HabitacionListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        # Serializar manualmente los cambios
         changes = {
             'nombre': instance.nombre,
             'servicio_id': instance.servicio.id,
@@ -22,7 +21,7 @@ class HabitacionListCreateView(generics.ListCreateAPIView):
             action='CREATE',
             model=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,  # Usar la versión serializada
+            changes=changes,  
         )
 
 class HabitacionDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -31,7 +30,6 @@ class HabitacionDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        # Serializar manualmente los cambios
         changes = {
             'nombre': instance.nombre,
             'servicio_id': instance.servicio.id,
@@ -42,7 +40,7 @@ class HabitacionDetailView(generics.RetrieveUpdateDestroyAPIView):
             action='UPDATE',
             model=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,  # Usar la versión serializada
+            changes=changes,  
         )
 
     def perform_destroy(self, instance):

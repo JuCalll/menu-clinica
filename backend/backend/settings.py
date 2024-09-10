@@ -1,10 +1,8 @@
-# Importamos Path de pathlib para manejar rutas de archivos
 from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'authentication',  # Aplicación de autenticación personalizada
+    'authentication',  
     'pedidos',
     'pacientes',
     'camas',

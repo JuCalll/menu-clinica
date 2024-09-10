@@ -1,4 +1,3 @@
-# servicios/models.py
 from django.db import models
 
 class Servicio(models.Model):
@@ -13,7 +12,6 @@ class Servicio(models.Model):
         super().save(*args, **kwargs)
 
         if not is_new and not self.activo:
-            # Importaciones dentro de la función para evitar ciclos
             from habitaciones.models import Habitacion
             from camas.models import Cama
             from pacientes.models import Paciente

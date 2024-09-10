@@ -1,84 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
 .user-management {
-    font-family: 'Syne', sans-serif;
-    padding: 20px;
-    background-color: #f9f9f9;
+  font-family: "Syne", sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  .custom-button {
+    background-color: #174288;
+    border-color: #174288;
+    font-weight: 700;
+    margin-bottom: 20px;
+
+    &:hover,
+    &:focus {
+      background-color: #00a7e2;
+      border-color: #00a7e2;
+    }
+  }
+
+  .table-responsive {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+  }
+
+  .ant-table {
+    margin-top: 20px;
+    background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
+    .ant-table-thead > tr > th {
+      background-color: #e6f7ff;
+      font-weight: bold;
+      padding: 12px;
+    }
+
+    .ant-table-tbody > tr > td {
+      padding: 10px;
+    }
+  }
+
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .ant-modal {
+    &-header {
+      font-family: "Syne", sans-serif;
+      background-color: #fafafa;
+      border-bottom: 1px solid #d9d9d9;
+    }
+
+    &-footer {
+      display: none;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: bold;
+    }
+
+    .ant-input,
+    .ant-select-selector {
+      border-radius: 5px;
+      padding: 10px;
+    }
+
     .custom-button {
-        background-color: #174288;
-        border-color: #174288;
-        font-weight: 700;
-        margin-bottom: 20px;
+      width: 100%;
+      margin-top: 10px;
+      background-color: #174288;
+      border-color: #174288;
+      font-weight: 700;
 
-        &:hover,
-        &:focus {
-            background-color: #00A7E2;
-            border-color: #00A7E2;
-        }
+      &:hover,
+      &:focus {
+        background-color: #00a7e2;
+        border-color: #00a7e2;
+      }
     }
-
-    .table-responsive {
-        overflow-x: auto;  // Habilita el scroll horizontal
-    }
-
-    .ant-table {
-        margin-top: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
-        .ant-table-thead > tr > th {
-            background-color: #e6f7ff;
-            font-weight: bold;
-            padding: 12px;
-        }
-
-        .ant-table-tbody > tr > td {
-            padding: 10px;
-        }
-    }
-
-    .pagination {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .ant-modal {
-        &-header {
-            font-family: 'Syne', sans-serif;
-            background-color: #fafafa;
-            border-bottom: 1px solid #d9d9d9;
-        }
-
-        &-footer {
-            display: none;
-        }
-
-        .ant-form-item-label > label {
-            font-weight: bold;
-        }
-
-        .ant-input, .ant-select-selector {
-            border-radius: 5px;
-            padding: 10px;
-        }
-
-        .custom-button {
-            width: 100%;
-            margin-top: 10px;
-            background-color: #174288;
-            border-color: #174288;
-            font-weight: 700;
-
-            &:hover,
-            &:focus {
-                background-color: #00A7E2;
-                border-color: #00A7E2;
-            }
-        }
-    }
+  }
 }

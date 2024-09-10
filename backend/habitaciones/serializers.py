@@ -21,13 +21,11 @@ class HabitacionSerializer(serializers.ModelSerializer):
         instance.servicio = validated_data.get('servicio', instance.servicio)
         instance.activo = validated_data.get('activo', instance.activo)
 
-        # Validación para asegurar que no se active la habitación si el servicio está desactivado
         if instance.activo and not instance.servicio.activo:
             raise serializers.ValidationError("No se puede activar la habitación porque el servicio está inactivo.")
 
         instance.save()
 
-        # Desactivación de las camas si la habitación se desactiva
         if not instance.activo:
             instance.camas.update(activo=False)
 

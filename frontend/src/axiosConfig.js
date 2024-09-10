@@ -1,40 +1,59 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-    baseURL: process.env.NODE_ENV === 'development'
-        ? 'http://127.0.0.1:8000/api'  // En desarrollo, usa localhost
-        : 'http://172.168.11.176:8000/api',  // En producción o red local, usa la IP del servidor
+  baseURL:
+    process.env.NODE_ENV === "development"
+      ? "http://127.0.0.1:8000/api"
+      : "http://172.168.11.176:8000/api",
 });
 
-// Interceptores de respuestas para manejar el error 401 (token expirado)
 api.interceptors.response.use(
-    response => response,  // Retorna la respuesta directamente si es exitosa
-    async (error) => {
-        const originalRequest = error.config;
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-        if (error.response.status === 401 && error.response.data.code === 'token_not_valid') {
-            const refreshToken = localStorage.getItem('refresh');
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.response.data.code === "token_not_valid"
+    ) {
+      const refreshToken = localStorage.getItem("refresh");
 
-            if (refreshToken) {
-                try {
-                    const { data } = await axios.post('/auth/token/refresh/', { refresh: refreshToken });
+      if (refreshToken) {
+        try {
+          const response = await axios.post("/auth/token/refresh/", {
+            refresh: refreshToken,
+          });
 
-                    localStorage.setItem('token', data.access);
-                    api.defaults.headers.common['Authorization'] = `Bearer ${data.access}`;
-                    originalRequest.headers['Authorization'] = `Bearer ${data.access}`;
+          if (response.data && response.data.access) {
+            localStorage.setItem("token", response.data.access);
+            api.defaults.headers.common[
+              "Authorization"
+            ] = `Bearer ${response.data.access}`;
+            originalRequest.headers[
+              "Authorization"
+            ] = `Bearer ${response.data.access}`;
 
-                    return api(originalRequest);  // Reintenta la solicitud original
-                } catch (refreshError) {
-                    console.error('Error al refrescar el token:', refreshError);
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('refresh');
-                    window.location.href = '/login';  // Redirige al login si falla el refresco
-                }
-            }
+            console.log("Token refreshed successfully");
+
+            return await api(originalRequest);
+          } else {
+            console.error("Invalid response from token refresh endpoint");
+            throw error;
+          }
+        } catch (refreshError) {
+          console.error("Error refreshing token:", refreshError);
+          localStorage.removeItem("token");
+          localStorage.removeItem("refresh");
+          window.location.href = "/login";
         }
-
-        return Promise.reject(error);  // Si no es un error de token, lo propaga
+      }
     }
+
+    // Handle non-401 errors
+    console.error("Error:", error);
+    return Promise.reject(error);
+  }
 );
 
 export default api;

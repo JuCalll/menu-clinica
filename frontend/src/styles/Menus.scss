@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
 .menu-page {
   padding: 20px;
 }
@@ -7,28 +9,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Espaciado entre el ícono y el texto */
-  background: linear-gradient(90deg, #1890ff, #40a9ff); /* Gradiente de color */
+  gap: 8px;
+  background: linear-gradient(90deg, #1890ff, #40a9ff);
   border: none;
   color: #fff;
-  padding: 10px 20px; /* Tamaño más grande para mayor usabilidad */
-  border-radius: 6px; /* Bordes redondeados */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
-  font-size: 16px; /* Tamaño de fuente más grande */
-  font-weight: bold; /* Negrita para resaltar el texto */
-  transition: background 0.3s ease, transform 0.3s ease; /* Transición suave para el hover */
+  padding: 10px 20px;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.3s ease;
 
   &:hover {
-    background: linear-gradient(90deg, #40a9ff, #69c0ff); /* Cambio de color en hover */
-    transform: translateY(-2px); /* Pequeño levantamiento en hover */
+    background: linear-gradient(90deg, #40a9ff, #69c0ff);
+    transform: translateY(-2px);
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); /* Resaltado al enfocarse */
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   }
 }
-
 
 .modal-footer {
   display: flex;
@@ -60,15 +61,15 @@
 
   .ant-list-item-actions {
     display: flex;
-    gap: 15px; /* Espaciado entre íconos */
-    justify-content: center; /* Centramos los íconos horizontalmente */
+    gap: 15px;
+    justify-content: center;
   }
 
   .ant-list-item-actions > li {
     margin: 0;
     display: flex;
     align-items: center;
-    justify-content: center; /* Centramos los íconos dentro de su contenedor */
+    justify-content: center;
   }
 
   .ant-list-item-actions .ant-btn {
@@ -76,21 +77,21 @@
     align-items: center;
     justify-content: center;
     padding: 8px;
-    font-size: 1.25rem; /* Aumenta el tamaño de los íconos */
+    font-size: 1.25rem;
     transition: color 0.3s ease;
 
     &:hover {
-      color: #00A7E2; /* Cambia el color al hacer hover */
+      color: #00a7e2;
     }
   }
 
   .menu-title {
     font-weight: bold;
-    margin-left: 20px; /* Mueve el nombre del menú hacia la derecha */
+    margin-left: 20px;
     padding: 10px;
-    background-color: #f9f9f9; /* Fondo suave detrás del nombre */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra para dar profundidad */
-    border-radius: 4px; /* Bordes redondeados para suavizar el contenedor */
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
   }
 }
 

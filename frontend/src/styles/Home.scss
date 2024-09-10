@@ -1,28 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
 .home {
-    font-family: 'Syne', sans-serif;
-    background-color: #DEE2E6;
+  font-family: "Syne", sans-serif;
+  background-color: #dee2e6;
+  color: #174288;
+  padding: 50px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 50px auto;
+  text-align: center;  // Asegura que el contenido esté centrado
+
+  h1 {
+    font-size: 2.5rem;
     color: #174288;
-    padding: 50px 20px;
-    border-radius: 8px; /* Borde redondeado para dar suavidad al contenedor */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave para dar profundidad */
-    max-width: 800px; /* Ancho máximo del contenedor para limitar el ancho en pantallas grandes */
-    margin: 50px auto; /* Centrado horizontal y margen superior/inferior */
+    position: relative;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .home-logo {
+    width: 400px;  // Ajusta el tamaño de la imagen
+    height: auto;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 767px) {
+    padding: 30px 10px;
 
     h1 {
-        font-size: 2.5rem;
-        color: #174288;
-        position: relative;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
+      font-size: 2rem;
     }
 
-    @media (max-width: 767px) {
-        padding: 30px 10px;
-
-        h1 {
-            font-size: 2rem;
-        }
+    .home-logo {
+      width: 400px;  // Ajusta el tamaño de la imagen en pantallas pequeñas
     }
+  }
 }

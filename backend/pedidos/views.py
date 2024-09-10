@@ -129,7 +129,6 @@ class PedidoPrintView(views.APIView):
             ep.write(b'\n\n\n\n\n')
             ep.write(b'\x1d\x56\x00')
         finally:
-            # Liberar la interfaz USB
             usb.util.release_interface(dev, interface_number)
             usb.util.dispose_resources(dev)
             print("Información del paciente impresa y dispositivo liberado con éxito.")

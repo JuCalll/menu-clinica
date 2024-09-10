@@ -1,73 +1,75 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
 .pedidos-pendientes {
-    font-family: 'Syne', sans-serif;
-    padding: 20px;
+  font-family: "Syne", sans-serif;
+  padding: 20px;
 
-    h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #174288;
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #174288;
+  }
+
+  .ant-collapse-header {
+    background-color: #e6f7ff;
+    font-weight: bold;
+  }
+
+  .ant-collapse-content-box {
+    padding: 15px;
+    background-color: #f9f9f9;
+  }
+
+  .section {
+    margin-bottom: 20px;
+
+    h4 {
+      color: #174288;
+      margin-bottom: 10px;
     }
 
-    .ant-collapse-header {
-        background-color: #e6f7ff;
-        font-weight: bold;
+    h5 {
+      color: #333;
+      margin-bottom: 5px;
     }
 
-    .ant-collapse-content-box {
-        padding: 15px;
-        background-color: #f9f9f9;
+    .custom-button {
+      margin-top: 10px;
+      background-color: #174288;
+      border-color: #174288;
+      font-weight: 700;
+
+      &:hover,
+      &:focus {
+        background-color: #00a7e2;
+        border-color: #00a7e2;
+      }
+
+      &:disabled {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        cursor: not-allowed;
+      }
     }
 
-    .section {
-        margin-bottom: 20px;
+    .buttons-container {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  }
 
-        h4 {
-            color: #174288;
-            margin-bottom: 10px;
-        }
+  .additional-options {
+    margin-top: 20px;
 
-        h5 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .custom-button {
-            margin-top: 10px;
-            background-color: #174288;
-            border-color: #174288;
-            font-weight: 700;
-
-            &:hover,
-            &:focus {
-                background-color: #00A7E2;
-                border-color: #00A7E2;
-            }
-
-            &:disabled {
-                background-color: #6c757d;
-                border-color: #6c757d;
-                cursor: not-allowed;
-            }
-        }
-
-        .buttons-container {
-            display: flex;
-            justify-content: flex-start;
-            gap: 10px; /* Espaciado entre botones */
-            margin-top: 10px; /* Espacio respecto a las opciones */
-        }
+    h4 {
+      color: #174288;
+      margin-bottom: 10px;
     }
 
-    .additional-options {
-        margin-top: 20px;
-
-        h4 {
-            color: #174288;
-            margin-bottom: 10px;
-        }
-
-        div {
-            margin-bottom: 5px;
-        }
+    div {
+      margin-bottom: 5px;
     }
+  }
 }

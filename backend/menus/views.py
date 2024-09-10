@@ -1,7 +1,7 @@
 from rest_framework import generics
 from .models import Menu
 from .serializers import MenuSerializer
-from logs.models import LogEntry  # Importar el modelo de LogEntry
+from logs.models import LogEntry  
 
 class MenuListCreateView(generics.ListCreateAPIView):
     queryset = Menu.objects.all()

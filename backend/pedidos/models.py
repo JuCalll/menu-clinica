@@ -15,7 +15,7 @@ class Pedido(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendiente')
     fecha_pedido = models.DateTimeField(auto_now_add=True)
     adicionales = models.JSONField(default=dict, blank=True)
-    sectionStatus = models.JSONField(default=dict, blank=True)  # Campo para almacenar el estado de las secciones
+    sectionStatus = models.JSONField(default=dict, blank=True)  
 
     def __str__(self):
         return f"Pedido {self.id} - {self.paciente.name} - {self.status}"

@@ -1,13 +1,13 @@
 from rest_framework import generics
 from .models import Paciente
 from .serializers import PacienteSerializer
-from logs.models import LogEntry  # Importar el modelo de LogEntry
+from logs.models import LogEntry  
 
 class PacienteListCreateView(generics.ListCreateAPIView):
     serializer_class = PacienteSerializer
 
     def get_queryset(self):
-        return Paciente.objects.filter(activo=True)  # Solo mostrar pacientes activos en la vista de listado
+        return Paciente.objects.filter(activo=True)  
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)

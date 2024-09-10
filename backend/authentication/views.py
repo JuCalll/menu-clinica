@@ -41,7 +41,7 @@ class LoginView(generics.GenericAPIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'user': {
-                    'role': user.role,  # Devolver el rol del usuario
+                    'role': user.role,  
                 }
             })
         else:
@@ -52,7 +52,7 @@ class UserListView(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
-        return CustomUser.objects.filter(activo=True)  # Filtrar solo los usuarios activos
+        return CustomUser.objects.filter(activo=True)  
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
