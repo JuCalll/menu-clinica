@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Spin, Collapse } from "antd";
+import { Button, Spin, Collapse, Card, Modal } from "antd";
 import { getPedidos, updatePedido } from "../services/api";
 import "../styles/PedidosPendientes.scss";
 import api from "../axiosConfig";
@@ -12,10 +12,8 @@ const PedidosPendientes = () => {
 
   useEffect(() => {
     const fetchPedidos = async () => {
-      console.log("Fetching pedidos...");
       try {
         const response = await getPedidos();
-        console.log("Pedidos fetched:", response);
         setPedidos(response.filter((pedido) => pedido.status !== "completado"));
         setLoading(false);
       } catch (error) {
@@ -28,9 +26,6 @@ const PedidosPendientes = () => {
   }, []);
 
   const handleSectionStatusChange = async (pedidoId, sectionTitle) => {
-    console.log(
-      `Changing section status for pedido ID: ${pedidoId}, section: ${sectionTitle}`
-    );
     try {
       const pedido = pedidos.find((p) => p.id === pedidoId);
       const updatedSections = {
@@ -50,11 +45,34 @@ const PedidosPendientes = () => {
         sectionStatus: updatedSections,
       };
 
-      await updatePedido(pedidoId, updatedPedido);
+      // Mostrar alerta solo si se completa la última sección
+      if (allSectionsCompleted) {
+        Modal.confirm({
+          title: "Pedido Completado",
+          content:
+            "Has completado todas las secciones del pedido. El pedido será marcado como 'Completado'. ¿Estás seguro de que deseas continuar?",
+          onOk: async () => {
+            await updatePedido(pedidoId, updatedPedido);
 
-      setPedidos((prevPedidos) =>
-        prevPedidos
-          .map((p) =>
+            setPedidos((prevPedidos) =>
+              prevPedidos
+                .map((p) =>
+                  p.id === pedidoId
+                    ? {
+                        ...p,
+                        sectionStatus: updatedSections,
+                        status: updatedPedido.status,
+                      }
+                    : p
+                )
+                .filter((p) => p.status !== "completado")
+            );
+          },
+        });
+      } else {
+        await updatePedido(pedidoId, updatedPedido);
+        setPedidos((prevPedidos) =>
+          prevPedidos.map((p) =>
             p.id === pedidoId
               ? {
                   ...p,
@@ -63,8 +81,8 @@ const PedidosPendientes = () => {
                 }
               : p
           )
-          .filter((p) => p.status !== "completado")
-      );
+        );
+      }
     } catch (error) {
       console.error("Error updating section status", error);
     }
@@ -72,7 +90,6 @@ const PedidosPendientes = () => {
 
   const handlePrint = async (pedido) => {
     const url = `/pedidos/${pedido.id}/print/`;
-    console.log("Imprimiendo pedido ID:", pedido.id);
     try {
       const response = await api.post(url);
       if (response.status === 200) {
@@ -87,6 +104,13 @@ const PedidosPendientes = () => {
     } catch (error) {
       console.error("Error al intentar imprimir el pedido:", error);
     }
+  };
+
+  const formatTitle = (title) => {
+    return title
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
   const renderSelectedOptions = (section, optionsType, pedido) => {
@@ -124,12 +148,10 @@ const PedidosPendientes = () => {
 
       return optionsToRender && optionsToRender.length > 0 ? (
         <div key={section.id} className="section">
-          <h4>{section.titulo}</h4>
+          <h4>{formatTitle(section.titulo)}</h4>
           {optionsToRender.map((optionType) => (
             <div key={optionType}>
-              <h5>
-                {optionType.charAt(0).toUpperCase() + optionType.slice(1)}
-              </h5>
+              <h5>{formatTitle(optionType)}</h5>
               {renderSelectedOptions(section, optionType, pedido)}
             </div>
           ))}
@@ -170,18 +192,23 @@ const PedidosPendientes = () => {
             <Panel
               header={`Pedido ${pedido.id} - ${pedido.paciente.name} (Hab: ${pedido.paciente.cama.habitacion.nombre}, Cama: ${pedido.paciente.cama.nombre})`}
               key={pedido.id}
+              className="pedido-panel"
             >
-              {renderSections(pedido)}
-              <div className="additional-options">
-                <h4>Opciones Adicionales del Menú</h4>
-                <div>Leche: {pedido.adicionales.leche}</div>
-                <div>Bebida: {pedido.adicionales.bebida}</div>
-                <div>
-                  Azúcar/Panela: {pedido.adicionales.azucarPanela.join(", ")}
+              <Card className="pedido-card">
+                {renderSections(pedido)}
+                <div className="additional-options">
+                  <h4>Opciones Adicionales del Menú</h4>
+                  <div>Leche: {pedido.adicionales.leche}</div>
+                  <div>Bebida: {pedido.adicionales.bebida}</div>
+                  <div>
+                    Azúcar/Panela: {pedido.adicionales.azucarPanela.join(", ")}
+                  </div>
+                  <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                  <div>
+                    Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}
+                  </div>
                 </div>
-                <div>Vegetales: {pedido.adicionales.vegetales}</div>
-                <div>Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}</div>
-              </div>
+              </Card>
             </Panel>
           ))
         ) : (

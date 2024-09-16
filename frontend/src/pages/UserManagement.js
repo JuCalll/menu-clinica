@@ -11,7 +11,7 @@ import {
   Switch,
 } from "antd";
 import { registerUser, getUsuarios, updateUser } from "../services/api";
-import { InfoCircleOutlined } from "@ant-design/icons";  // Importar ícono
+import { InfoCircleOutlined } from "@ant-design/icons"; // Importar ícono
 import "../styles/UserManagament.scss";
 
 const { Option } = Select;
@@ -95,7 +95,6 @@ const UserManagement = () => {
     setIsEditModalVisible(true);
   };
 
-
   const handleUpdateUser = async (values) => {
     console.log("Datos enviados al actualizar:", values); // Log de los datos enviados
     try {
@@ -106,7 +105,7 @@ const UserManagement = () => {
         message: "Usuario actualizado",
         description: "El usuario ha sido actualizado correctamente",
       });
-      setIsEditModalVisible(false);  // Cerrar el modal después de la actualización
+      setIsEditModalVisible(false); // Cerrar el modal después de la actualización
     } catch (error) {
       console.error(
         "Error actualizando el usuario:",
@@ -128,9 +127,7 @@ const UserManagement = () => {
 
   const columns = [
     { title: "Nombre", dataIndex: "name", key: "name" },
-    { title: "Cédula", dataIndex: "cedula", key: "cedula" },
     { title: "Usuario", dataIndex: "username", key: "username" },
-    { title: "Email", dataIndex: "email", key: "email" },
     { title: "Rol", dataIndex: "role", key: "role" },
     {
       title: "",
@@ -159,7 +156,7 @@ const UserManagement = () => {
           loading={loading}
           rowKey="id"
           pagination={false}
-          scroll={{ x: 10 }}
+          scroll={{ x: "100%" }}
         />
       </div>
 
@@ -252,12 +249,25 @@ const UserManagement = () => {
         onCancel={() => setIsDetailsModalVisible(false)}
         footer={null}
       >
-        <p><strong>Nombre:</strong> {editingUser?.name}</p>
-        <p><strong>Cédula:</strong> {editingUser?.cedula}</p>
-        <p><strong>Usuario:</strong> {editingUser?.username}</p>
-        <p><strong>Email:</strong> {editingUser?.email}</p>
-        <p><strong>Ingresos:</strong> {editingUser?.ingreso_count > 1 ? "Nuevo ingreso" : "Primera vez"}</p>
-        <p><strong>Rol:</strong> {editingUser?.role}</p>
+        <p>
+          <strong>Nombre:</strong> {editingUser?.name}
+        </p>
+        <p>
+          <strong>Cédula:</strong> {editingUser?.cedula}
+        </p>
+        <p>
+          <strong>Usuario:</strong> {editingUser?.username}
+        </p>
+        <p>
+          <strong>Email:</strong> {editingUser?.email}
+        </p>
+        <p>
+          <strong>Ingresos:</strong>{" "}
+          {editingUser?.ingreso_count > 1 ? "Nuevo ingreso" : "Primera vez"}
+        </p>
+        <p>
+          <strong>Rol:</strong> {editingUser?.role}
+        </p>
         <Button type="primary" onClick={() => handleEditUser(editingUser)}>
           Editar
         </Button>

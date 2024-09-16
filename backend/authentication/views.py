@@ -41,7 +41,8 @@ class LoginView(generics.GenericAPIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'user': {
-                    'role': user.role,  
+                    'role': user.role,
+                    'name': user.name  # Aquí devolvemos el nombre completo del usuario
                 }
             })
         else:

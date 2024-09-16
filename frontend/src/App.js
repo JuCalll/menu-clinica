@@ -28,7 +28,12 @@ function App() {
   const [isWarningVisible, setIsWarningVisible] = useState(false);
 
   useEffect(() => {
-    inactivityTime(setIsWarningVisible);
+    const token = localStorage.getItem("token");
+
+    // Solo iniciamos el temporizador de inactividad si el usuario está autenticado
+    if (token) {
+      inactivityTime(setIsWarningVisible);
+    }
   }, []);
 
   const handleWarningOk = () => {

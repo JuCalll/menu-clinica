@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Collapse, Spin, Select } from "antd";
+import { Collapse, Spin, Select, Card } from "antd";
 import { getPacientes, getPedidosCompletados } from "../services/api";
 import "../styles/HistorialPedidos.scss";
 
@@ -56,9 +56,13 @@ const HistorialPedidos = () => {
     );
   };
 
-  if (loading) {
-    return <Spin />;
-  }
+  // Función para capitalizar los títulos y reemplazar guiones bajos con espacios
+  const formatTitle = (title) => {
+    return title
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
 
   const renderSelectedOptions = (section, optionsType, pedido) => {
     return section[optionsType]
@@ -93,13 +97,11 @@ const HistorialPedidos = () => {
     return pedido.menu.sections.map((section) => {
       const optionsToRender = sectionsToShow[section.titulo];
       return optionsToRender && optionsToRender.length > 0 ? (
-        <div key={section.id}>
-          <h4>{section.titulo}</h4>
+        <div key={section.id} className="section">
+          <h4>{formatTitle(section.titulo)}</h4>
           {optionsToRender.map((optionType) => (
             <div key={optionType}>
-              <h5>
-                {optionType.charAt(0).toUpperCase() + optionType.slice(1)}
-              </h5>
+              <h5>{formatTitle(optionType)}</h5>
               {renderSelectedOptions(section, optionType, pedido)}
             </div>
           ))}
@@ -107,6 +109,10 @@ const HistorialPedidos = () => {
       ) : null;
     });
   };
+
+  if (loading) {
+    return <Spin />;
+  }
 
   return (
     <div className="historial-pedidos">
@@ -134,22 +140,27 @@ const HistorialPedidos = () => {
             <Panel
               header={`Pedido ${pedido.id} - ${pedido.paciente.name}`}
               key={pedido.id}
+              className="pedido-panel"
             >
-              <h4>
-                Fecha del Pedido:{" "}
-                {new Date(pedido.fecha_pedido).toLocaleString()}
-              </h4>
-              {renderSections(pedido)}
-              <div className="adicionales">
-                <h4>Opciones Adicionales del Menú</h4>
-                <div>Leche: {pedido.adicionales.leche}</div>
-                <div>Bebida: {pedido.adicionales.bebida}</div>
-                <div>
-                  Azúcar/Panela: {pedido.adicionales.azucarPanela.join(", ")}
+              <Card className="pedido-card">
+                <h4>
+                  Fecha del Pedido:{" "}
+                  {new Date(pedido.fecha_pedido).toLocaleString()}
+                </h4>
+                {renderSections(pedido)}
+                <div className="adicionales">
+                  <h4>Opciones Adicionales del Menú</h4>
+                  <div>Leche: {pedido.adicionales.leche}</div>
+                  <div>Bebida: {pedido.adicionales.bebida}</div>
+                  <div>
+                    Azúcar/Panela: {pedido.adicionales.azucarPanela.join(", ")}
+                  </div>
+                  <div>Vegetales: {pedido.adicionales.vegetales}</div>
+                  <div>
+                    Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}
+                  </div>
                 </div>
-                <div>Vegetales: {pedido.adicionales.vegetales}</div>
-                <div>Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}</div>
-              </div>
+              </Card>
             </Panel>
           ))}
         </Collapse>

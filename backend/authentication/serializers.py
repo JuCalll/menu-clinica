@@ -43,9 +43,12 @@ class LoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Invalid credentials.")
             if not user.is_active:
                 raise serializers.ValidationError("User is inactive.")
+            
             data['user'] = user
             data['role'] = user.role
+            data['name'] = user.name  
         else:
             raise serializers.ValidationError("Both username and password are required.")
         
         return data
+

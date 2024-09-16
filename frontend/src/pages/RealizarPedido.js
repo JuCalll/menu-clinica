@@ -6,6 +6,14 @@ import "../styles/RealizarPedido.scss";
 const { Option } = Select;
 const { Panel } = Collapse;
 
+// Mapeo de nombres de secciones
+const sectionNames = {
+  adicionales: "Adicionales",
+  platos_principales: "Platos Principales",
+  acompanantes: "Acompañantes", // Mapeo correcto de "acompanantes" a "Acompañantes"
+  bebidas: "Bebidas",
+};
+
 const RealizarPedido = () => {
   const [pacientes, setPacientes] = useState([]);
   const [menus, setMenus] = useState([]);
@@ -19,6 +27,7 @@ const RealizarPedido = () => {
     vegetales: "",
     golosina: false,
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
@@ -40,14 +49,12 @@ const RealizarPedido = () => {
 
   const handlePacienteChange = (value) => {
     setSelectedPaciente(value);
-    console.log("Selected Paciente:", value);
   };
 
   const handleMenuChange = (value) => {
     const menu = menus.find((menu) => menu.id === value);
     setSelectedMenu(menu);
     setSelectedOptions({});
-    console.log("Selected Menu:", menu);
   };
 
   const handleOptionChange = (sectionName, optionType, optionId, checked) => {
@@ -76,68 +83,39 @@ const RealizarPedido = () => {
         ].filter((id) => id !== optionId);
       }
 
-      console.log("Updated Selected Options:", newOptions);
       return newOptions;
     });
   };
 
-  const validateSelections = () => {
-    const errors = [];
+  const validateForm = () => {
+    const newErrors = {};
 
-    const sectionsValidation = {
-      Adicional: { adicionales: { max: 1 } },
-      Algo: { adicionales: { max: 1 }, bebidas: { max: 1 } },
-      Onces: { adicionales: { max: 1 } },
-      Desayuno: {
-        adicionales: { max: 1 },
-        platos_principales: { max: 1 },
-        acompanantes: { max: 2 },
-        bebidas: { max: 1 },
-      },
-      Almuerzo: {
-        adicionales: { max: 1 },
-        platos_principales: { max: 1 },
-        acompanantes: { max: 2 },
-        bebidas: { max: 1 },
-      },
-      Cena: {
-        adicionales: { max: 1 },
-        platos_principales: { max: 1 },
-        acompanantes: { max: 2 },
-        bebidas: { max: 1 },
-      },
-    };
-
-    for (const [sectionName, rules] of Object.entries(sectionsValidation)) {
-      const sectionOptions = selectedOptions[sectionName] || {};
-      for (const [optionType, rule] of Object.entries(rules)) {
-        const selectedCount = (sectionOptions[optionType] || []).length;
-        if (rule.max !== undefined && selectedCount > rule.max) {
-          errors.push(
-            `${sectionName} - ${optionType}: Máximo ${rule.max} opciones`
-          );
-        }
-      }
+    if (!selectedPaciente) {
+      newErrors.paciente = "Debe seleccionar un paciente.";
     }
 
-    return errors;
+    if (!selectedMenu) {
+      newErrors.menu = "Debe seleccionar un menú.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const showConfirmModal = () => {
-    const validationErrors = validateSelections();
-    if (validationErrors.length > 0) {
+    if (validateForm()) {
+      setConfirmVisible(true);
+    } else {
       Modal.error({
         title: "Errores de Validación",
         content: (
           <ul>
-            {validationErrors.map((error, index) => (
+            {Object.values(errors).map((error, index) => (
               <li key={index}>{error}</li>
             ))}
           </ul>
         ),
       });
-    } else {
-      setConfirmVisible(true);
     }
   };
 
@@ -168,12 +146,19 @@ const RealizarPedido = () => {
         adicionales: additionalOptions,
       };
 
-      console.log("Final Pedido Data:", pedido);
-
       await createPedido(pedido);
+      Modal.success({
+        title: "Pedido Realizado",
+        content: "El pedido se ha realizado correctamente.",
+      });
+
       resetForm();
     } catch (error) {
       console.error("Error creating pedido", error);
+      Modal.error({
+        title: "Error",
+        content: "Hubo un error al realizar el pedido. Inténtelo de nuevo.",
+      });
     }
   };
 
@@ -188,18 +173,11 @@ const RealizarPedido = () => {
       vegetales: "",
       golosina: false,
     });
-    console.log("Form Reset.");
+    setErrors({});
   };
 
   const handleCancel = () => {
     setConfirmVisible(false);
-  };
-
-  const filterOption = (input, option) => {
-    return (
-      option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >=
-      0
-    );
   };
 
   if (loading) {
@@ -213,7 +191,6 @@ const RealizarPedido = () => {
         <label>Paciente</label>
         <Select
           showSearch
-          filterOption={filterOption}
           value={selectedPaciente}
           onChange={handlePacienteChange}
           style={{ width: "100%" }}
@@ -226,6 +203,7 @@ const RealizarPedido = () => {
             </Option>
           ))}
         </Select>
+        {errors.paciente && <p className="error">{errors.paciente}</p>}
       </div>
       <div className="form-item">
         <label>Menú</label>
@@ -240,7 +218,9 @@ const RealizarPedido = () => {
             </Option>
           ))}
         </Select>
+        {errors.menu && <p className="error">{errors.menu}</p>}
       </div>
+
       {selectedMenu &&
         selectedMenu.sections.map((section) => (
           <Collapse key={section.id} className="section-collapse">
@@ -251,7 +231,7 @@ const RealizarPedido = () => {
                   key !== "titulo" &&
                   section[key].length > 0 && (
                     <div key={key} className="option-group">
-                      <h4>{key.charAt(0).toUpperCase() + key.slice(1)}</h4>
+                      <h4>{sectionNames[key] || key}</h4>
                       {section[key].map((option) => (
                         <Checkbox
                           key={option.id}
@@ -276,77 +256,93 @@ const RealizarPedido = () => {
             </Panel>
           </Collapse>
         ))}
-      <div className="additional-options">
-        <h3>Opciones Adicionales</h3>
-        <div className="form-item">
-          <label>Leche</label>
-          <Select
-            value={additionalOptions.leche}
-            onChange={(value) =>
-              setAdditionalOptions((prev) => ({ ...prev, leche: value }))
-            }
-            style={{ width: "100%" }}
-          >
-            <Option value="entera">Leche entera</Option>
-            <Option value="deslactosada">Leche deslactosada</Option>
-          </Select>
+
+      {selectedPaciente && selectedMenu && (
+        <div className="additional-options">
+          <h3>Opciones Adicionales</h3>
+
+          <div className="form-item">
+            <label>Leche</label>
+            <Select
+              value={additionalOptions.leche}
+              onChange={(value) =>
+                setAdditionalOptions((prev) => ({ ...prev, leche: value }))
+              }
+              style={{ width: "100%" }}
+            >
+              <Option value="">Ninguno</Option>
+              <Option value="entera">Leche entera</Option>
+              <Option value="deslactosada">Leche deslactosada</Option>
+            </Select>
+            {errors.leche && <p className="error">{errors.leche}</p>}
+          </div>
+
+          <div className="form-item">
+            <label>Bebida</label>
+            <Select
+              value={additionalOptions.bebida}
+              onChange={(value) =>
+                setAdditionalOptions((prev) => ({ ...prev, bebida: value }))
+              }
+              style={{ width: "100%" }}
+            >
+              <Option value="">Ninguno</Option>
+              <Option value="leche">Bebida en leche</Option>
+              <Option value="agua">Bebida en agua</Option>
+            </Select>
+            {errors.bebida && <p className="error">{errors.bebida}</p>}
+          </div>
+
+          <div className="form-item">
+            <label>Vegetales</label>
+            <Select
+              value={additionalOptions.vegetales}
+              onChange={(value) =>
+                setAdditionalOptions((prev) => ({ ...prev, vegetales: value }))
+              }
+              style={{ width: "100%" }}
+            >
+              <Option value="">Ninguno</Option>
+              <Option value="crudos">Vegetales Crudos</Option>
+              <Option value="calientes">Vegetales Calientes</Option>
+            </Select>
+            {errors.vegetales && <p className="error">{errors.vegetales}</p>}
+          </div>
+
+          {/* Asegúrate de que esta clase coincida con el SCSS */}
+          <div className="form-item azucar-panela">
+            <label>Azúcar y/o Panela:</label>
+            <Checkbox.Group
+              value={additionalOptions.azucarPanela}
+              onChange={(checkedValues) =>
+                setAdditionalOptions((prev) => ({
+                  ...prev,
+                  azucarPanela: checkedValues,
+                }))
+              }
+            >
+              <Checkbox value="azucar">Azúcar</Checkbox>
+              <Checkbox value="panela">Panela</Checkbox>
+            </Checkbox.Group>
+          </div>
+
+          {/* Asegúrate de que esta clase coincida con el SCSS */}
+          <div className="form-item golosina">
+            <label>Golosina Opcional:</label>
+            <Checkbox
+              checked={additionalOptions.golosina}
+              onChange={(e) =>
+                setAdditionalOptions((prev) => ({
+                  ...prev,
+                  golosina: e.target.checked,
+                }))
+              }
+            >
+              Golosina
+            </Checkbox>
+          </div>
         </div>
-        <div className="form-item">
-          <label>Bebida</label>
-          <Select
-            value={additionalOptions.bebida}
-            onChange={(value) =>
-              setAdditionalOptions((prev) => ({ ...prev, bebida: value }))
-            }
-            style={{ width: "100%" }}
-          >
-            <Option value="leche">Bebida en leche</Option>
-            <Option value="agua">Bebida en agua</Option>
-          </Select>
-        </div>
-        <div className="form-item">
-          <label>Azúcar y/o Panela:</label>
-          <Checkbox.Group
-            value={additionalOptions.azucarPanela}
-            onChange={(checkedValues) =>
-              setAdditionalOptions((prev) => ({
-                ...prev,
-                azucarPanela: checkedValues,
-              }))
-            }
-          >
-            <Checkbox value="azucar">Azúcar</Checkbox>
-            <Checkbox value="panela">Panela</Checkbox>
-          </Checkbox.Group>
-        </div>
-        <div className="form-item">
-          <label>Vegetales</label>
-          <Select
-            value={additionalOptions.vegetales}
-            onChange={(value) =>
-              setAdditionalOptions((prev) => ({ ...prev, vegetales: value }))
-            }
-            style={{ width: "100%" }}
-          >
-            <Option value="crudos">Vegetales Crudos</Option>
-            <Option value="calientes">Vegetales Calientes</Option>
-          </Select>
-        </div>
-        <div className="form-item">
-          <label>Golosina Opcional:</label>
-          <Checkbox
-            checked={additionalOptions.golosina}
-            onChange={(e) =>
-              setAdditionalOptions((prev) => ({
-                ...prev,
-                golosina: e.target.checked,
-              }))
-            }
-          >
-            Golosina
-          </Checkbox>
-        </div>
-      </div>
+      )}
       <Button
         onClick={showConfirmModal}
         type="primary"
