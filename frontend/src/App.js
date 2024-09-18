@@ -1,4 +1,3 @@
-// App.js
 import React, { useEffect, useState } from "react";
 import {
   HashRouter as Router,
@@ -10,7 +9,7 @@ import { Modal } from "antd";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import inactivityTime from "./utils/inactivityHandler";
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 import api from "./axiosConfig";
 
 import Home from "./pages/Home";
@@ -28,8 +27,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import "./styles/App.scss";
 
 function App() {
-  const [isWarningVisible, setIsWarningVisible] =
-    useState(false);
+  const [isWarningVisible, setIsWarningVisible] = useState(false);
 
   useEffect(() => {
     let cleanupInactivity;
@@ -42,32 +40,32 @@ function App() {
         const currentTime = Date.now() / 1000;
         return decodedToken.exp < currentTime;
       } catch (error) {
-        console.error("Error al decodificar el token:", error);
         return true;
       }
     };
 
-    const initializeApp = async () => {
+    const initializeApp = async (location) => {
+      const currentPath = location.hash ? location.hash.substring(1) : location.pathname; 
+
+      if (currentPath === "/login") {
+        return;
+      }
+
       let token = localStorage.getItem("token");
       let refresh = localStorage.getItem("refresh");
 
       if (token && !isTokenExpired(token)) {
-        console.log("Token válido, iniciando manejador de inactividad.");
         cleanupInactivity = inactivityTime(setIsWarningVisible);
         scheduleTokenRefresh();
       } else if (refresh && !isTokenExpired(refresh)) {
-        console.log("Token de acceso expirado, intentando refrescar.");
         try {
           await refreshToken();
-          console.log("Token refrescado exitosamente.");
           cleanupInactivity = inactivityTime(setIsWarningVisible);
           scheduleTokenRefresh();
         } catch (error) {
-          console.error("No se pudo refrescar el token:", error);
           handleWarningCancel();
         }
       } else {
-        console.log("Tokens inválidos o expirados, redirigiendo al login.");
         handleWarningCancel();
       }
     };
@@ -75,7 +73,6 @@ function App() {
     const scheduleTokenRefresh = () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.log("No hay token disponible para programar el refresco.");
         handleWarningCancel();
         return;
       }
@@ -86,95 +83,66 @@ function App() {
       const refreshTime = (timeUntilExpiry - 300) * 1000;
 
       if (refreshTime > 0) {
-        console.log(
-          `Programando refresco del token en ${refreshTime / 1000} segundos.`
-        );
-        tokenRefreshTimeout = setTimeout(
-          async () => {
-            try {
-              await refreshToken();
-              scheduleTokenRefresh(); 
-            } catch (error) {
-              console.error("Error al refrescar el token:", error);
-              handleWarningCancel();
-            }
-          },
-          refreshTime
-        );
+        tokenRefreshTimeout = setTimeout(async () => {
+          try {
+            await refreshToken();
+            scheduleTokenRefresh();
+          } catch (error) {
+            handleWarningCancel();
+          }
+        }, refreshTime);
       } else {
-        console.log("El token está próximo a expirar o ya ha expirado.");
         handleWarningCancel();
       }
     };
 
-    initializeApp();
+    const location = window.location;
+    initializeApp(location);
 
     return () => {
       if (cleanupInactivity) cleanupInactivity();
-      if (tokenRefreshTimeout)
-        clearTimeout(tokenRefreshTimeout);
+      if (tokenRefreshTimeout) clearTimeout(tokenRefreshTimeout);
     };
   }, []);
 
   const refreshToken = async () => {
     const refresh = localStorage.getItem("refresh");
-    if (!refresh)
-      throw new Error("No hay token de refresco disponible.");
+    if (!refresh) throw new Error("No hay token de refresco disponible.");
 
     try {
-      const response = await api.post(
-        "/auth/token/refresh/",
-        { refresh }
-      );
+      const response = await api.post("/auth/token/refresh/", { refresh });
 
       if (response.data && response.data.access) {
         localStorage.setItem("token", response.data.access);
-        api.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${response.data.access}`;
+        api.defaults.headers.common["Authorization"] = `Bearer ${response.data.access}`;
 
         if (response.data.refresh) {
-          localStorage.setItem(
-            "refresh",
-            response.data.refresh
-          );
+          localStorage.setItem("refresh", response.data.refresh);
         }
-        console.log("Token refrescado y almacenado correctamente.");
       } else {
         throw new Error("No se pudo refrescar el token.");
       }
     } catch (error) {
-      console.error("Error en la solicitud de refresco:", error);
       throw error;
     }
   };
 
   const handleWarningOk = async () => {
-    console.log("Usuario confirmó que está presente.");
     try {
       await refreshToken();
       setIsWarningVisible(false);
     } catch (error) {
-      console.error(
-        "Error al refrescar el token:",
-        error
-      );
       handleWarningCancel();
     }
   };
 
   const handleWarningCancel = () => {
-    console.log("Cerrando sesión y redirigiendo al login.");
     localStorage.removeItem("token");
     localStorage.removeItem("refresh");
     localStorage.removeItem("role");
     localStorage.removeItem("name");
     window.location.href = "/login";
   };
-
-  useEffect(() => {
-    console.log("Estado de isWarningVisible:", isWarningVisible);
-  }, [isWarningVisible]);
 
   return (
     <Router>
@@ -186,16 +154,11 @@ function App() {
         okText="Estoy aquí"
         cancelText="Cerrar sesión"
       >
-        <p>
-          Ha pasado un tiempo desde su última actividad.
-          Por favor, confirme que sigue aquí.
-        </p>
+        <p>Ha pasado un tiempo desde su última actividad. Por favor, confirme que sigue aquí.</p>
       </Modal>
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
-
         <Route path="/login" element={<Login />} />
-
         <Route
           path="/"
           element={
@@ -215,9 +178,7 @@ function App() {
           <Route
             path="/menus"
             element={
-              <PrivateRoute
-                requiredRoles={["admin", "coordinador"]}
-              >
+              <PrivateRoute requiredRoles={["admin", "coordinador"]}>
                 <MenuPage />
               </PrivateRoute>
             }
@@ -225,13 +186,7 @@ function App() {
           <Route
             path="/realizar-pedido"
             element={
-              <PrivateRoute
-                requiredRoles={[
-                  "admin",
-                  "jefe_enfermeria",
-                  "coordinador",
-                ]}
-              >
+              <PrivateRoute requiredRoles={["admin", "jefe_enfermeria", "coordinador"]}>
                 <RealizarPedido />
               </PrivateRoute>
             }
@@ -239,13 +194,7 @@ function App() {
           <Route
             path="/pedidos/pendientes"
             element={
-              <PrivateRoute
-                requiredRoles={[
-                  "admin",
-                  "coordinador",
-                  "auxiliar",
-                ]}
-              >
+              <PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}>
                 <PedidosPendientes />
               </PrivateRoute>
             }
@@ -253,13 +202,7 @@ function App() {
           <Route
             path="/pedidos/historial"
             element={
-              <PrivateRoute
-                requiredRoles={[
-                  "admin",
-                  "coordinador",
-                  "auxiliar",
-                ]}
-              >
+              <PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}>
                 <HistorialPedidos />
               </PrivateRoute>
             }
@@ -267,12 +210,7 @@ function App() {
           <Route
             path="/gestion-datos"
             element={
-              <PrivateRoute
-                requiredRoles={[
-                  "admin",
-                  "jefe_enfermeria",
-                ]}
-              >
+              <PrivateRoute requiredRoles={["admin", "jefe_enfermeria"]}>
                 <DataManagement />
               </PrivateRoute>
             }

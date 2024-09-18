@@ -1,4 +1,3 @@
-// axiosConfig.js
 import axios from "axios";
 import { jwtDecode } from 'jwt-decode';
 
@@ -16,7 +15,6 @@ const isTokenExpired = (token) => {
     const currentTime = Date.now() / 1000;
     return decodedToken.exp < currentTime;
   } catch (error) {
-    console.error("Error al decodificar el token:", error);
     return true;
   }
 };
@@ -39,16 +37,12 @@ api.interceptors.request.use(
             api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
             if (response.data.refresh) {
-              localStorage.setItem(
-                "refresh",
-                response.data.refresh
-              );
+              localStorage.setItem("refresh", response.data.refresh);
             }
           } else {
             throw new Error("No se pudo refrescar el token.");
           }
         } catch (error) {
-          console.error("Error al refrescar el token:", error);
           localStorage.removeItem("token");
           localStorage.removeItem("refresh");
           window.location.href = "/login";
@@ -77,7 +71,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.log("Error 401: No autorizado. Redirigiendo al login.");
       localStorage.removeItem("token");
       localStorage.removeItem("refresh");
       window.location.href = "/login";

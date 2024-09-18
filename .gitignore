@@ -4,6 +4,9 @@ node_modules/
 # Python bytecode files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.py[cod]
 
 # Environment variables
 .env
@@ -19,3 +22,52 @@ build/
 
 # Windows metadata files
 Thumbs.db
+
+# Logs and temporary files
+*.log
+*.pot
+*.swp  # Vim swap files
+
+# Distribution / Packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django related files
+*.log
+staticfiles/
+media/
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# pytest cache
+.pytest_cache/
+
+# Docker related files
+docker-compose.override.yml
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# MyPy type checker cache
+.mypy_cache/
+dmypy.json

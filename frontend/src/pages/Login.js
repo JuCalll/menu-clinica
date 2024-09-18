@@ -1,4 +1,3 @@
-// Login.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input, Button, Alert } from "antd";
@@ -29,7 +28,6 @@ const Login = () => {
       const currentTime = Date.now() / 1000;
       return decodedToken.exp > currentTime;
     } catch (error) {
-      console.error("Error al decodificar el token:", error);
       return false;
     }
   };
@@ -87,7 +85,6 @@ const Login = () => {
           "No se pudo conectar al servidor. Por favor, verifique su conexión."
         );
       }
-      console.error("Error al iniciar sesión:", error);
     } finally {
       setLoading(false);
     }
