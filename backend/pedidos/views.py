@@ -131,4 +131,3 @@ class PedidoPrintView(views.APIView):
         finally:
             usb.util.release_interface(dev, interface_number)
             usb.util.dispose_resources(dev)
-            print("Información del paciente impresa y dispositivo liberado con éxito.")

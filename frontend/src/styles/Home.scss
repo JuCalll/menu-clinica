@@ -9,7 +9,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 800px;
   margin: 50px auto;
-  text-align: center;  // Asegura que el contenido esté centrado
+  text-align: center;  
 
   h1 {
     font-size: 2.5rem;
@@ -20,7 +20,7 @@
   }
 
   .home-logo {
-    width: 400px;  // Ajusta el tamaño de la imagen
+    width: 400px;  
     height: auto;
     margin-top: 20px;
   }
@@ -33,7 +33,7 @@
     }
 
     .home-logo {
-      width: 400px;  // Ajusta el tamaño de la imagen en pantallas pequeñas
+      width: 400px;  
     }
   }
 }

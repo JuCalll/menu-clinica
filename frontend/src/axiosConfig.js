@@ -1,7 +1,7 @@
+// axiosConfig.js
 import axios from "axios";
-import { jwtDecode } from 'jwt-decode'; // Para decodificar y verificar el token
+import { jwtDecode } from 'jwt-decode';
 
-// Crear instancia de axios
 const api = axios.create({
   baseURL:
     process.env.NODE_ENV === "development"
@@ -9,87 +9,79 @@ const api = axios.create({
       : "http://172.168.11.176:8000/api",
 });
 
-// Función para verificar si el token de refresco ha expirado
 const isTokenExpired = (token) => {
   if (!token) return true;
-  const decodedToken = jwtDecode(token);
-  const currentTime = Date.now() / 1000; // Tiempo actual en segundos
-  return decodedToken.exp < currentTime; // Compara la expiración con el tiempo actual
+  try {
+    const decodedToken = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    return decodedToken.exp < currentTime;
+  } catch (error) {
+    console.error("Error al decodificar el token:", error);
+    return true;
+  }
 };
 
-// Interceptor de respuesta para manejar la expiración del token
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+api.interceptors.request.use(
+  async (config) => {
+    let token = localStorage.getItem("token");
 
-    // Si el error es por un token no válido o expirado
-    if (
-      error.response &&
-      error.response.status === 401 &&
-      error.response.data.code === "token_not_valid"
-    ) {
+    if (token && isTokenExpired(token)) {
       const refreshToken = localStorage.getItem("refresh");
-
-      // Verificar si hay un token de refresco válido
       if (refreshToken && !isTokenExpired(refreshToken)) {
         try {
-          // Intentar refrescar el token de acceso
-          const response = await api.post("/auth/token/refresh/", {
-            refresh: refreshToken,
-          });
-
+          const response = await axios.post(
+            `${api.defaults.baseURL}/auth/token/refresh/`,
+            { refresh: refreshToken }
+          );
           if (response.data && response.data.access) {
-            // Guardar el nuevo token de acceso
-            localStorage.setItem("token", response.data.access);
+            token = response.data.access;
+            localStorage.setItem("token", token);
+            api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-            // Actualizar los encabezados con el nuevo token
-            api.defaults.headers.common[
-              "Authorization"
-            ] = `Bearer ${response.data.access}`;
-            originalRequest.headers[
-              "Authorization"
-            ] = `Bearer ${response.data.access}`;
-
-            console.log("Token refreshed successfully");
-
-            // Reintentar la solicitud original con el nuevo token
-            return await api(originalRequest);
+            if (response.data.refresh) {
+              localStorage.setItem(
+                "refresh",
+                response.data.refresh
+              );
+            }
           } else {
-            console.error("Invalid response from token refresh endpoint");
-            throw error;
+            throw new Error("No se pudo refrescar el token.");
           }
-        } catch (refreshError) {
-          console.error("Error refreshing token:", refreshError);
-          // Si el token de refresco también falla, cerrar sesión
+        } catch (error) {
+          console.error("Error al refrescar el token:", error);
           localStorage.removeItem("token");
           localStorage.removeItem("refresh");
           window.location.href = "/login";
+          return Promise.reject(error);
         }
       } else {
-        // Si no hay un token de refresco válido, redirigir al login
         localStorage.removeItem("token");
         localStorage.removeItem("refresh");
         window.location.href = "/login";
+        return Promise.reject(new Error("Token expirado"));
       }
     }
 
-    // Manejar otros errores no relacionados con la autenticación
-    console.error("Error:", error);
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );
 
-// Interceptor para agregar el token de acceso a todas las solicitudes automáticamente
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response && error.response.status === 401) {
+      console.log("Error 401: No autorizado. Redirigiendo al login.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh");
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   }
 );

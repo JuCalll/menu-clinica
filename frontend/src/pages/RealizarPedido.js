@@ -6,11 +6,10 @@ import "../styles/RealizarPedido.scss";
 const { Option } = Select;
 const { Panel } = Collapse;
 
-// Mapeo de nombres de secciones
 const sectionNames = {
   adicionales: "Adicionales",
   platos_principales: "Platos Principales",
-  acompanantes: "Acompañantes", // Mapeo correcto de "acompanantes" a "Acompañantes"
+  acompanantes: "Acompañantes", 
   bebidas: "Bebidas",
 };
 
@@ -309,7 +308,6 @@ const RealizarPedido = () => {
             {errors.vegetales && <p className="error">{errors.vegetales}</p>}
           </div>
 
-          {/* Asegúrate de que esta clase coincida con el SCSS */}
           <div className="form-item azucar-panela">
             <label>Azúcar y/o Panela:</label>
             <Checkbox.Group
@@ -326,7 +324,6 @@ const RealizarPedido = () => {
             </Checkbox.Group>
           </div>
 
-          {/* Asegúrate de que esta clase coincida con el SCSS */}
           <div className="form-item golosina">
             <label>Golosina Opcional:</label>
             <Checkbox

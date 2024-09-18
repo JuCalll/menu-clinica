@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from .models import CustomUser
 from .serializers import UserSerializer, LoginSerializer
 from logs.models import LogEntry
@@ -26,6 +28,7 @@ class RegisterView(generics.CreateAPIView):
             object_id=instance.id,
             changes=serializer.validated_data,
         )
+
 class LoginView(generics.GenericAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = LoginSerializer
@@ -33,7 +36,10 @@ class LoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = authenticate(username=serializer.validated_data['username'], password=serializer.validated_data['password'])
+        user = authenticate(
+            username=serializer.validated_data['username'],
+            password=serializer.validated_data['password']
+        )
 
         if user and user.activo:
             refresh = RefreshToken.for_user(user)
@@ -42,7 +48,7 @@ class LoginView(generics.GenericAPIView):
                 'access': str(refresh.access_token),
                 'user': {
                     'role': user.role,
-                    'name': user.name  # Aquí devolvemos el nombre completo del usuario
+                    'name': user.name  
                 }
             })
         else:
@@ -53,7 +59,7 @@ class UserListView(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
-        return CustomUser.objects.filter(activo=True)  
+        return CustomUser.objects.filter(activo=True)
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
@@ -87,3 +93,22 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
             object_id=instance.id,
         )
         instance.delete()
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = TokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+
+        response_data = {
+            "access": data.get("access"),
+            "refresh": data.get("refresh"),  
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)

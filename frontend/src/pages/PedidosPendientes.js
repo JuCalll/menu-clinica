@@ -45,7 +45,6 @@ const PedidosPendientes = () => {
         sectionStatus: updatedSections,
       };
 
-      // Mostrar alerta solo si se completa la última sección
       if (allSectionsCompleted) {
         Modal.confirm({
           title: "Pedido Completado",

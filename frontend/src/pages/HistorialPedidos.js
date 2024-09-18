@@ -56,7 +56,6 @@ const HistorialPedidos = () => {
     );
   };
 
-  // Función para capitalizar los títulos y reemplazar guiones bajos con espacios
   const formatTitle = (title) => {
     return title
       .replace(/_/g, " ")

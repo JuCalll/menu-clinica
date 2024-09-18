@@ -7,6 +7,7 @@ from menus.serializers import MenuSerializer, MenuOptionSerializer
 
 class PedidoMenuOptionSerializer(serializers.ModelSerializer):
     menu_option = MenuOptionSerializer()
+    
     class Meta:
         model = PedidoMenuOption
         fields = ['menu_option', 'selected']
@@ -49,8 +50,6 @@ class PedidoSerializer(serializers.ModelSerializer):
         adicionales_data = validated_data.pop('adicionales', instance.adicionales)
         section_status_data = validated_data.pop('sectionStatus', instance.sectionStatus)
 
-        print(f"Actualizando pedido ID: {instance.id}")
-
         instance.paciente = validated_data.get('paciente', instance.paciente)
         instance.menu = validated_data.get('menu', instance.menu)
         instance.status = validated_data.get('status', instance.status)
@@ -71,8 +70,6 @@ class PedidoSerializer(serializers.ModelSerializer):
                             defaults={'selected': selected}
                         )
                     except MenuOption.DoesNotExist:
-                        print(f"MenuOption con ID {opcion_id} no existe. Saltando esta opción.")
                         continue
 
-        print(f"Pedido actualizado con status: {instance.status}")
         return instance

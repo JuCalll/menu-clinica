@@ -7,7 +7,6 @@ const Header = () => {
   const [name, setName] = useState("");
 
   useEffect(() => {
-    // Recuperamos el nombre del usuario desde el localStorage
     const storedName = localStorage.getItem("name");
     if (storedName) {
       setName(storedName);
@@ -16,7 +15,7 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("name"); // Limpiamos el nombre del usuario al cerrar sesión
+    localStorage.removeItem("name"); 
   };
 
   return (
@@ -26,7 +25,7 @@ const Header = () => {
           <img src={logo} alt="Logo" className="logo" />
         </div>
         <div className="header-right d-flex align-items-center">
-          {name && <span className="username">Bienvenido, {name}</span>} {/* Mostramos el nombre si está disponible */}
+          {name && <span className="username">Bienvenido, {name}</span>} 
           <Link
             to="/login"
             className="nav-link logout-link"

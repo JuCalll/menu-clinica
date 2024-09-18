@@ -15,7 +15,6 @@ class PacienteListCreateView(generics.ListCreateAPIView):
             'name': response.data.get('name'),
             'cedula': response.data.get('cedula'),
             'activo': response.data.get('activo'),
-            # Asegúrate de que estás utilizando campos serializables
         }
         LogEntry.objects.create(
             user=self.request.user,
@@ -36,14 +35,13 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
             'name': instance.name,
             'cedula': instance.cedula,
             'activo': instance.activo,
-            # Incluye aquí otros campos relevantes que sean serializables
         }
         LogEntry.objects.create(
             user=self.request.user,
             action='UPDATE',
             model=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,  # Solo datos serializables
+            changes=changes,  
         )
 
     def perform_destroy(self, instance):

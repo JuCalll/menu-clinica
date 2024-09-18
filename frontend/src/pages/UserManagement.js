@@ -11,7 +11,7 @@ import {
   Switch,
 } from "antd";
 import { registerUser, getUsuarios, updateUser } from "../services/api";
-import { InfoCircleOutlined } from "@ant-design/icons"; // Importar ícono
+import { InfoCircleOutlined } from "@ant-design/icons"; 
 import "../styles/UserManagament.scss";
 
 const { Option } = Select;
@@ -20,8 +20,8 @@ const UserManagement = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
-  const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false); // Modal para detalles
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Modal para editar
+  const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false); 
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false); 
   const [form] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
@@ -42,7 +42,6 @@ const UserManagement = () => {
     fetchUsuarios();
   }, []);
 
-  // Manejo para crear usuario
   const handleCreateUser = async (values) => {
     try {
       const existingUsers = await getUsuarios();
@@ -82,13 +81,11 @@ const UserManagement = () => {
     }
   };
 
-  // Manejar la visualización de detalles del usuario
   const handleViewDetails = (user) => {
     setEditingUser(user);
     setIsDetailsModalVisible(true);
   };
 
-  // Función para editar el usuario
   const handleEditUser = (user) => {
     setEditingUser(user);
     form.setFieldsValue(user);
@@ -96,21 +93,21 @@ const UserManagement = () => {
   };
 
   const handleUpdateUser = async (values) => {
-    console.log("Datos enviados al actualizar:", values); // Log de los datos enviados
+    console.log("Datos enviados al actualizar:", values); 
     try {
-      await updateUser(editingUser.id, values); // Actualizar en la base de datos
+      await updateUser(editingUser.id, values); 
       const updatedUsers = await getUsuarios();
       setUsuarios(updatedUsers);
       notification.success({
         message: "Usuario actualizado",
         description: "El usuario ha sido actualizado correctamente",
       });
-      setIsEditModalVisible(false); // Cerrar el modal después de la actualización
+      setIsEditModalVisible(false); 
     } catch (error) {
       console.error(
         "Error actualizando el usuario:",
         error.response ? error.response.data : error.message
-      ); // Log más detallado
+      ); 
       notification.error({
         message: "Error al actualizar el usuario",
         description: "Hubo un problema al intentar actualizar el usuario",
@@ -134,7 +131,7 @@ const UserManagement = () => {
       key: "actions",
       render: (text, record) => (
         <Button type="link" onClick={() => handleViewDetails(record)}>
-          <InfoCircleOutlined /> {/* Ícono para abrir los detalles */}
+          <InfoCircleOutlined /> 
         </Button>
       ),
     },
@@ -242,7 +239,6 @@ const UserManagement = () => {
         </Form>
       </Modal>
 
-      {/* Modal para ver los detalles del usuario */}
       <Modal
         title="Detalles del Usuario"
         open={isDetailsModalVisible}
@@ -273,7 +269,6 @@ const UserManagement = () => {
         </Button>
       </Modal>
 
-      {/* Modal para editar el usuario */}
       <Modal
         title="Editar Usuario"
         open={isEditModalVisible}

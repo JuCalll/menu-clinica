@@ -14,7 +14,7 @@ class MenuSectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MenuSection  
-        fields = ['id', 'titulo', 'adicionales', 'platos_principales', 'acompanantes', 'bebidas']  # Campos a incluir en la serialización
+        fields = ['id', 'titulo', 'adicionales', 'platos_principales', 'acompanantes', 'bebidas']  
 
     def get_adicionales(self, obj):
         return MenuOptionSerializer(obj.options.filter(tipo='adicionales'), many=True).data
