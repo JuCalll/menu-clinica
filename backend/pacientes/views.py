@@ -7,13 +7,16 @@ class PacienteListCreateView(generics.ListCreateAPIView):
     serializer_class = PacienteSerializer
 
     def get_queryset(self):
-        return Paciente.objects.filter(activo=True)  
+        return Paciente.objects.filter(activo=True)
 
     def create(self, request, *args, **kwargs):
+        print("Datos recibidos para crear paciente:", request.data)
         response = super().create(request, *args, **kwargs)
         changes = {
             'name': response.data.get('name'),
             'cedula': response.data.get('cedula'),
+            'recommended_diet': response.data.get('recommended_diet'),  # Registrar la dieta recomendada
+            'alergias': response.data.get('alergias'),  # Registrar las alergias
             'activo': response.data.get('activo'),
         }
         LogEntry.objects.create(
@@ -34,6 +37,8 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
         changes = {
             'name': instance.name,
             'cedula': instance.cedula,
+            'recommended_diet': instance.recommended_diet.id if instance.recommended_diet else None,  # Guardar la dieta recomendada
+            'alergias': instance.alergias,  # Guardar las alergias
             'activo': instance.activo,
         }
         LogEntry.objects.create(
@@ -41,7 +46,7 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
             action='UPDATE',
             model=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,  
+            changes=changes,
         )
 
     def perform_destroy(self, instance):

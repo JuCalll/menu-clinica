@@ -11,7 +11,7 @@ function inactivityTime(showWarningCallback) {
       if (typeof showWarningCallback === "function") {
         showWarningCallback(true);
       }
-    }, 50 * 60 * 1000); 
+    }, 30 * 60 * 1000); 
   }
 
   const events = [

@@ -60,9 +60,36 @@ export const getPacientes = async () => {
   return response.data;
 };
 
-export const createPaciente = async (pacienteData) => {
-  const response = await api.post("/pacientes/", pacienteData);
+export const getDietas = async () => {
+  const response = await api.get("/dietas/");
   return response.data;
+};
+
+export const createDieta = async (dietaData) => {
+  const response = await api.post("/dietas/", dietaData);
+  return response.data;
+};
+
+export const updateDieta = async (id, dietaData) => {
+  const response = await api.put(`/dietas/${id}/`, dietaData);
+  return response.data;
+};
+
+export const deleteDieta = async (id) => {
+  const response = await api.delete(`/dietas/${id}/`);
+  return response.data;
+};
+
+export const createPaciente = async (pacienteData) => {
+  try {
+      console.log("Datos que se envían al servidor:", pacienteData);  // Verifica qué datos están siendo enviados
+      const response = await api.post("/pacientes/", pacienteData);
+      console.log("Respuesta del servidor:", response.data);  // Verifica la respuesta del servidor
+      return response.data;
+  } catch (error) {
+      console.error("Error en la solicitud de crear paciente:", error.response);  // Aquí puedes ver detalles del error
+      throw error;
+  }
 };
 
 export const getPedidos = async () => {

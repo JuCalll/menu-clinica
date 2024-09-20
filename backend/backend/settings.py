@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'pedidos',
     'pacientes',
     'camas',
+    'dietas',
     'habitaciones',
     'servicios',
     'menus',

@@ -19,6 +19,7 @@ import api, {
   createPaciente,
 } from "../services/api";
 import "../styles/DataManagement.scss";
+import DietaManagementModal from "./DietaManagementModal";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -29,18 +30,21 @@ const DataManagement = () => {
   const [pacientes, setPacientes] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [habitaciones, setHabitaciones] = useState([]);
+  const [dietas, setDietas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHabitacionModalOpen, setIsHabitacionModalOpen] = useState(false);
   const [isCamaModalOpen, setIsCamaModalOpen] = useState(false);
   const [isPacienteModalOpen, setIsPacienteModalOpen] = useState(false);
+  const [isDietaModalOpen, setIsDietaModalOpen] = useState(false);
   const [newServicioName, setNewServicioName] = useState("");
   const [newHabitacionName, setNewHabitacionName] = useState("");
   const [newCamaName, setNewCamaName] = useState("");
   const [newPacienteID, setNewPacienteID] = useState("");
   const [newPacienteName, setNewPacienteName] = useState("");
   const [newRecommendedDiet, setNewRecommendedDiet] = useState("");
+  const [newAllergies, setNewAllergies] = useState("");
   const [selectedServicio, setSelectedServicio] = useState(null);
   const [selectedHabitacion, setSelectedHabitacion] = useState(null);
   const [selectedCama, setSelectedCama] = useState(null);
@@ -50,16 +54,22 @@ const DataManagement = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pacientesResponse, serviciosResponse, habitacionesResponse] =
-          await Promise.all([
-            api.get("/pacientes/"),
-            api.get("/servicios/"),
-            api.get("/habitaciones/"),
-          ]);
+        const [
+          pacientesResponse,
+          serviciosResponse,
+          habitacionesResponse,
+          dietasResponse,
+        ] = await Promise.all([
+          api.get("/pacientes/"),
+          api.get("/servicios/"),
+          api.get("/habitaciones/"),
+          api.get("/dietas/"), // Nueva solicitud para traer las dietas
+        ]);
 
         setPacientes(pacientesResponse.data);
         setServicios(serviciosResponse.data);
         setHabitaciones(habitacionesResponse.data);
+        setDietas(dietasResponse.data); // Asignamos las dietas obtenidas
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -71,6 +81,13 @@ const DataManagement = () => {
 
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
+  const openDietaManagementModal = () => {
+    console.log("Abriendo gestión de dietas");
+    setIsDietaModalOpen(true);
+  };
+  const closeDietaManagementModal = () => {
+    setIsDietaModalOpen(false);
+  };
 
   const toggleActivo = async (item, type) => {
     const showConfirm = (isActivating) => {
@@ -396,9 +413,12 @@ const DataManagement = () => {
         cedula: newPacienteID,
         name: newPacienteName,
         cama_id: selectedCama,
-        recommended_diet: newRecommendedDiet,
+        recommended_diet: newRecommendedDiet, // Cambiamos para enviar el ID de la dieta seleccionada
+        alergias: newAllergies, // Enviar las alergias ingresadas
         activo: true,
       };
+
+      console.log("Payload que se enviará:", payload);
 
       await createPaciente(payload);
       notification.success({ message: "Paciente creado exitosamente" });
@@ -406,6 +426,7 @@ const DataManagement = () => {
       setNewPacienteID("");
       setNewPacienteName("");
       setNewRecommendedDiet("");
+      setNewAllergies(""); // Limpiamos el campo de alergias
       setSelectedCama(null);
       refreshData();
     } catch (error) {
@@ -694,6 +715,21 @@ const DataManagement = () => {
               >
                 Crear Paciente
               </Button>
+
+              <Button
+                className="custom-button"
+                onClick={openDietaManagementModal} // Nueva función
+                style={{ marginBottom: "20px" }}
+              >
+                Gestionar Dietas
+              </Button>
+              <DietaManagementModal
+                visible={isDietaModalOpen}
+                onClose={closeDietaManagementModal}
+                dietas={dietas} // Pasamos las dietas
+                refreshData={refreshData} // Función para refrescar los datos
+              />
+
               <Table
                 dataSource={pacientes}
                 columns={[
@@ -714,6 +750,11 @@ const DataManagement = () => {
                     title: "Dieta Recomendada",
                     dataIndex: "recommended_diet",
                     key: "recommended_diet",
+                  },
+                  {
+                    title: "Alergias",
+                    dataIndex: "alergias", // Añadimos la columna de alergias
+                    key: "alergias",
                   },
                   {
                     title: "Activo",
@@ -776,10 +817,23 @@ const DataManagement = () => {
                     </Select>
                   </Form.Item>
                   <Form.Item label="Dieta Recomendada">
-                    <Input
+                    <Select
                       value={newRecommendedDiet}
-                      onChange={(e) => setNewRecommendedDiet(e.target.value)}
-                      placeholder="Ingrese la dieta recomendada"
+                      onChange={(value) => setNewRecommendedDiet(value)}
+                      placeholder="Seleccione la dieta recomendada"
+                    >
+                      {dietas.map((dieta) => (
+                        <Option key={dieta.id} value={dieta.id}>
+                          {dieta.nombre}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  <Form.Item label="Alergias">
+                    <Input
+                      value={newAllergies}
+                      onChange={(e) => setNewAllergies(e.target.value)}
+                      placeholder="Ingrese las alergias del paciente"
                     />
                   </Form.Item>
                 </Form>
@@ -843,6 +897,10 @@ const DataManagement = () => {
                   <p>
                     <strong>Dieta Recomendada:</strong>{" "}
                     {paciente.recommended_diet}
+                  </p>
+                  <p>
+                    <strong>Alergias:</strong> {paciente.allergies || "Ninguna"}{" "}
+                    {/* Aquí añadimos el campo de alergias */}
                   </p>
                   <p>
                     <strong>Registrado en:</strong> {paciente.created_at}

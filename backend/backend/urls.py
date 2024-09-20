@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/menus/', include('menus.urls')),
     path('api/pedidos/', include('pedidos.urls')),
     path('api/camas/', include('camas.urls')),
+    path('api/dietas/', include('dietas.urls')),  
 ]
