@@ -158,6 +158,10 @@ const HistorialPedidos = () => {
                   <div>
                     Golosina: {pedido.adicionales.golosina ? "Sí" : "No"}
                   </div>
+                  <div>
+                    Observaciones:{" "}
+                    {pedido.adicionales.observaciones || "Sin observaciones"}
+                  </div>
                 </div>
               </Card>
             </Panel>

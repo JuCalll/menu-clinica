@@ -9,7 +9,7 @@ const { Panel } = Collapse;
 const sectionNames = {
   adicionales: "Adicionales",
   platos_principales: "Platos Principales",
-  acompanantes: "Acompañantes", 
+  acompanantes: "Acompañantes",
   bebidas: "Bebidas",
 };
 
@@ -25,6 +25,7 @@ const RealizarPedido = () => {
     azucarPanela: [],
     vegetales: "",
     golosina: false,
+    observaciones: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -171,6 +172,7 @@ const RealizarPedido = () => {
       azucarPanela: [],
       vegetales: "",
       golosina: false,
+      observaciones: "",
     });
     setErrors({});
   };
@@ -337,6 +339,21 @@ const RealizarPedido = () => {
             >
               Golosina
             </Checkbox>
+          </div>
+          <div className="form-item observaciones">
+            <label>Observaciones:</label>
+            <textarea
+              value={additionalOptions.observaciones}
+              onChange={(e) =>
+                setAdditionalOptions((prev) => ({
+                  ...prev,
+                  observaciones: e.target.value,
+                }))
+              }
+              rows={4}
+              style={{ width: "100%" }}
+              placeholder="Escribe tus observaciones aquí..."
+            />
           </div>
         </div>
       )}

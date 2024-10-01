@@ -30,6 +30,29 @@
       font-size: 12px;
       margin-top: 5px;
     }
+
+    &.observaciones {
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 14px;
+        color: #333;
+        resize: vertical;
+
+        &:focus {
+          outline: none;
+          border-color: #174288;
+          box-shadow: 0 0 5px rgba(23, 66, 136, 0.5);
+        }
+
+        &::placeholder {
+          color: #aaa;
+        }
+      }
+    }
   }
 
   .ant-select {
@@ -63,7 +86,7 @@
 
       label {
         display: inline-block;
-        width: 125px; 
+        width: 125px;
         font-weight: bold;
       }
 
@@ -114,3 +137,4 @@
     }
   }
 }
+  

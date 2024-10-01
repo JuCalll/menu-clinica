@@ -236,17 +236,6 @@ const DataManagement = () => {
               console.log("Estado de habitación:", habitacionActiva);
               console.log("Estado de servicio:", servicioActivo);
 
-              if (
-                camaActiva === null ||
-                habitacionActiva === null ||
-                servicioActivo === null
-              ) {
-                console.error(
-                  "Error: Estado indefinido para cama, habitación o servicio."
-                );
-                return;
-              }
-
               if (!camaActiva || !habitacionActiva || !servicioActivo) {
                 alert(
                   "No se puede activar el paciente porque la cama, habitación o servicio no están activos."
@@ -256,6 +245,26 @@ const DataManagement = () => {
 
               updatedItem.cama_id = cama.id;
               console.log("Cama ID extraído:", updatedItem.cama_id);
+
+              // Verificación y extracción correcta del ID de la dieta recomendada
+              if (item.recommended_diet && item.recommended_diet.id) {
+                updatedItem.recommended_diet_id = item.recommended_diet.id;
+              } else if (
+                item.recommended_diet &&
+                typeof item.recommended_diet === "string"
+              ) {
+                const dieta = dietas.find(
+                  (d) => d.nombre === item.recommended_diet
+                );
+                updatedItem.recommended_diet_id = dieta ? dieta.id : null;
+              } else {
+                updatedItem.recommended_diet_id = null;
+              }
+
+              console.log(
+                "Recommended Diet ID extraído:",
+                updatedItem.recommended_diet_id
+              );
             }
 
             const response = await api.put(`/${type}/${item.id}/`, updatedItem);
@@ -413,7 +422,7 @@ const DataManagement = () => {
         cedula: newPacienteID,
         name: newPacienteName,
         cama_id: selectedCama,
-        recommended_diet: newRecommendedDiet, // Cambiamos para enviar el ID de la dieta seleccionada
+        recommended_diet_id: newRecommendedDiet, // Enviar el ID de la dieta seleccionada
         alergias: newAllergies, // Enviar las alergias ingresadas
         activo: true,
       };
@@ -425,7 +434,7 @@ const DataManagement = () => {
       setIsPacienteModalOpen(false);
       setNewPacienteID("");
       setNewPacienteName("");
-      setNewRecommendedDiet("");
+      setNewRecommendedDiet(null); // Limpiamos la selección de dieta
       setNewAllergies(""); // Limpiamos el campo de alergias
       setSelectedCama(null);
       refreshData();

@@ -35,13 +35,14 @@ class DietaSerializer(serializers.ModelSerializer):
 class PacienteSerializer(serializers.ModelSerializer):
     cama_id = serializers.PrimaryKeyRelatedField(queryset=Cama.objects.all(), source='cama', write_only=True)
     cama = CamaSerializer(read_only=True)
-    recommended_diet = serializers.PrimaryKeyRelatedField(queryset=Dieta.objects.all(), allow_null=True)  # Relación con Dieta
-    recommended_diet = serializers.StringRelatedField(read_only=True)
-    alergias = serializers.CharField(allow_blank=True, allow_null=True)  # Campo de alergias
+    recommended_diet_id = serializers.PrimaryKeyRelatedField(queryset=Dieta.objects.all(), source='recommended_diet', write_only=True)
+    recommended_diet = serializers.StringRelatedField(read_only=True)  # This displays the diet name
+    alergias = serializers.CharField(allow_blank=True, allow_null=True)
 
     class Meta:
         model = Paciente
-        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 'recommended_diet', 'alergias', 'activo', 'created_at']
+        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 'recommended_diet_id', 'recommended_diet', 'alergias', 'activo', 'created_at']
+
 
     def create(self, validated_data):
         return Paciente.objects.create(**validated_data)
