@@ -51,6 +51,13 @@ const RealizarPedido = () => {
     setSelectedPaciente(value);
   };
 
+  const filterOption = (input, option) => {
+    return (
+      option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >=
+      0
+    );
+  };
+
   const handleMenuChange = (value) => {
     const menu = menus.find((menu) => menu.id === value);
     setSelectedMenu(menu);
@@ -192,9 +199,10 @@ const RealizarPedido = () => {
         <label>Paciente</label>
         <Select
           showSearch
+          placeholder="Seleccionar Paciente"
           value={selectedPaciente}
           onChange={handlePacienteChange}
-          style={{ width: "100%" }}
+          filterOption={filterOption}
         >
           {pacientes.map((paciente) => (
             <Option key={paciente.id} value={paciente.id}>
