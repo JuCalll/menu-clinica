@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Spin, Collapse, Card, Modal } from "antd";
+import { PrinterOutlined } from "@ant-design/icons"; // Importar el ícono de impresión
 import { getPedidos, updatePedido } from "../services/api";
 import "../styles/PedidosPendientes.scss";
 import api from "../axiosConfig";
@@ -167,11 +168,10 @@ const PedidosPendientes = () => {
                 : "Marcar como Completado"}
             </Button>
             <Button
+              icon={<PrinterOutlined />} // Usar el ícono de impresión
               onClick={() => handlePrint(pedido)}
               className="custom-button"
-            >
-              Imprimir
-            </Button>
+            />
           </div>
         </div>
       ) : null;
