@@ -778,8 +778,45 @@ const DataManagement = () => {
                 refreshData={refreshData} // Función para refrescar los datos
               />
 
+              {/* Campo de búsqueda y filtro */}
+              <div className="filters-container">
+                <Input
+                  placeholder="Buscar por nombre o cédula"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+                  style={{ width: 200, marginRight: 10 }}
+                  className="search-input"
+                />
+                <Select
+                  value={selectedFilter}
+                  onChange={(value) => setSelectedFilter(value)}
+                  placeholder="Filtrar por servicio o habitación"
+                  style={{ width: 200 }}
+                  className="filter-select"
+                >
+                  <Option value="">Todos</Option>
+                  {servicios.map((servicio) => (
+                    <Option
+                      key={`servicio-${servicio.id}`}
+                      value={servicio.nombre}
+                    >
+                      {servicio.nombre}
+                    </Option>
+                  ))}
+                  {habitaciones.map((habitacion) => (
+                    <Option
+                      key={`habitacion-${habitacion.id}`}
+                      value={habitacion.nombre}
+                    >
+                      {habitacion.nombre}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Tabla de pacientes */}
               <Table
-                dataSource={pacientes}
+                dataSource={filteredPacientes} // Cambiado para aplicar el filtro
                 columns={[
                   { title: "Cédula", dataIndex: "cedula", key: "cedula" },
                   { title: "Nombre", dataIndex: "name", key: "name" },
@@ -943,12 +980,15 @@ const DataManagement = () => {
             >
               <Option value="">Todos</Option>
               {servicios.map((servicio) => (
-                <Option key={servicio.id} value={servicio.nombre}>
+                <Option key={`servicio-${servicio.id}`} value={servicio.nombre}>
                   {servicio.nombre}
                 </Option>
               ))}
               {habitaciones.map((habitacion) => (
-                <Option key={habitacion.id} value={habitacion.nombre}>
+                <Option
+                  key={`habitacion-${habitacion.id}`}
+                  value={habitacion.nombre}
+                >
                   {habitacion.nombre}
                 </Option>
               ))}
@@ -958,7 +998,7 @@ const DataManagement = () => {
             {filteredPacientes.map((paciente) => (
               <Panel
                 header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
-                key={paciente.id}
+                key={`paciente-${paciente.id}`}
                 className="paciente-panel"
               >
                 <p>
