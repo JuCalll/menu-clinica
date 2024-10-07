@@ -35,6 +35,65 @@ p {
   margin-bottom: 20px;
 }
 
+.summary {
+  display: flex;
+  flex-direction: column;  /* Cambiado a columna para alinear los elementos verticalmente */
+  align-items: flex-start;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 5px;
+  border: 1px solid #e1e1e1;
+  margin-bottom: 20px;
+
+  p {
+    margin: 10px 0;  /* Añadir un margen vertical */
+    font-weight: bold;
+    color: #34495e;
+  }
+}
+
+.filters-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+
+  .search-input {
+    width: 300px;
+    margin-right: 10px;
+  }
+
+  .filter-select {
+    width: 300px;
+  }
+}
+
+.pacientes-collapse {
+  .ant-collapse-item {
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+
+    .ant-collapse-header {
+      font-weight: bold;
+      color: #174288;
+    }
+
+    .paciente-panel {
+      padding: 15px;
+
+      p {
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      strong {
+        color: #174288;
+      }
+    }
+  }
+}
+
 .list-group-item {
   border: 1px solid #ddd;
   padding: 15px;

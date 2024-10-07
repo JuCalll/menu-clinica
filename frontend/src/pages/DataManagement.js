@@ -48,6 +48,13 @@ const DataManagement = () => {
   const [selectedServicio, setSelectedServicio] = useState(null);
   const [selectedHabitacion, setSelectedHabitacion] = useState(null);
   const [selectedCama, setSelectedCama] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("");
+  const [summary, setSummary] = useState({
+    totalPacientesActivos: 0,
+    habitacionesOcupadas: 0,
+    camasDisponibles: 0,
+  });
 
   const userRole = localStorage.getItem("role");
 
@@ -63,13 +70,13 @@ const DataManagement = () => {
           api.get("/pacientes/"),
           api.get("/servicios/"),
           api.get("/habitaciones/"),
-          api.get("/dietas/"), // Nueva solicitud para traer las dietas
+          api.get("/dietas/"),
         ]);
 
         setPacientes(pacientesResponse.data);
         setServicios(serviciosResponse.data);
         setHabitaciones(habitacionesResponse.data);
-        setDietas(dietasResponse.data); // Asignamos las dietas obtenidas
+        setDietas(dietasResponse.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -78,6 +85,38 @@ const DataManagement = () => {
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const totalPacientesActivos = pacientes.filter((p) => p.activo).length;
+    const habitacionesOcupadas = new Set(
+      pacientes.filter((p) => p.activo).map((p) => p.cama.habitacion.nombre)
+    ).size;
+    const camasDisponibles = habitaciones
+      .flatMap((h) => h.camas)
+      .filter(
+        (c) => c.activo && !pacientes.some((p) => p.cama.id === c.id)
+      ).length;
+
+    setSummary({
+      totalPacientesActivos,
+      habitacionesOcupadas,
+      camasDisponibles,
+    });
+  }, [pacientes, habitaciones]);
+
+  const filteredPacientes = pacientes
+    .filter((p) => p.activo)
+    .filter((p) => {
+      const inSearchTerm =
+        p.name.toLowerCase().includes(searchTerm) ||
+        p.cedula.toLowerCase().includes(searchTerm);
+      const inSelectedFilter =
+        selectedFilter === "" ||
+        p.cama.habitacion.nombre === selectedFilter ||
+        p.cama.habitacion.servicio.nombre === selectedFilter;
+
+      return inSearchTerm && inSelectedFilter;
+    });
 
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
@@ -727,7 +766,7 @@ const DataManagement = () => {
 
               <Button
                 className="custom-button"
-                onClick={openDietaManagementModal} 
+                onClick={openDietaManagementModal} // Nueva función
                 style={{ marginBottom: "20px" }}
               >
                 Gestionar Dietas
@@ -881,41 +920,72 @@ const DataManagement = () => {
           </ul>
 
           <h3>Pacientes Activos</h3>
-          <Collapse>
-            {pacientes
-              .filter((p) => p.activo)
-              .map((paciente) => (
-                <Panel
-                  header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
-                  key={paciente.id}
-                >
-                  <p>
-                    <strong>Cédula:</strong> {paciente.cedula}
-                  </p>
-                  <p>
-                    <strong>Cama:</strong> {paciente.cama.nombre}
-                  </p>
-                  <p>
-                    <strong>Habitación:</strong>{" "}
-                    {paciente.cama.habitacion.nombre}
-                  </p>
-                  <p>
-                    <strong>Servicio:</strong>{" "}
-                    {paciente.cama.habitacion.servicio.nombre}
-                  </p>
-                  <p>
-                    <strong>Dieta Recomendada:</strong>{" "}
-                    {paciente.recommended_diet}
-                  </p>
-                  <p>
-                    <strong>Alergias:</strong> {paciente.allergies || "Ninguna"}{" "}
-                    {/* Aquí añadimos el campo de alergias */}
-                  </p>
-                  <p>
-                    <strong>Registrado en:</strong> {paciente.created_at}
-                  </p>
-                </Panel>
+          <div className="summary">
+            <p>Total de Pacientes Activos: {summary.totalPacientesActivos}</p>
+            <p>Habitaciones Ocupadas: {summary.habitacionesOcupadas}</p>
+            <p>Camas Disponibles: {summary.camasDisponibles}</p>
+          </div>
+
+          <div className="filters-container">
+            <Input
+              placeholder="Buscar por nombre o cédula"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+              style={{ width: 200, marginRight: 10 }}
+              className="search-input"
+            />
+            <Select
+              value={selectedFilter}
+              onChange={(value) => setSelectedFilter(value)}
+              placeholder="Filtrar por servicio o habitación"
+              style={{ width: 200 }}
+              className="filter-select"
+            >
+              <Option value="">Todos</Option>
+              {servicios.map((servicio) => (
+                <Option key={servicio.id} value={servicio.nombre}>
+                  {servicio.nombre}
+                </Option>
               ))}
+              {habitaciones.map((habitacion) => (
+                <Option key={habitacion.id} value={habitacion.nombre}>
+                  {habitacion.nombre}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          <Collapse className="pacientes-collapse">
+            {filteredPacientes.map((paciente) => (
+              <Panel
+                header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                key={paciente.id}
+                className="paciente-panel"
+              >
+                <p>
+                  <strong>Cédula:</strong> {paciente.cedula}
+                </p>
+                <p>
+                  <strong>Cama:</strong> {paciente.cama.nombre}
+                </p>
+                <p>
+                  <strong>Habitación:</strong> {paciente.cama.habitacion.nombre}
+                </p>
+                <p>
+                  <strong>Servicio:</strong>{" "}
+                  {paciente.cama.habitacion.servicio.nombre}
+                </p>
+                <p>
+                  <strong>Dieta Recomendada:</strong>{" "}
+                  {paciente.recommended_diet}
+                </p>
+                <p>
+                  <strong>Alergias:</strong> {paciente.alergias || "Ninguna"}
+                </p>
+                <p>
+                  <strong>Registrado en:</strong> {paciente.created_at}
+                </p>
+              </Panel>
+            ))}
           </Collapse>
         </div>
       </div>
