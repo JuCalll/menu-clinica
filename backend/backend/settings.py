@@ -1,4 +1,3 @@
-# settings.py
 from pathlib import Path
 from datetime import timedelta
 import os
@@ -76,15 +75,30 @@ MIDDLEWARE = [
     'logs.middleware.AuthenticationLoggingMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Seguridad para HTTPS
+SECURE_SSL_REDIRECT = False  # Desactivado ya que Apache maneja el redireccionamiento
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000  # 1 año
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Configuración de CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://172.168.11.176",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://172.168.11.176",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
     {
-        'BACKEND':
-            'django.template.backends.django.DjangoTemplates',
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -102,8 +116,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE':
-            'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('MYSQL_DB'),
         'USER': os.getenv('MYSQL_USER'),
         'PASSWORD': os.getenv('MYSQL_PASSWORD'),
@@ -114,24 +127,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME':
-            'django.contrib.auth.password_validation.'
-            'UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME':
-            'django.contrib.auth.password_validation.'
-            'MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME':
-            'django.contrib.auth.password_validation.'
-            'CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME':
-            'django.contrib.auth.password_validation.'
-            'NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 

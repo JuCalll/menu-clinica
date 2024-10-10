@@ -31,27 +31,27 @@ const MenuPage = () => {
   const [menuName, setMenuName] = useState("");
   const [currentMenu, setCurrentMenu] = useState(null);
   const [options, setOptions] = useState({
-    adicional: { adicionales: [] },
-    algo: { adicionales: [], bebidas: [] },
-    onces: { adicionales: [] },
     desayuno: {
       adicionales: [],
       platos_principales: [],
       acompanantes: [],
       bebidas: [],
     },
+    onces: { adicionales: [] },
     almuerzo: {
       adicionales: [],
       platos_principales: [],
       acompanantes: [],
       bebidas: [],
     },
+    algo: { adicionales: [], bebidas: [] },
     cena: {
       adicionales: [],
       platos_principales: [],
       acompanantes: [],
       bebidas: [],
     },
+    adicional: { adicionales: [] },
   });
   const [newOptionText, setNewOptionText] = useState("");
   const [currentOptionType, setCurrentOptionType] = useState({});
@@ -65,27 +65,27 @@ const MenuPage = () => {
     setCurrentMenu(null);
     setMenuName("");
     setOptions({
-      adicional: { adicionales: [] },
-      algo: { adicionales: [], bebidas: [] },
-      onces: { adicionales: [] },
       desayuno: {
         adicionales: [],
         platos_principales: [],
         acompanantes: [],
         bebidas: [],
       },
+      onces: { adicionales: [] },
       almuerzo: {
         adicionales: [],
         platos_principales: [],
         acompanantes: [],
         bebidas: [],
       },
+      algo: { adicionales: [], bebidas: [] },
       cena: {
         adicionales: [],
         platos_principales: [],
         acompanantes: [],
         bebidas: [],
       },
+      adicional: { adicionales: [] },
     });
   };
 
@@ -203,27 +203,27 @@ const MenuPage = () => {
     setCurrentMenu(null);
     setMenuName("");
     setOptions({
-      adicional: { adicionales: [] },
-      algo: { adicionales: [], bebidas: [] },
-      onces: { adicionales: [] },
       desayuno: {
         adicionales: [],
         platos_principales: [],
         acompanantes: [],
         bebidas: [],
       },
+      onces: { adicionales: [] },
       almuerzo: {
         adicionales: [],
         platos_principales: [],
         acompanantes: [],
         bebidas: [],
       },
+      algo: { adicionales: [], bebidas: [] },
       cena: {
         adicionales: [],
         platos_principales: [],
         acompanantes: [],
         bebidas: [],
       },
+      adicional: { adicionales: [] },
     });
   };
 
@@ -365,54 +365,65 @@ const MenuPage = () => {
             />
           </Form.Item>
           <Collapse>
-            {["adicional", "algo", "onces"].map((section) => (
-              <Panel
-                header={section.charAt(0).toUpperCase() + section.slice(1)}
-                key={section}
-              >
-                <div className="button-group vertical-buttons">
-                  <Button
-                    className="custom-button"
-                    onClick={() => openOptionModal(section, "adicionales")}
-                    icon={<PlusOutlined />}
-                  >
-                    Agregar Adicional
-                  </Button>
-                  {section === "algo" && (
+            {["desayuno", "onces", "almuerzo", "algo", "cena", "adicional"].map(
+              (section) => (
+                <Panel
+                  header={section.charAt(0).toUpperCase() + section.slice(1)}
+                  key={section}
+                >
+                  <div className="button-group vertical-buttons">
                     <Button
                       className="custom-button"
-                      onClick={() => openOptionModal(section, "bebidas")}
+                      onClick={() => openOptionModal(section, "adicionales")}
                       icon={<PlusOutlined />}
                     >
-                      Agregar Bebida
+                      Agregar Adicional
                     </Button>
-                  )}
-                </div>
-                <List
-                  header={<div>Adicionales</div>}
-                  bordered
-                  dataSource={options[section]?.adicionales || []}
-                  renderItem={(opt, index) => (
-                    <List.Item
-                      actions={[
+                    {["desayuno", "almuerzo", "cena"].includes(section) && (
+                      <>
                         <Button
-                          type="link"
-                          icon={<DeleteOutlined />}
+                          className="custom-button"
                           onClick={() =>
-                            removeOption(section, "adicionales", index)
+                            openOptionModal(section, "platos_principales")
                           }
-                        />,
-                      ]}
-                    >
-                      {opt.texto}
-                    </List.Item>
-                  )}
-                />
-                {section === "algo" && (
+                          icon={<PlusOutlined />}
+                        >
+                          Agregar Plato Principal
+                        </Button>
+                        <Button
+                          className="custom-button"
+                          onClick={() =>
+                            openOptionModal(section, "acompanantes")
+                          }
+                          icon={<PlusOutlined />}
+                        >
+                          Agregar Acompañante
+                        </Button>
+                        <Button
+                          className="custom-button"
+                          onClick={() => openOptionModal(section, "bebidas")}
+                          icon={<PlusOutlined />}
+                        >
+                          Agregar Bebida
+                        </Button>
+                      </>
+                    )}
+                    {section === "algo" && (
+                      <Button
+                        className="custom-button"
+                        onClick={() => openOptionModal(section, "bebidas")}
+                        icon={<PlusOutlined />}
+                      >
+                        Agregar Bebida
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Renderizando las opciones existentes en la sección */}
                   <List
-                    header={<div>Bebidas</div>}
+                    header={<div>Adicionales</div>}
                     bordered
-                    dataSource={options[section]?.bebidas || []}
+                    dataSource={options[section]?.adicionales || []}
                     renderItem={(opt, index) => (
                       <List.Item
                         actions={[
@@ -420,7 +431,7 @@ const MenuPage = () => {
                             type="link"
                             icon={<DeleteOutlined />}
                             onClick={() =>
-                              removeOption(section, "bebidas", index)
+                              removeOption(section, "adicionales", index)
                             }
                           />,
                         ]}
@@ -429,128 +440,101 @@ const MenuPage = () => {
                       </List.Item>
                     )}
                   />
-                )}
-              </Panel>
-            ))}
-            {["desayuno", "almuerzo", "cena"].map((section) => (
-              <Panel
-                header={section.charAt(0).toUpperCase() + section.slice(1)}
-                key={section}
-              >
-                <div className="button-group vertical-buttons">
-                  <Button
-                    className="custom-button"
-                    onClick={() => openOptionModal(section, "adicionales")}
-                    icon={<PlusOutlined />}
-                  >
-                    Agregar Adicional
-                  </Button>
-                  <Button
-                    className="custom-button"
-                    onClick={() =>
-                      openOptionModal(section, "platos_principales")
-                    }
-                    icon={<PlusOutlined />}
-                  >
-                    Agregar Plato Principal
-                  </Button>
-                  <Button
-                    className="custom-button"
-                    onClick={() => openOptionModal(section, "acompanantes")}
-                    icon={<PlusOutlined />}
-                  >
-                    Agregar Acompañante
-                  </Button>
-                  <Button
-                    className="custom-button"
-                    onClick={() => openOptionModal(section, "bebidas")}
-                    icon={<PlusOutlined />}
-                  >
-                    Agregar Bebida
-                  </Button>
-                </div>
-                <List
-                  header={<div>Adicionales</div>}
-                  bordered
-                  dataSource={options[section]?.adicionales || []}
-                  renderItem={(opt, index) => (
-                    <List.Item
-                      actions={[
-                        <Button
-                          type="link"
-                          icon={<DeleteOutlined />}
-                          onClick={() =>
-                            removeOption(section, "adicionales", index)
-                          }
-                        />,
-                      ]}
-                    >
-                      {opt.texto}
-                    </List.Item>
+
+                  {["desayuno", "almuerzo", "cena"].includes(section) && (
+                    <>
+                      <List
+                        header={<div>Platos Principales</div>}
+                        bordered
+                        dataSource={options[section]?.platos_principales || []}
+                        renderItem={(opt, index) => (
+                          <List.Item
+                            actions={[
+                              <Button
+                                type="link"
+                                icon={<DeleteOutlined />}
+                                onClick={() =>
+                                  removeOption(
+                                    section,
+                                    "platos_principales",
+                                    index
+                                  )
+                                }
+                              />,
+                            ]}
+                          >
+                            {opt.texto}
+                          </List.Item>
+                        )}
+                      />
+                      <List
+                        header={<div>Acompañantes</div>}
+                        bordered
+                        dataSource={options[section]?.acompanantes || []}
+                        renderItem={(opt, index) => (
+                          <List.Item
+                            actions={[
+                              <Button
+                                type="link"
+                                icon={<DeleteOutlined />}
+                                onClick={() =>
+                                  removeOption(section, "acompanantes", index)
+                                }
+                              />,
+                            ]}
+                          >
+                            {opt.texto}
+                          </List.Item>
+                        )}
+                      />
+                      <List
+                        header={<div>Bebidas</div>}
+                        bordered
+                        dataSource={options[section]?.bebidas || []}
+                        renderItem={(opt, index) => (
+                          <List.Item
+                            actions={[
+                              <Button
+                                type="link"
+                                icon={<DeleteOutlined />}
+                                onClick={() =>
+                                  removeOption(section, "bebidas", index)
+                                }
+                              />,
+                            ]}
+                          >
+                            {opt.texto}
+                          </List.Item>
+                        )}
+                      />
+                    </>
                   )}
-                />
-                <List
-                  header={<div>Platos Principales</div>}
-                  bordered
-                  dataSource={options[section]?.platos_principales || []}
-                  renderItem={(opt, index) => (
-                    <List.Item
-                      actions={[
-                        <Button
-                          type="link"
-                          icon={<DeleteOutlined />}
-                          onClick={() =>
-                            removeOption(section, "platos_principales", index)
-                          }
-                        />,
-                      ]}
-                    >
-                      {opt.texto}
-                    </List.Item>
+
+                  {section === "algo" && (
+                    <List
+                      header={<div>Bebidas</div>}
+                      bordered
+                      dataSource={options[section]?.bebidas || []}
+                      renderItem={(opt, index) => (
+                        <List.Item
+                          actions={[
+                            <Button
+                              type="link"
+                              icon={<DeleteOutlined />}
+                              onClick={() =>
+                                removeOption(section, "bebidas", index)
+                              }
+                            />,
+                          ]}
+                        >
+                          {opt.texto}
+                        </List.Item>
+                      )}
+                    />
                   )}
-                />
-                <List
-                  header={<div>Acompañantes</div>}
-                  bordered
-                  dataSource={options[section]?.acompanantes || []}
-                  renderItem={(opt, index) => (
-                    <List.Item
-                      actions={[
-                        <Button
-                          type="link"
-                          icon={<DeleteOutlined />}
-                          onClick={() =>
-                            removeOption(section, "acompanantes", index)
-                          }
-                        />,
-                      ]}
-                    >
-                      {opt.texto}
-                    </List.Item>
-                  )}
-                />
-                <List
-                  header={<div>Bebidas</div>}
-                  bordered
-                  dataSource={options[section]?.bebidas || []}
-                  renderItem={(opt, index) => (
-                    <List.Item
-                      actions={[
-                        <Button
-                          type="link"
-                          icon={<DeleteOutlined />}
-                          onClick={() =>
-                            removeOption(section, "bebidas", index)
-                          }
-                        />,
-                      ]}
-                    >
-                      {opt.texto}
-                    </List.Item>
-                  )}
-                />
-              </Panel>
-            ))}
+                </Panel>
+              )
+            )}
           </Collapse>
         </Form>
       </Modal>

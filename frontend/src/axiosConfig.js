@@ -3,10 +3,11 @@ import { jwtDecode } from 'jwt-decode';
 
 const api = axios.create({
   baseURL:
-    process.env.NODE_ENV === "development"
-      ? "http://127.0.0.1:8000/api"
-      : "http://172.168.11.176:8000/api",
+      process.env.NODE_ENV === "development"
+          ? "http://127.0.0.1:8000/api"
+          : "https://172.168.11.176/api",
 });
+
 
 const isTokenExpired = (token) => {
   if (!token) return true;

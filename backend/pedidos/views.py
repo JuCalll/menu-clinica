@@ -6,6 +6,7 @@ from .serializers import PedidoSerializer
 from logs.models import LogEntry 
 import usb.core
 import usb.util
+import socket
 
 class PedidoListCreateView(generics.ListCreateAPIView):
     queryset = Pedido.objects.all()
@@ -98,23 +99,15 @@ class PedidoPrintView(views.APIView):
             return Response({"status": "success", "message": "Pedido impreso con éxito."})
         except Pedido.DoesNotExist:
             return Response({"status": "error", "message": "Pedido no encontrado."}, status=404)
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, status=500)
 
     def print_pedido(self, pedido):
-        dev = usb.core.find(idVendor=0x1FC9, idProduct=0x2016)
+        # Dirección IP y puerto de la impresora
+        printer_ip = '172.168.11.177'  # La IP de tu impresora
+        printer_port = 9100  # El puerto estándar para impresoras de red
 
-        if dev is None:
-            raise ValueError('Dispositivo no encontrado')
-
-        dev.set_configuration()
-
-        cfg = dev.get_active_configuration()
-        interface_number = cfg[(0,0)].bInterfaceNumber
-        intf = usb.util.find_descriptor(cfg, bInterfaceNumber=interface_number)
-        ep = usb.util.find_descriptor(
-            intf,
-            custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT
-        )
-
+        # Datos a imprimir
         print_data = (
             "===============================\n"
             f"Paciente: {pedido.paciente.name}\n"
@@ -125,9 +118,24 @@ class PedidoPrintView(views.APIView):
         )
 
         try:
-            ep.write(b'\x1b\x40' + print_data.encode('utf-8'))
-            ep.write(b'\n\n\n\n\n')
-            ep.write(b'\x1d\x56\x00')
+            # Crear un socket TCP/IP
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)  # Tiempo de espera de 10 segundos
+
+            # Conectar con la impresora
+            sock.connect((printer_ip, printer_port))
+
+            # Comandos ESC/POS para inicializar y finalizar la impresión
+            initialize_printer = b'\x1b\x40'  # Inicializar la impresora
+            cut_paper = b'\x1d\x56\x00'      # Comando para corte parcial de papel
+
+            # Construir el mensaje completo
+            message = initialize_printer + print_data.encode('utf-8') + b'\n\n\n\n\n' + cut_paper
+
+            # Enviar el mensaje a la impresora
+            sock.sendall(message)
+        except socket.error as e:
+            raise Exception(f"Error al conectar con la impresora: {e}")
         finally:
-            usb.util.release_interface(dev, interface_number)
-            usb.util.dispose_resources(dev)
+            sock.close()
+
