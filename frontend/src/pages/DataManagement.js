@@ -1,30 +1,13 @@
 import React, { useState, useEffect } from "react";
-import {
-  Button,
-  Drawer,
-  Tabs,
-  Table,
-  Switch,
-  Modal,
-  Form,
-  Input,
-  notification,
-  Select,
-  Collapse,
-} from "antd";
-import api, {
-  createServicio,
-  createHabitacion,
-  createCama,
-  createPaciente,
-} from "../services/api";
+import { Input, Select, Collapse, Typography, Card, Row, Col, Tabs } from "antd";
+import api from "../services/api";
 import "../styles/DataManagement.scss";
-import DietaManagementModal from "./DietaManagementModal";
+import GestionPanel from "../components/GestionPanel";
 
-const { TabPane } = Tabs;
 const { Option } = Select;
 const { Panel } = Collapse;
-const { confirm } = Modal;
+const { Title, Text } = Typography;
+const { TabPane } = Tabs;
 
 const DataManagement = () => {
   const [pacientes, setPacientes] = useState([]);
@@ -32,31 +15,19 @@ const DataManagement = () => {
   const [habitaciones, setHabitaciones] = useState([]);
   const [dietas, setDietas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isHabitacionModalOpen, setIsHabitacionModalOpen] = useState(false);
-  const [isCamaModalOpen, setIsCamaModalOpen] = useState(false);
-  const [isPacienteModalOpen, setIsPacienteModalOpen] = useState(false);
-  const [isDietaModalOpen, setIsDietaModalOpen] = useState(false);
-  const [newServicioName, setNewServicioName] = useState("");
-  const [newHabitacionName, setNewHabitacionName] = useState("");
-  const [newCamaName, setNewCamaName] = useState("");
-  const [newPacienteID, setNewPacienteID] = useState("");
-  const [newPacienteName, setNewPacienteName] = useState("");
-  const [newRecommendedDiet, setNewRecommendedDiet] = useState("");
-  const [newAllergies, setNewAllergies] = useState("");
-  const [selectedServicio, setSelectedServicio] = useState(null);
-  const [selectedHabitacion, setSelectedHabitacion] = useState(null);
-  const [selectedCama, setSelectedCama] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("");
+  const [filterLevel, setFilterLevel] = useState("todos");
+  const [selectedService, setSelectedService] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedBed, setSelectedBed] = useState(null);
   const [summary, setSummary] = useState({
     totalPacientesActivos: 0,
     habitacionesOcupadas: 0,
     camasDisponibles: 0,
   });
-
-  const userRole = localStorage.getItem("role");
+  const [filteredHabitaciones, setFilteredHabitaciones] = useState([]);
+  const [filteredCamas, setFilteredCamas] = useState([]);
+  const [filteredPacientes, setFilteredPacientes] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,236 +75,86 @@ const DataManagement = () => {
     });
   }, [pacientes, habitaciones]);
 
-  const filteredPacientes = pacientes
-    .filter((p) => p.activo)
-    .filter((p) => {
-      const inSearchTerm =
-        p.name.toLowerCase().includes(searchTerm) ||
-        p.cedula.toLowerCase().includes(searchTerm);
-      const inSelectedFilter =
-        selectedFilter === "" ||
-        p.cama.habitacion.nombre === selectedFilter ||
-        p.cama.habitacion.servicio.nombre === selectedFilter;
-
-      return inSearchTerm && inSelectedFilter;
-    });
-
-  const openDrawer = () => setIsDrawerOpen(true);
-  const closeDrawer = () => setIsDrawerOpen(false);
-  const openDietaManagementModal = () => {
-    console.log("Abriendo gestión de dietas");
-    setIsDietaModalOpen(true);
-  };
-  const closeDietaManagementModal = () => {
-    setIsDietaModalOpen(false);
-  };
-
-  const toggleActivo = async (item, type) => {
-    const showConfirm = (isActivating) => {
-      let title = "";
-      let content = "";
-
-      if (isActivating) {
-        switch (type) {
-          case "servicios":
-            title = "¿Estás seguro de que deseas activar este servicio?";
-            content =
-              "Esta acción activará el servicio y permitirá activar habitaciones y camas relacionadas a él.";
-            break;
-          case "habitaciones":
-            title = "¿Estás seguro de que deseas activar esta habitación?";
-            content =
-              "Esta acción activará la habitación y permitirá activar las camas relacionadas a ella.";
-            break;
-          case "camas":
-            title = "¿Estás seguro de que deseas activar esta cama?";
-            content =
-              "Esta acción activará la cama para ser asignada a un paciente.";
-            break;
-          case "pacientes":
-            title = "¿Estás seguro de que deseas activar a este paciente?";
-            content =
-              "Esta acción activará al paciente y asignará su cama asociada.";
-            break;
-          default:
-            title = "¿Estás seguro de que deseas continuar?";
-            content =
-              "Esta acción cambiará el estado del elemento seleccionado a activo.";
-            break;
-        }
-      } else {
-        switch (type) {
-          case "servicios":
-            title = "¿Estás seguro de que deseas desactivar este servicio?";
-            content =
-              "Esta acción desactivará el servicio y todas las habitaciones y camas asociadas a él. El servicio permanecerá en la base de datos como inactivo.";
-            break;
-          case "habitaciones":
-            title = "¿Estás seguro de que deseas desactivar esta habitación?";
-            content =
-              "Esta acción desactivará la habitación y todas las camas asociadas a ella. La habitación permanecerá en la base de datos como inactiva.";
-            break;
-          case "camas":
-            title = "¿Estás seguro de que deseas desactivar esta cama?";
-            content =
-              "Esta acción desactivará la cama y quedará disponible para ser asignada a un nuevo paciente. La cama permanecerá en la base de datos como inactiva.";
-            break;
-          case "pacientes":
-            title = "¿Estás seguro de que deseas desactivar a este paciente?";
-            content =
-              "Esta acción desactivará al paciente y liberará su cama asociada. El paciente permanecerá en la base de datos como inactivo.";
-            break;
-          default:
-            title = "¿Estás seguro de que deseas continuar?";
-            content =
-              "Esta acción cambiará el estado del elemento seleccionado a inactivo.";
-            break;
-        }
-      }
-
-      confirm({
-        title: title,
-        content: content,
-        onOk: async () => {
-          try {
-            console.log("Datos antes de actualizar:", item);
-
-            const updatedItem = { ...item, activo: !item.activo };
-
-            if (type === "habitaciones") {
-              let servicioId = item.servicio_id;
-              if (!servicioId) {
-                const servicio = servicios.find(
-                  (s) => s.nombre === item.servicio
-                );
-                if (servicio) {
-                  servicioId = servicio.id;
-                }
-              }
-              updatedItem.servicio_id = servicioId;
-              console.log("Servicio ID extraído:", updatedItem.servicio_id);
-            }
-
-            if (type === "camas") {
-              const habitacion = habitaciones.find(
-                (h) => h.id === item.habitacion
-              );
-              console.log("Habitación encontrada:", habitacion);
-              if (!habitacion || !habitacion.activo) {
-                alert(
-                  "No se puede activar la cama porque la habitación no está activa."
-                );
-                return;
-              }
-
-              updatedItem.habitacion_id = habitacion.id;
-              console.log("Habitación ID extraído:", updatedItem.habitacion_id);
-            }
-
-            if (type === "pacientes") {
-              const cama = item.cama ? item.cama : null;
-              console.log("Cama obtenida:", cama);
-
-              if (!cama) {
-                console.error(
-                  "Error: No se encontró la cama asociada al paciente."
-                );
-                return;
-              }
-
-              const habitacion = cama.habitacion ? cama.habitacion : null;
-              console.log("Habitación obtenida desde cama:", habitacion);
-
-              if (!habitacion) {
-                console.error(
-                  "Error: No se encontró la habitación asociada a la cama."
-                );
-                return;
-              }
-
-              const servicio = habitacion.servicio ? habitacion.servicio : null;
-              console.log("Servicio obtenido desde habitación:", servicio);
-
-              if (!servicio) {
-                console.error(
-                  "Error: No se encontró el servicio asociado a la habitación."
-                );
-                return;
-              }
-
-              // Verificación de estados
-              const camaActiva =
-                cama.activo !== undefined ? cama.activo : "no definido";
-              const habitacionActiva =
-                habitacion.activo !== undefined
-                  ? habitacion.activo
-                  : "no definido";
-              const servicioActivo =
-                servicio.activo !== undefined ? servicio.activo : "no definido";
-
-              console.log("Estado de cama:", camaActiva);
-              console.log("Estado de habitación:", habitacionActiva);
-              console.log("Estado de servicio:", servicioActivo);
-
-              if (!camaActiva || !habitacionActiva || !servicioActivo) {
-                alert(
-                  "No se puede activar el paciente porque la cama, habitación o servicio no están activos."
-                );
-                return;
-              }
-
-              updatedItem.cama_id = cama.id;
-              console.log("Cama ID extraído:", updatedItem.cama_id);
-
-              // Verificación y extracción correcta del ID de la dieta recomendada
-              if (item.recommended_diet && item.recommended_diet.id) {
-                updatedItem.recommended_diet_id = item.recommended_diet.id;
-              } else if (
-                item.recommended_diet &&
-                typeof item.recommended_diet === "string"
-              ) {
-                const dieta = dietas.find(
-                  (d) => d.nombre === item.recommended_diet
-                );
-                updatedItem.recommended_diet_id = dieta ? dieta.id : null;
-              } else {
-                updatedItem.recommended_diet_id = null;
-              }
-
-              console.log(
-                "Recommended Diet ID extraído:",
-                updatedItem.recommended_diet_id
-              );
-            }
-
-            const response = await api.put(`/${type}/${item.id}/`, updatedItem);
-            console.log("Respuesta del backend:", response.data);
-            refreshData();
-          } catch (error) {
-            if (error.response && error.response.status === 400) {
-              const errorMessage =
-                error.response.data.detail ||
-                "No se puede activar el paciente debido a restricciones en la lógica de activación.";
-              alert(`Error: ${errorMessage}`);
-            } else {
-              console.error(
-                "Error toggling activo:",
-                error.response ? error.response.data : error
-              );
-            }
-          }
-        },
-        onCancel() {
-          console.log("Acción cancelada por el usuario");
-        },
-      });
-    };
-
-    if (item.activo) {
-      showConfirm(false);
+  useEffect(() => {
+    if (selectedService) {
+      const habitacionesActivas = habitaciones.filter(
+        h => h.servicio === selectedService.nombre && h.activo
+      );
+      console.log('Habitaciones filtradas:', habitacionesActivas);
+      setFilteredHabitaciones(habitacionesActivas);
+      setSelectedRoom(null);
+      setSelectedBed(null);
     } else {
-      showConfirm(true);
+      setFilteredHabitaciones([]);
     }
+  }, [selectedService, habitaciones]);
+
+  useEffect(() => {
+    if (selectedRoom) {
+      const camasActivas = selectedRoom.camas.filter(c => c.activo);
+      setFilteredCamas(camasActivas);
+      setSelectedBed(null);
+    } else {
+      setFilteredCamas([]);
+    }
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    const filtered = pacientes.filter((p) => p.activo).filter((p) => {
+      if (selectedBed) return p.cama.id === selectedBed.id;
+      if (selectedRoom) return p.cama.habitacion.id === selectedRoom.id;
+      if (selectedService) return p.cama.habitacion.servicio.id === selectedService.id;
+      if (searchTerm) {
+        return p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               p.cedula.toLowerCase().includes(searchTerm.toLowerCase());
+      }
+      return true;
+    });
+    setFilteredPacientes(filtered);
+  }, [pacientes, selectedBed, selectedRoom, selectedService, searchTerm]);
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+  };
+
+  const handleFilterLevelChange = (newLevel) => {
+    setFilterLevel(newLevel);
+    if (newLevel === "todos" || newLevel === "servicio") {
+      setSelectedService(null);
+      setSelectedRoom(null);
+      setSelectedBed(null);
+    } else if (newLevel === "habitacion") {
+      setSelectedRoom(null);
+      setSelectedBed(null);
+    } else if (newLevel === "cama") {
+      setSelectedBed(null);
+    }
+  };
+
+  const handleServiceSelect = (serviceId) => {
+    if (serviceId) {
+      const service = servicios.find(s => s.id === serviceId);
+      setSelectedService(service);
+      setFilterLevel("habitacion");
+      console.log('Servicio seleccionado:', service);
+    } else {
+      setSelectedService(null);
+      setFilterLevel("servicio");
+    }
+    setSelectedRoom(null);
+    setSelectedBed(null);
+  };
+
+  const handleRoomSelect = (roomId) => {
+    const room = filteredHabitaciones.find(h => h.id === roomId);
+    setSelectedRoom(room);
+    setFilterLevel("cama");
+  };
+
+  const handleBedSelect = (bedId) => {
+    const bed = filteredCamas.find(c => c.id === bedId);
+    setSelectedBed(bed);
+    setFilterLevel("paciente");
   };
 
   const refreshData = async () => {
@@ -356,677 +177,126 @@ const DataManagement = () => {
     }
   };
 
-  const handleCreateServicio = async () => {
-    if (!newServicioName) {
-      notification.error({
-        message: "Error",
-        description: "El nombre del servicio es obligatorio",
-      });
-      return;
-    }
-
-    try {
-      await createServicio({ nombre: newServicioName });
-      notification.success({ message: "Servicio creado exitosamente" });
-      setIsModalOpen(false);
-      setNewServicioName("");
-      refreshData();
-    } catch (error) {
-      notification.error({
-        message: "Error al crear el servicio",
-        description: error.response?.data?.message || error.message,
-      });
-    }
-  };
-
-  const handleCreateHabitacion = async () => {
-    if (!newHabitacionName || !selectedServicio) {
-      notification.error({
-        message: "Error",
-        description:
-          "El nombre de la habitación y la selección de un servicio son obligatorios",
-      });
-      return;
-    }
-
-    try {
-      const payload = {
-        nombre: newHabitacionName,
-        servicio_id: selectedServicio,
-        activo: false,
-        camas: [],
-      };
-
-      await createHabitacion(payload);
-      notification.success({ message: "Habitación creada exitosamente" });
-      setIsHabitacionModalOpen(false);
-      setNewHabitacionName("");
-      setSelectedServicio(null);
-      refreshData();
-    } catch (error) {
-      notification.error({
-        message: "Error al crear la habitación",
-        description: error.response?.data?.message || error.message,
-      });
-    }
-  };
-
-  const handleCreateCama = async () => {
-    if (!newCamaName || !selectedHabitacion) {
-      notification.error({
-        message: "Error",
-        description:
-          "El nombre de la cama y la selección de una habitación son obligatorios",
-      });
-      return;
-    }
-
-    try {
-      const payload = {
-        nombre: newCamaName,
-        habitacion: selectedHabitacion,
-        activo: false,
-      };
-
-      await createCama(payload);
-      notification.success({ message: "Cama creada exitosamente" });
-      setIsCamaModalOpen(false);
-      setNewCamaName("");
-      setSelectedHabitacion(null);
-      refreshData();
-    } catch (error) {
-      notification.error({
-        message: "Error al crear la cama",
-        description: error.response?.data?.message || error.message,
-      });
-    }
-  };
-
-  const handleCreatePaciente = async () => {
-    if (
-      !newPacienteID ||
-      !newPacienteName ||
-      !selectedCama ||
-      !newRecommendedDiet
-    ) {
-      notification.error({
-        message: "Error",
-        description: "Todos los campos son obligatorios para crear un paciente",
-      });
-      return;
-    }
-
-    try {
-      const payload = {
-        cedula: newPacienteID,
-        name: newPacienteName,
-        cama_id: selectedCama,
-        recommended_diet_id: newRecommendedDiet, // Enviar el ID de la dieta seleccionada
-        alergias: newAllergies, // Enviar las alergias ingresadas
-        activo: true,
-      };
-
-      console.log("Payload que se enviará:", payload);
-
-      await createPaciente(payload);
-      notification.success({ message: "Paciente creado exitosamente" });
-      setIsPacienteModalOpen(false);
-      setNewPacienteID("");
-      setNewPacienteName("");
-      setNewRecommendedDiet(null); // Limpiamos la selección de dieta
-      setNewAllergies(""); // Limpiamos el campo de alergias
-      setSelectedCama(null);
-      refreshData();
-    } catch (error) {
-      notification.error({
-        message: "Error al crear el paciente",
-        description: error.response?.data?.message || error.message,
-      });
-    }
-  };
-
-  const openCreateServicioModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeCreateServicioModal = () => {
-    setIsModalOpen(false);
-    setNewServicioName("");
-  };
-
-  const openCreateHabitacionModal = () => {
-    const activeServices = servicios.filter((s) => s.activo);
-    if (activeServices.length === 0) {
-      notification.warning({
-        message: "Advertencia",
-        description:
-          "No se pueden crear habitaciones porque no hay servicios activos",
-      });
-      return;
-    }
-    setIsHabitacionModalOpen(true);
-  };
-
-  const closeCreateHabitacionModal = () => {
-    setIsHabitacionModalOpen(false);
-    setNewHabitacionName("");
-    setSelectedServicio(null);
-  };
-
-  const openCreateCamaModal = () => {
-    const activeHabitaciones = habitaciones.filter((h) => h.activo);
-    if (activeHabitaciones.length === 0) {
-      notification.warning({
-        message: "Advertencia",
-        description:
-          "No se pueden crear camas porque no hay habitaciones activas",
-      });
-      return;
-    }
-    setIsCamaModalOpen(true);
-  };
-
-  const closeCreateCamaModal = () => {
-    setIsCamaModalOpen(false);
-    setNewCamaName("");
-    setSelectedHabitacion(null);
-  };
-
-  const openCreatePacienteModal = () => {
-    const activeCamas = habitaciones.flatMap((h) =>
-      h.camas.filter(
-        (c) => c.activo && !pacientes.some((p) => p.cama.id === c.id)
-      )
-    );
-    if (activeCamas.length === 0) {
-      notification.warning({
-        message: "Advertencia",
-        description:
-          "No se pueden crear pacientes porque no hay camas disponibles sin pacientes",
-      });
-      return;
-    }
-    setIsPacienteModalOpen(true);
-  };
-
-  const closeCreatePacienteModal = () => {
-    setIsPacienteModalOpen(false);
-    setNewPacienteID("");
-    setNewPacienteName("");
-    setNewRecommendedDiet("");
-    setSelectedCama(null);
-  };
-
   if (loading) {
     return <div>Cargando...</div>;
   }
 
   return (
-    <div className="data-management-container mt-5">
-      <div className="data-management">
-        <h2>Gestión de Pacientes, Servicios y Habitaciones</h2>
+    <div className="dm-container">
+      <div className="dm-content">
+        <Title level={2} className="dm-title">Gestión de Pacientes, Servicios y Habitaciones</Title>
 
-        <Button className="custom-button" onClick={openDrawer}>
-          Panel de Gestión
-        </Button>
+        <GestionPanel
+          pacientes={pacientes}
+          servicios={servicios}
+          habitaciones={habitaciones}
+          dietas={dietas}
+          refreshData={refreshData}
+        />
 
-        <Drawer
-          title="Gestión de Datos"
-          placement="right"
-          onClose={closeDrawer}
-          open={isDrawerOpen}
-          width={600}
-        >
-          <Tabs defaultActiveKey="1">
-            {userRole !== "jefe_enfermeria" && (
-              <TabPane tab="Servicios" key="1">
-                <Button
-                  className="custom-button"
-                  onClick={openCreateServicioModal}
-                  style={{ marginBottom: "20px" }}
-                >
-                  Crear Servicio
-                </Button>
-                <Table
-                  dataSource={servicios}
-                  columns={[
-                    { title: "Nombre", dataIndex: "nombre", key: "nombre" },
-                    {
-                      title: "Activo",
-                      key: "activo",
-                      render: (_, record) => (
-                        <Switch
-                          checked={record.activo}
-                          onChange={() => toggleActivo(record, "servicios")}
-                        />
-                      ),
-                    },
-                  ]}
-                  rowKey="id"
-                  scroll={{ x: 10 }}
-                />
+        <div className="dm-active-data">
+          <Card title="Pacientes Activos" className="dm-card">
+            <div className="dm-summary">
+              <Text>Total de Pacientes Activos: {summary.totalPacientesActivos}</Text>
+              <Text>Habitaciones Ocupadas: {summary.habitacionesOcupadas}</Text>
+              <Text>Camas Disponibles: {summary.camasDisponibles}</Text>
+            </div>
 
-                <Modal
-                  title="Crear Nuevo Servicio"
-                  open={isModalOpen}
-                  onOk={handleCreateServicio}
-                  onCancel={closeCreateServicioModal}
-                  okText="Crear"
-                  cancelText="Cancelar"
-                >
-                  <Form layout="vertical">
-                    <Form.Item label="Nombre del Servicio">
-                      <Input
-                        value={newServicioName}
-                        onChange={(e) => setNewServicioName(e.target.value)}
-                        placeholder="Ingrese el nombre del servicio"
-                      />
-                    </Form.Item>
-                  </Form>
-                </Modal>
-              </TabPane>
-            )}
-
-            {userRole !== "jefe_enfermeria" && (
-              <TabPane tab="Habitaciones" key="2">
-                <Button
-                  className="custom-button"
-                  onClick={openCreateHabitacionModal}
-                  style={{ marginBottom: "20px" }}
-                >
-                  Crear Habitación
-                </Button>
-                <Button
-                  className="custom-button"
-                  onClick={openCreateCamaModal}
-                  style={{ marginBottom: "20px" }}
-                >
-                  Crear Cama
-                </Button>
-                <Table
-                  dataSource={habitaciones}
-                  columns={[
-                    { title: "Nombre", dataIndex: "nombre", key: "nombre" },
-                    {
-                      title: "Servicio",
-                      dataIndex: "servicio",
-                      key: "servicio",
-                    },
-                    {
-                      title: "Camas",
-                      key: "camas",
-                      render: (_, habitacion) => (
-                        <ul>
-                          {habitacion.camas.map((cama) => (
-                            <li key={cama.id}>
-                              {cama.nombre}
-                              <Switch
-                                checked={cama.activo}
-                                onChange={() => toggleActivo(cama, "camas")}
-                                style={{ marginLeft: 8 }}
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      ),
-                    },
-                    {
-                      title: "Activo",
-                      key: "activo",
-                      render: (_, record) => (
-                        <Switch
-                          checked={record.activo}
-                          onChange={() => toggleActivo(record, "habitaciones")}
-                        />
-                      ),
-                    },
-                  ]}
-                  rowKey="id"
-                  scroll={{ x: 10 }}
-                />
-
-                <Modal
-                  title="Crear Nueva Habitación"
-                  open={isHabitacionModalOpen}
-                  onOk={handleCreateHabitacion}
-                  onCancel={closeCreateHabitacionModal}
-                  okText="Crear"
-                  cancelText="Cancelar"
-                >
-                  <Form layout="vertical">
-                    <Form.Item label="Nombre de la Habitación">
-                      <Input
-                        value={newHabitacionName}
-                        onChange={(e) => setNewHabitacionName(e.target.value)}
-                        placeholder="Ingrese el nombre de la habitación"
-                      />
-                    </Form.Item>
-                    <Form.Item label="Servicio">
-                      <Select
-                        value={selectedServicio}
-                        onChange={(value) => setSelectedServicio(value)}
-                        placeholder="Seleccione un servicio"
-                      >
-                        {servicios
-                          .filter((s) => s.activo)
-                          .map((servicio) => (
-                            <Option key={servicio.id} value={servicio.id}>
-                              {servicio.nombre}
-                            </Option>
-                          ))}
-                      </Select>
-                    </Form.Item>
-                  </Form>
-                </Modal>
-
-                <Modal
-                  title="Crear Nueva Cama"
-                  open={isCamaModalOpen}
-                  onOk={handleCreateCama}
-                  onCancel={closeCreateCamaModal}
-                  okText="Crear"
-                  cancelText="Cancelar"
-                >
-                  <Form layout="vertical">
-                    <Form.Item label="Nombre de la Cama">
-                      <Input
-                        value={newCamaName}
-                        onChange={(e) => setNewCamaName(e.target.value)}
-                        placeholder="Ingrese el nombre de la cama"
-                      />
-                    </Form.Item>
-                    <Form.Item label="Habitación">
-                      <Select
-                        value={selectedHabitacion}
-                        onChange={(value) => setSelectedHabitacion(value)}
-                        placeholder="Seleccione una habitación"
-                      >
-                        {habitaciones
-                          .filter((h) => h.activo)
-                          .map((habitacion) => (
-                            <Option key={habitacion.id} value={habitacion.id}>
-                              {habitacion.nombre}
-                            </Option>
-                          ))}
-                      </Select>
-                    </Form.Item>
-                  </Form>
-                </Modal>
-              </TabPane>
-            )}
-
-            <TabPane tab="Pacientes" key="3">
-              <Button
-                className="custom-button"
-                onClick={openCreatePacienteModal}
-                style={{ marginBottom: "20px" }}
-              >
-                Crear Paciente
-              </Button>
-
-              <Button
-                className="custom-button"
-                onClick={openDietaManagementModal} // Nueva función
-                style={{ marginBottom: "20px" }}
-              >
-                Gestionar Dietas
-              </Button>
-              <DietaManagementModal
-                visible={isDietaModalOpen}
-                onClose={closeDietaManagementModal}
-                dietas={dietas} // Pasamos las dietas
-                refreshData={refreshData} // Función para refrescar los datos
+            <div className="dm-filters">
+              <Input
+                placeholder="Buscar por nombre o cédula"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="dm-search-input"
               />
-
-              {/* Campo de búsqueda y filtro */}
-              <div className="filters-container">
-                <Input
-                  placeholder="Buscar por nombre o cédula"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-                  style={{ width: 200, marginRight: 10 }}
-                  className="search-input"
-                />
+              {filterLevel !== "todos" && (
                 <Select
-                  value={selectedFilter}
-                  onChange={(value) => setSelectedFilter(value)}
-                  placeholder="Filtrar por servicio o habitación"
-                  style={{ width: 200 }}
-                  className="filter-select"
+                  value={selectedService?.id}
+                  onChange={handleServiceSelect}
+                  placeholder="Seleccionar servicio"
+                  className="dm-filter-select"
+                  allowClear
                 >
-                  <Option value="">Todos</Option>
-                  {servicios.map((servicio) => (
-                    <Option
-                      key={`servicio-${servicio.id}`}
-                      value={servicio.nombre}
-                    >
+                  {servicios.filter(s => s.activo).map((servicio) => (
+                    <Option key={servicio.id} value={servicio.id}>
                       {servicio.nombre}
                     </Option>
                   ))}
-                  {habitaciones.map((habitacion) => (
-                    <Option
-                      key={`habitacion-${habitacion.id}`}
-                      value={habitacion.nombre}
-                    >
+                </Select>
+              )}
+              {selectedService && (
+                <Select
+                  value={selectedRoom?.id}
+                  onChange={handleRoomSelect}
+                  placeholder="Seleccionar habitación"
+                  className="dm-filter-select"
+                  allowClear
+                >
+                  {filteredHabitaciones.map((habitacion) => (
+                    <Option key={habitacion.id} value={habitacion.id}>
                       {habitacion.nombre}
                     </Option>
                   ))}
                 </Select>
-              </div>
-
-              {/* Tabla de pacientes */}
-              <Table
-                dataSource={filteredPacientes} // Cambiado para aplicar el filtro
-                columns={[
-                  { title: "Cédula", dataIndex: "cedula", key: "cedula" },
-                  { title: "Nombre", dataIndex: "name", key: "name" },
-                  { title: "Cama", dataIndex: ["cama", "nombre"], key: "cama" },
-                  {
-                    title: "Habitación",
-                    dataIndex: ["cama", "habitacion", "nombre"],
-                    key: "habitacion",
-                  },
-                  {
-                    title: "Servicio",
-                    dataIndex: ["cama", "habitacion", "servicio", "nombre"],
-                    key: "servicio",
-                  },
-                  {
-                    title: "Dieta Recomendada",
-                    dataIndex: "recommended_diet",
-                    key: "recommended_diet",
-                  },
-                  {
-                    title: "Alergias",
-                    dataIndex: "alergias", // Añadimos la columna de alergias
-                    key: "alergias",
-                  },
-                  {
-                    title: "Activo",
-                    key: "activo",
-                    align: "center",
-                    render: (_, record) => (
-                      <Switch
-                        checked={record.activo}
-                        onChange={() => toggleActivo(record, "pacientes")}
-                      />
-                    ),
-                  },
-                ]}
-                rowKey="id"
-                scroll={{ x: 10 }}
-              />
-
-              <Modal
-                title="Crear Nuevo Paciente"
-                open={isPacienteModalOpen}
-                onOk={handleCreatePaciente}
-                onCancel={closeCreatePacienteModal}
-                okText="Crear"
-                cancelText="Cancelar"
-              >
-                <Form layout="vertical">
-                  <Form.Item label="Cédula">
-                    <Input
-                      value={newPacienteID}
-                      onChange={(e) => setNewPacienteID(e.target.value)}
-                      placeholder="Ingrese la cédula del paciente"
-                    />
-                  </Form.Item>
-                  <Form.Item label="Nombre">
-                    <Input
-                      value={newPacienteName}
-                      onChange={(e) => setNewPacienteName(e.target.value)}
-                      placeholder="Ingrese el nombre del paciente"
-                    />
-                  </Form.Item>
-                  <Form.Item label="Cama">
-                    <Select
-                      value={selectedCama}
-                      onChange={(value) => setSelectedCama(value)}
-                      placeholder="Seleccione una cama"
-                    >
-                      {habitaciones
-                        .flatMap((h) =>
-                          h.camas.filter(
-                            (c) =>
-                              c.activo &&
-                              !pacientes.some((p) => p.cama.id === c.id)
-                          )
-                        )
-                        .map((cama) => (
-                          <Option key={cama.id} value={cama.id}>
-                            {cama.nombre}
-                          </Option>
-                        ))}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item label="Dieta Recomendada">
-                    <Select
-                      value={newRecommendedDiet}
-                      onChange={(value) => setNewRecommendedDiet(value)}
-                      placeholder="Seleccione la dieta recomendada"
-                    >
-                      {dietas.map((dieta) => (
-                        <Option key={dieta.id} value={dieta.id}>
-                          {dieta.nombre}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                  <Form.Item label="Alergias">
-                    <Input
-                      value={newAllergies}
-                      onChange={(e) => setNewAllergies(e.target.value)}
-                      placeholder="Ingrese las alergias del paciente"
-                    />
-                  </Form.Item>
-                </Form>
-              </Modal>
-            </TabPane>
-          </Tabs>
-        </Drawer>
-
-        <div className="active-data mt-4">
-          <h3>Servicios Activos</h3>
-          <ul className="list-group mb-4">
-            {servicios
-              .filter((s) => s.activo)
-              .map((servicio) => (
-                <li key={servicio.id} className="list-group-item">
-                  {servicio.nombre}
-                </li>
-              ))}
-          </ul>
-
-          <h3>Habitaciones Activas</h3>
-          <ul className="list-group mb-4">
-            {habitaciones
-              .filter((h) => h.activo)
-              .map((habitacion) => (
-                <li key={habitacion.id} className="list-group-item">
-                  {habitacion.nombre} - {habitacion.servicio}
-                  <ul>
-                    {habitacion.camas.map(
-                      (cama) =>
-                        cama.activo && <li key={cama.id}>{cama.nombre}</li>
-                    )}
-                  </ul>
-                </li>
-              ))}
-          </ul>
-
-          <h3>Pacientes Activos</h3>
-          <div className="summary">
-            <p>Total de Pacientes Activos: {summary.totalPacientesActivos}</p>
-            <p>Habitaciones Ocupadas: {summary.habitacionesOcupadas}</p>
-            <p>Camas Disponibles: {summary.camasDisponibles}</p>
-          </div>
-
-          <div className="filters-container">
-            <Input
-              placeholder="Buscar por nombre o cédula"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-              style={{ width: 200, marginRight: 10 }}
-              className="search-input"
-            />
-            <Select
-              value={selectedFilter}
-              onChange={(value) => setSelectedFilter(value)}
-              placeholder="Filtrar por servicio o habitación"
-              style={{ width: 200 }}
-              className="filter-select"
-            >
-              <Option value="">Todos</Option>
-              {servicios.map((servicio) => (
-                <Option key={`servicio-${servicio.id}`} value={servicio.nombre}>
-                  {servicio.nombre}
-                </Option>
-              ))}
-              {habitaciones.map((habitacion) => (
-                <Option
-                  key={`habitacion-${habitacion.id}`}
-                  value={habitacion.nombre}
+              )}
+              {filterLevel === "cama" && (
+                <Select
+                  value={selectedBed?.id}
+                  onChange={handleBedSelect}
+                  placeholder="Seleccionar cama"
+                  className="dm-filter-select"
+                  allowClear
                 >
-                  {habitacion.nombre}
-                </Option>
+                  {filteredCamas.map((cama) => (
+                    <Option key={cama.id} value={cama.id}>
+                      {cama.nombre}
+                    </Option>
+                  ))}
+                </Select>
+              )}
+            </div>
+
+            <Tabs activeKey={filterLevel} onChange={handleFilterLevelChange}>
+              <TabPane tab="Todos" key="todos" />
+              <TabPane tab="Servicios" key="servicio" />
+              {selectedService && <TabPane tab="Habitaciones" key="habitacion" />}
+              {selectedRoom && <TabPane tab="Camas" key="cama" />}
+            </Tabs>
+
+            <Collapse className="dm-pacientes-collapse">
+              {filteredPacientes.map((paciente) => (
+                <Panel
+                  header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                  key={`paciente-${paciente.id}`}
+                  className="dm-paciente-panel"
+                >
+                  <Row gutter={[16, 16]}>
+                    <Col span={12}>
+                      <Text strong>Cédula:</Text> {paciente.cedula}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Cama:</Text> {paciente.cama.nombre}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Habitación:</Text> {paciente.cama.habitacion.nombre}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Servicio:</Text> {paciente.cama.habitacion.servicio.nombre}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Dieta Recomendada:</Text> {paciente.recommended_diet}
+                    </Col>
+                    <Col span={12}>
+                      <Text strong>Alergias:</Text> {paciente.alergias || "Ninguna"}
+                    </Col>
+                    <Col span={24}>
+                      <Text strong>Registrado en:</Text> {paciente.created_at}
+                    </Col>
+                  </Row>
+                </Panel>
               ))}
-            </Select>
-          </div>
-          <Collapse className="pacientes-collapse">
-            {filteredPacientes.map((paciente) => (
-              <Panel
-                header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
-                key={`paciente-${paciente.id}`}
-                className="paciente-panel"
-              >
-                <p>
-                  <strong>Cédula:</strong> {paciente.cedula}
-                </p>
-                <p>
-                  <strong>Cama:</strong> {paciente.cama.nombre}
-                </p>
-                <p>
-                  <strong>Habitación:</strong> {paciente.cama.habitacion.nombre}
-                </p>
-                <p>
-                  <strong>Servicio:</strong>{" "}
-                  {paciente.cama.habitacion.servicio.nombre}
-                </p>
-                <p>
-                  <strong>Dieta Recomendada:</strong>{" "}
-                  {paciente.recommended_diet}
-                </p>
-                <p>
-                  <strong>Alergias:</strong> {paciente.alergias || "Ninguna"}
-                </p>
-                <p>
-                  <strong>Registrado en:</strong> {paciente.created_at}
-                </p>
-              </Panel>
-            ))}
-          </Collapse>
+            </Collapse>
+          </Card>
         </div>
       </div>
     </div>

@@ -86,7 +86,9 @@ SECURE_HSTS_PRELOAD = True
 # Configuración de CORS
 CORS_ALLOWED_ORIGINS = [
     "https://172.168.11.176",
+    "http://localhost:3000",
 ]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "https://172.168.11.176",

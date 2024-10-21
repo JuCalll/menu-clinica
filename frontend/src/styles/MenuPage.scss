@@ -1,0 +1,346 @@
+/* MenuPage.scss */
+
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$menu-title-color: #174288;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $box-shadow;
+  }
+}
+
+// Estilos Generales
+.menu-page {
+  padding: 30px;
+  background-color: $background-color;
+  font-family: $font-family;
+  min-height: 100vh;
+
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
+}
+
+.menu-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-title {
+  color: $menu-title-color;
+  font-size: 3rem;
+  font-weight: bold;
+  font-family: $font-family;
+  margin: 0;
+}
+
+.custom-button {
+  background: $button-gradient;
+  border: none;
+  color: #fff;
+  border-radius: $border-radius;
+  padding: 12px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  font-family: $font-family;
+  @include hover-effect;
+}
+
+.create-menu-button {
+  min-width: 170px;
+  font-size: 1.1rem;
+  padding: 14px 24px;
+}
+
+.save-button {
+  background: darken($primary-color, 10%);
+  &:hover {
+    background: darken($primary-color, 20%);
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between; // Cambiado de flex-end a space-between
+  gap: 15px;
+  padding-top: 20px;
+  
+  .custom-button {
+    flex: 1; // Hace que cada botón ocupe el mismo espacio
+    min-width: 0; // Permite que los botones se encojan si es necesario
+    justify-content: center; // Centra el texto en el botón
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    
+    .custom-button {
+      width: 100%; // Ocupa todo el ancho en dispositivos móviles
+    }
+  }
+}
+
+.menu-section {
+  margin-bottom: 30px;
+  background-color: #fff;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+
+  .ant-collapse-header {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: $menu-title-color;
+    padding: 15px 20px;
+    font-family: $font-family;
+  }
+
+  .ant-collapse-content-box {
+    padding: 20px;
+    font-family: $font-family;
+  }
+
+  .option-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px; // Aumentamos el espacio entre los botones
+    margin-top: 15px;
+    margin-bottom: 20px; // Añadimos margen inferior
+  }
+
+  .option-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 48px; // Altura fija para todos los botones
+    overflow: hidden;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .anticon {
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .button-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .menu-option-list {
+    margin-bottom: 20px; // Añadimos margen inferior a cada lista de opciones
+  }
+}
+
+.menu-list {
+  margin-top: 40px;
+
+  .loading-container {
+    @include flex-center;
+    height: 300px;
+  }
+}
+
+.view-menu-modal {
+  .ant-modal-content {
+    border-radius: $border-radius;
+    padding: 25px;
+    font-family: $font-family;
+  }
+
+  .menu-header {
+    color: $primary-color;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: $font-family;
+  }
+}
+
+.menu-item {
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $box-shadow;
+  }
+
+  .ant-card-head-title {
+    font-size: 1.2rem;
+    color: $primary-color;
+    font-weight: bold;
+  }
+
+  .ant-card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .menu-item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 5px;
+
+    .action-button {
+      width: 100%;
+      min-width: 0;
+      font-size: 0.9rem;
+      height: 36px;
+      border: none;
+      background: rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      padding: 0 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      &.view-button:hover { 
+        color: $primary-color;
+        background: rgba(24, 144, 255, 0.1); 
+      }
+      &.edit-button:hover { 
+        color: #faad14;
+        background: rgba(250, 173, 20, 0.1);
+      }
+      &.delete-button:hover { 
+        color: $secondary-color;
+        background: rgba(255, 77, 79, 0.1);
+      }
+
+      .anticon {
+        margin-right: 3px;
+        flex-shrink: 0;
+      }
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+.no-menus-alert {
+  font-size: 1.1rem;
+  padding: 20px;
+  border-radius: $border-radius;
+}
+
+// Ajustes Responsivos
+@media (max-width: 768px) {
+  .menu-section {
+    .option-buttons {
+      grid-template-columns: repeat(2, 1fr); // Mantener dos columnas en tablets
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .menu-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+  }
+
+  .custom-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .create-menu-button {
+    margin-top: 15px;
+    width: 100%;
+  }
+
+  .menu-option-list .ant-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .menu-item {
+    .menu-item-actions {
+      flex-direction: column;
+
+      .action-button {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.menu-item {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.custom-button {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.modal {
+  .ant-modal-content {
+    animation: fadeIn 0.3s ease-in;
+  }
+}
+
+
+
+
+

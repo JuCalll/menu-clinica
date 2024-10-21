@@ -1,7 +1,7 @@
 from rest_framework import generics
 from .models import Menu
 from .serializers import MenuSerializer
-from logs.models import LogEntry  
+from logs.models import LogEntry
 
 class MenuListCreateView(generics.ListCreateAPIView):
     queryset = Menu.objects.all()
@@ -16,6 +16,7 @@ class MenuListCreateView(generics.ListCreateAPIView):
             object_id=instance.id,
             changes=serializer.validated_data,
         )
+
 
 class MenuDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Menu.objects.all()

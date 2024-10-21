@@ -1,153 +1,212 @@
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$title-color: #174288;
+$font-size-base: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 28px;
 
-.container {
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $box-shadow;
+  }
+}
+
+// Aplicar la fuente Syne a todo el contenedor
+.dm-container {
+  padding: 30px;
+  background-color: $background-color;
+  font-family: $font-family;
+  min-height: 100vh;
+  font-size: $font-size-base;
+
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
+
+  // Asegurar que todos los elementos de texto dentro del contenedor usen Syne
+  * {
+    font-family: $font-family;
+  }
+}
+
+.dm-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
 }
 
-h2,
-h3 {
-  color: #2c3e50;
+.dm-title {
+  color: $title-color;
+  font-size: $font-size-xxlarge;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.dm-active-data {
+  margin-top: 30px;
+}
+
+.dm-card {
   margin-bottom: 20px;
-  font-weight: 700;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  @include hover-effect;
+
+  .ant-card-head-title {
+    font-size: $font-size-xlarge;
+    color: $primary-color;
+    font-family: $font-family;
+  }
+
+  // Asegurar que todo el texto dentro de las tarjetas use Syne
+  .ant-card-body {
+    font-family: $font-family;
+    font-size: $font-size-large;
+  }
 }
 
-h4 {
-  font-weight: 700;
-  color: #34495e;
-  margin-bottom: 10px;
+.dm-list {
+  list-style-type: none;
+  padding: 0;
+
+  .dm-list-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-family: $font-family;
+    font-size: $font-size-large;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
 }
 
-p {
-  margin-bottom: 5px;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.section {
-  margin-bottom: 40px;
-}
-
-.section h3 {
-  border-bottom: 2px solid #e74c3c;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-
-.summary {
+.dm-summary {
   display: flex;
-  flex-direction: column;  /* Cambiado a columna para alinear los elementos verticalmente */
-  align-items: flex-start;
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 5px;
-  border: 1px solid #e1e1e1;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 20px;
 
-  p {
-    margin: 10px 0;  /* Añadir un margen vertical */
+  .ant-typography {
+    font-size: $font-size-large;
+    font-family: $font-family;
+  }
+}
+
+.dm-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  .dm-search-input,
+  .dm-filter-select {
+    flex: 1;
+    font-family: $font-family;
+    font-size: $font-size-large;
+
+    // Asegurar que el texto dentro del input y select use Syne
+    input, .ant-select-selection-item, .ant-select-item-option-content {
+      font-family: $font-family;
+      font-size: $font-size-large;
+    }
+  }
+}
+
+.dm-pacientes-collapse {
+  .ant-collapse-header {
     font-weight: bold;
-    color: #34495e;
-  }
-}
-
-.filters-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-
-  .search-input {
-    width: 300px;
-    margin-right: 10px;
+    color: $primary-color;
+    font-family: $font-family;
+    font-size: $font-size-base;
   }
 
-  .filter-select {
-    width: 300px;
-  }
-}
-
-.pacientes-collapse {
-  .ant-collapse-item {
-    border: 1px solid #ddd;
+  .dm-paciente-panel {
     margin-bottom: 10px;
-    border-radius: 5px;
-    background-color: #fff;
+    border-radius: $border-radius;
+    overflow: hidden;
 
-    .ant-collapse-header {
-      font-weight: bold;
-      color: #174288;
-    }
-
-    .paciente-panel {
-      padding: 15px;
-
-      p {
-        margin: 0;
-        line-height: 1.6;
-      }
-
-      strong {
-        color: #174288;
-      }
+    // Asegurar que todo el texto dentro del panel use Syne
+    .ant-collapse-content {
+      font-family: $font-family;
+      font-size: $font-size-base;
     }
   }
 }
 
-.list-group-item {
-  border: 1px solid #ddd;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  background-color: #fff;
+// Animaciones
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.form-group {
-  margin-bottom: 15px;
+.dm-card,
+.dm-paciente-panel {
+  animation: fadeIn 0.3s ease-in;
 }
 
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1rem;
-  font-family: "Syne", sans-serif;
+// Responsive
+@media (max-width: 768px) {
+  .dm-filters {
+    flex-direction: column;
+  }
+
+  .dm-summary {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
 
-.form-control:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+// Asegurar que los componentes de Ant Design usen la fuente Syne y tamaños adecuados
+.ant-input,
+.ant-select-selector,
+.ant-select-item-option-content,
+.ant-collapse-header,
+.ant-collapse-content,
+.ant-card-body,
+.ant-typography {
+  font-family: $font-family !important;
+  font-size: $font-size-base !important;
 }
 
-.btn-primary:hover {
-  background-color: #c0392b;
-  border-color: #c0392b;
+.ant-card-head-title {
+  font-size: $font-size-xlarge !important;
 }
 
-.btn-primary:focus {
-  outline: none;
-  box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+.ant-collapse-header {
+  font-size: $font-size-base !important;
 }
 
-.mt-5 {
-  margin-top: 3rem;
+// Nuevo estilo para el título principal
+h2.dm-title {
+  font-size: $font-size-xxlarge !important;
 }
 
-.mb-3 {
-  margin-bottom: 1rem;
+.ant-tabs-nav {
+  margin-bottom: 16px;
 }
 
-.list-group {
-  padding-left: 0;
-  margin-bottom: 20px;
+.ant-tabs-tab {
+  font-family: $font-family;
+  font-size: $font-size-base;
 }
 
-.list-group-item h4 {
-  margin-bottom: 10px;
-}
-
-.list-group-item p {
-  margin: 0;
+.ant-select-dropdown {
+  font-family: $font-family;
+  font-size: $font-size-base;
 }

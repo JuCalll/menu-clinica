@@ -20,19 +20,17 @@ const Header = () => {
 
   return (
     <header className="header">
-      <div className="container d-flex justify-content-between align-items-center">
-        <div className="header-left d-flex align-items-center">
-          <img src={logo} alt="Logo" className="logo" />
-        </div>
-        <div className="header-right d-flex align-items-center">
-          {name && <span className="username">Bienvenido, {name}</span>} 
-          <Link
-            to="/login"
-            className="nav-link logout-link"
-            onClick={handleLogout}
-          >
-            Cerrar sesión
-          </Link>
+      <div className="container">
+        <div className="header-content">
+          <div className="header-left">
+            <img src={logo} alt="Logo" className="logo" />
+          </div>
+          <div className="header-right">
+            {name && <span className="username">Bienvenido, {name}</span>}
+            <Link to="/login" className="logout-link" onClick={handleLogout}>
+              Cerrar sesión
+            </Link>
+          </div>
         </div>
       </div>
     </header>
