@@ -194,7 +194,11 @@ $font-size-xxlarge: 28px;
 
 // Nuevo estilo para el título principal
 h2.dm-title {
+  color: $title-color !important;
   font-size: $font-size-xxlarge !important;
+  font-weight: bold !important;
+  margin-bottom: 30px !important;
+  text-align: center !important;
 }
 
 .ant-tabs-nav {

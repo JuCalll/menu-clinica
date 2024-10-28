@@ -1,0 +1,290 @@
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$title-color: #174288;
+$font-size-base: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 28px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $box-shadow;
+  }
+}
+
+.gestion-panel {
+  &__container {
+    font-family: $font-family;
+    max-width: 1200px; // Añadir un ancho máximo
+    margin: 0 auto; // Centrar el contenedor
+  }
+
+  &__button {
+    background: $button-gradient;
+    border: none;
+    color: #fff;
+    border-radius: $border-radius;
+    padding: 12px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    @include hover-effect;
+  }
+
+  &__drawer {
+    .ant-drawer-content {
+      background-color: $background-color;
+    }
+  }
+
+  &__tabs {
+    .ant-tabs-nav {
+      margin-bottom: 20px;
+    }
+
+    .ant-tabs-tab {
+      font-size: $font-size-large;
+    }
+  }
+
+  &__table {
+    .ant-table-thead > tr > th {
+      background-color: $primary-color;
+      color: #fff;
+      text-align: center;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background-color: lighten($primary-color, 35%);
+    }
+
+    // Estilos para la paginación
+    .ant-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 16px 0;
+
+      &-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        margin: 0 4px;
+        border-radius: 6px;
+        border: 1px solid #d9d9d9;
+        background: #fff;
+        
+        &:hover {
+          border-color: #1890ff;
+          color: #1890ff;
+        }
+
+        &-active {
+          border-color: #1890ff;
+          background: #1890ff;
+          color: #fff;
+
+          &:hover {
+            color: #fff;
+          }
+        }
+      }
+
+      &-prev, &-next {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        margin: 0 4px;
+        border-radius: 6px;
+        border: 1px solid #d9d9d9;
+        background: #fff;
+        vertical-align: middle;
+
+        .anticon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          font-size: 12px;
+        }
+
+        &:hover {
+          border-color: #1890ff;
+          color: #1890ff;
+        }
+
+        &.ant-pagination-disabled {
+          color: rgba(0, 0, 0, 0.25);
+          border-color: #d9d9d9;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .ant-table-tbody > tr > td {
+      text-align: center;
+    }
+  }
+
+  &__modal {
+    .ant-modal-content {
+      border-radius: $border-radius;
+    }
+
+    .ant-modal-header {
+      background-color: $primary-color;
+      border-top-left-radius: $border-radius;
+      border-top-right-radius: $border-radius;
+
+      .ant-modal-title {
+        color: #fff;
+      }
+    }
+  }
+
+  &__form {
+    .ant-form-item-label > label {
+      font-weight: bold;
+    }
+  }
+
+  &__camas-list {
+    list-style: none;
+    padding: 16px 20px; // Aumentar padding
+    margin: 8px 0; // Añadir margen vertical
+    // background-color: #fff; // Eliminar o comentar esta línea
+    border-radius: $border-radius;
+    min-width: 200px; // Asegurar un ancho mínimo
+  }
+
+  &__cama-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px; // Aumentado el padding horizontal
+    min-height: 48px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &.gestion-panel__cama-empty {
+      color: #999;
+      justify-content: center;
+      font-style: italic;
+    }
+
+    .cama-nombre {
+      margin-right: 24px;
+      flex: 1;
+      font-size: 15px;
+      color: rgba(0, 0, 0, 0.85);
+      padding-left: 8px; // Añadido padding izquierdo
+    }
+
+    .ant-switch {
+      flex-shrink: 0;
+      min-width: 44px;
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+
+  &__actions-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
+    .gestion-panel__button {
+      margin: 0;
+      min-width: 120px; // Asegurar un ancho mínimo para los botones
+    }
+
+    .gestion-panel__select,
+    .gestion-panel__search {
+      min-width: 200px;
+      flex: 1;
+      max-width: 300px; // Limitar el ancho máximo
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__edit-button {
+    padding: 4px 8px;
+    color: $primary-color;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto; // Centrar el botón horizontalmente
+    width: 32px; // Ancho fijo para el botón
+    height: 32px; // Alto fijo para el botón
+    
+    &:hover {
+      color: darken($primary-color, 10%);
+      background-color: rgba($primary-color, 0.1);
+      border-radius: $border-radius;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gestion-panel__fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+  .gestion-panel {
+    &__drawer {
+      width: 100% !important;
+    }
+
+    &__button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    &__table {
+      overflow-x: auto;
+    }
+
+    &__actions-container {
+      flex-direction: column;
+      align-items: stretch;
+      
+      .gestion-panel__button,
+      .gestion-panel__select,
+      .gestion-panel__search {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  }
+}

@@ -24,7 +24,6 @@ import {
 import { createMenu, getMenus, deleteMenu, updateMenu } from "../services/api";
 import "../styles/MenuPage.scss";
 
-const { Title } = Typography;
 const { Panel } = Collapse;
 const { confirm } = Modal;
 
@@ -343,14 +342,13 @@ const MenuPage = () => {
   return (
     <div className="menu-page">
       <div className="menu-page-header">
-        <Title level={2} className="page-title">Menús</Title>
+        <h1 className="page-title">Menús</h1>
         <Button
-          className="custom-button create-menu-button"
           type="primary"
           onClick={showModal}
-          icon={<PlusOutlined />}
+          className="custom-button create-menu-button"
         >
-          Crear Menú
+          <PlusOutlined /> Crear Menú
         </Button>
       </div>
       <Modal
