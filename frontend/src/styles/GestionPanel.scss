@@ -248,6 +248,33 @@ $font-size-xxlarge: 28px;
       border-radius: $border-radius;
     }
   }
+
+  &__cama-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .gestion-panel__edit-button,
+    .gestion-panel__delete-button {
+      padding: 4px;
+      width: 28px;
+      height: 28px;
+      
+      &:hover {
+        background-color: rgba($primary-color, 0.1);
+        border-radius: $border-radius;
+      }
+    }
+
+    .gestion-panel__delete-button {
+      color: $secondary-color;
+      
+      &:hover {
+        color: darken($secondary-color, 10%);
+        background-color: rgba($secondary-color, 0.1);
+      }
+    }
+  }
 }
 
 @keyframes fadeIn {

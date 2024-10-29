@@ -20,7 +20,7 @@ import {
 import DietaManagementModal from "./DietaManagementModal";
 import api from "../services/api";
 import "../styles/GestionPanel.scss";
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -48,9 +48,6 @@ const GestionPanel = ({
   const [selectedHabitacion, setSelectedHabitacion] = useState(null);
   const [selectedCama, setSelectedCama] = useState(null);
   const [habitacionesFiltradas, setHabitacionesFiltradas] = useState([]);
-  const [filteredPacientes, setFilteredPacientes] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedService, setSelectedService] = useState(null);
 
   const userRole = localStorage.getItem("role");
 
@@ -64,6 +61,15 @@ const GestionPanel = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
 
+  // Agregar estos estados al inicio del componente
+  const [isEditHabitacionModalOpen, setIsEditHabitacionModalOpen] =
+    useState(false);
+  const [editingHabitacion, setEditingHabitacion] = useState(null);
+
+  // Agregar estos estados al inicio del componente
+  const [isEditCamaModalOpen, setIsEditCamaModalOpen] = useState(false);
+  const [editingCama, setEditingCama] = useState(null);
+
   // Agregar estas funciones de paginación
   const paginate = (items) => {
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -75,10 +81,6 @@ const GestionPanel = ({
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-
-  useEffect(() => {
-    setFilteredPacientes(pacientes);
-  }, [pacientes]);
 
   // Función de ordenamiento para habitaciones
   const ordenarHabitaciones = (habitaciones) => {
@@ -102,13 +104,13 @@ const GestionPanel = ({
 
   // Modificar el useEffect para usar la función de ordenamiento
   useEffect(() => {
-    if (selectedService) {
+    if (selectedServicio) {
       const filtradas = habitaciones.filter((h) => {
         const habitacionServicio = h.servicio;
         return (
-          habitacionServicio === selectedService ||
-          habitacionServicio.id === selectedService ||
-          habitacionServicio === selectedService.nombre
+          habitacionServicio === selectedServicio ||
+          habitacionServicio.id === selectedServicio ||
+          habitacionServicio === selectedServicio.nombre
         );
       });
 
@@ -118,7 +120,7 @@ const GestionPanel = ({
       // Aplicar el ordenamiento a todas las habitaciones
       setHabitacionesFiltradas(ordenarHabitaciones(habitaciones));
     }
-  }, [habitaciones, selectedService]);
+  }, [habitaciones, selectedServicio]);
 
   const toggleActivo = async (item, type) => {
     const showConfirm = (isActivating) => {
@@ -517,33 +519,6 @@ const GestionPanel = ({
   const openDietaManagementModal = () => setIsDietaModalOpen(true);
   const closeDietaManagementModal = () => setIsDietaModalOpen(false);
 
-  const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-    setFilteredPacientes(
-      pacientes.filter(
-        (p) =>
-          p.name.toLowerCase().includes(value) ||
-          p.cedula.toLowerCase().includes(value)
-      )
-    );
-  };
-
-  const handleServiceSelect = (value) => {
-    const servicio = servicios.find((s) => s.nombre === value);
-    setSelectedService(servicio);
-
-    if (servicio) {
-      setFilteredPacientes(
-        pacientes.filter(
-          (p) => p.cama.habitacion.servicio.id === servicio.id
-        )
-      );
-    } else {
-      // Si no hay servicio seleccionado, mostrar todos los pacientes
-      setFilteredPacientes(pacientes);
-    }
-  };
 
   useEffect(() => {
     console.log("habitacionesFiltradas:", habitacionesFiltradas);
@@ -563,16 +538,9 @@ const GestionPanel = ({
 
   // Manejar el cambio de pestañas
   const handleTabChange = (activeKey) => {
-    // Limpiar filtros según la pestaña
-    if (activeKey === "2") {
-      // Pestaña de Habitaciones
-      setSelectedService(null);
-      setCurrentPage(1); // Resetear página
-    } else if (activeKey === "3") {
-      // Pestaña de Pacientes
-      setSearchTerm("");
-      setSelectedService(null);
-      setCurrentPage(1); // Resetear página
+    if (activeKey === "2" || activeKey === "3") {
+      setSelectedServicio(null);
+      setCurrentPage(1);
     }
   };
 
@@ -611,13 +579,128 @@ const GestionPanel = ({
     setEditingService(null);
   };
 
+  const handleEditHabitacion = (habitacion) => {
+    setEditingHabitacion(habitacion);
+    // Asegurarnos de obtener el ID del servicio correctamente
+    const servicioId = habitacion.servicio?.id || habitacion.servicio_id;
+    
+    form.setFieldsValue({
+      habitacionName: habitacion.nombre,
+      servicioId: servicioId
+    });
+    setIsEditHabitacionModalOpen(true);
+  };
+
+  const handleUpdateHabitacion = async () => {
+    try {
+      const values = await form.validateFields();
+      const updatedHabitacion = {
+        ...editingHabitacion,
+        nombre: values.habitacionName,
+        servicio_id: values.servicioId,
+      };
+
+      await api.put(
+        `/habitaciones/${editingHabitacion.id}/`,
+        updatedHabitacion
+      );
+      notification.success({
+        message: "Habitación actualizada",
+        description: "La habitación se ha actualizado correctamente",
+      });
+      setIsEditHabitacionModalOpen(false);
+      form.resetFields();
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo actualizar la habitación",
+      });
+    }
+  };
+
+  const closeEditHabitacionModal = () => {
+    setIsEditHabitacionModalOpen(false);
+    form.resetFields();
+    setEditingHabitacion(null);
+  };
+
+  const handleEditCama = (cama) => {
+    setEditingCama(cama);
+    form.setFieldsValue({
+      camaName: cama.nombre
+    });
+    setIsEditCamaModalOpen(true);
+  };
+
+  const handleUpdateCama = async () => {
+    try {
+      const values = await form.validateFields();
+      const updatedCama = {
+        ...editingCama,
+        nombre: values.camaName
+      };
+
+      await api.put(`/camas/${editingCama.id}/`, updatedCama);
+      notification.success({
+        message: "Cama actualizada",
+        description: "La cama se ha actualizado correctamente",
+      });
+      setIsEditCamaModalOpen(false);
+      form.resetFields();
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo actualizar la cama",
+      });
+    }
+  };
+
+  const handleDeleteCama = async (cama) => {
+    // Verificar si la cama tiene un paciente activo
+    const tienePacienteActivo = pacientes.some(
+      (paciente) => paciente.cama?.id === cama.id && paciente.activo
+    );
+
+    if (tienePacienteActivo) {
+      notification.error({
+        message: "No se puede eliminar la cama",
+        description: "La cama tiene un paciente activo asignado. Debe dar de alta al paciente antes de eliminar la cama.",
+      });
+      return;
+    }
+
+    Modal.confirm({
+      title: "¿Estás seguro de eliminar esta cama?",
+      content: "Esta acción no se puede deshacer",
+      okText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      onOk: async () => {
+        try {
+          await api.delete(`/camas/${cama.id}/`);
+          notification.success({
+            message: "Cama eliminada",
+            description: "La cama se ha eliminado correctamente",
+          });
+          refreshData();
+        } catch (error) {
+          notification.error({
+            message: "Error",
+            description: "No se pudo eliminar la cama",
+          });
+        }
+      },
+    });
+  };
+
   const columns = [
     { title: "Nombre", dataIndex: "nombre", key: "nombre" },
     {
       title: "Editar",
       key: "edit",
       width: 80, // Ancho fijo para la columna
-      align: 'center', // Alinear contenido al centro
+      align: "center", // Alinear contenido al centro
       render: (_, record) => (
         <Button
           type="link"
@@ -639,6 +722,36 @@ const GestionPanel = ({
       ),
     },
   ];
+
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
+  const [localSelectedService, setLocalSelectedService] = useState(null);
+  const [localFilteredPacientes, setLocalFilteredPacientes] = useState([]);
+
+  useEffect(() => {
+    const filtered = pacientes.filter((p) => {
+      const matchesSearch = localSearchTerm ? 
+        p.name.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
+        p.cedula.toLowerCase().includes(localSearchTerm.toLowerCase())
+        : true;
+
+      const matchesService = localSelectedService ?
+        p.cama.habitacion.servicio.id === localSelectedService.id
+        : true;
+
+      return matchesSearch && matchesService;
+    });
+    
+    setLocalFilteredPacientes(filtered);
+  }, [pacientes, localSearchTerm, localSelectedService]);
+
+  const handleLocalSearch = (e) => {
+    setLocalSearchTerm(e.target.value);
+  };
+
+  const handleLocalServiceSelect = (value) => {
+    const servicio = servicios.find((s) => s.nombre === value);
+    setLocalSelectedService(servicio);
+  };
 
   return (
     <div className="gestion-panel__container">
@@ -714,9 +827,9 @@ const GestionPanel = ({
                 placeholder="Filtrar por servicio"
                 onChange={(value) => {
                   const servicio = servicios.find((s) => s.nombre === value);
-                  setSelectedService(servicio);
+                  setSelectedServicio(servicio);
                 }}
-                value={selectedService ? selectedService.nombre : undefined}
+                value={selectedServicio ? selectedServicio.nombre : undefined}
                 allowClear
               >
                 {servicios.map((servicio) => (
@@ -771,16 +884,50 @@ const GestionPanel = ({
                         </li>
                       ) : (
                         habitacion.camas.map((cama) => (
-                          <li key={`cama-${habitacion.id}-${cama.id}`} className="gestion-panel__cama-item">
+                          <li
+                            key={`cama-${habitacion.id}-${cama.id}`}
+                            className="gestion-panel__cama-item"
+                          >
                             <span className="cama-nombre">{cama.nombre}</span>
-                            <Switch
-                              checked={cama.activo}
-                              onChange={() => toggleActivo(cama, "camas")}
-                            />
+                            <div className="gestion-panel__cama-actions">
+                              <Button
+                                type="link"
+                                onClick={() => handleEditCama(cama)}
+                                className="gestion-panel__edit-button"
+                              >
+                                <EditOutlined />
+                              </Button>
+                              <Button
+                                type="link"
+                                onClick={() => handleDeleteCama(cama)}
+                                className="gestion-panel__delete-button"
+                              >
+                                <DeleteOutlined />
+                              </Button>
+                              <Switch
+                                checked={cama.activo}
+                                onChange={() => toggleActivo(cama, "camas")}
+                              />
+                            </div>
                           </li>
                         ))
                       )}
                     </ul>
+                  ),
+                },
+                {
+                  title: "Editar",
+                  key: "edit",
+                  width: 80,
+                  align: "center",
+                  render: (_, record) => (
+                    <Button
+                      type="link"
+                      onClick={() => handleEditHabitacion(record)}
+                      className="gestion-panel__edit-button"
+                    >
+                      <EditOutlined />
+                    </Button>
                   ),
                 },
                 {
@@ -884,15 +1031,15 @@ const GestionPanel = ({
               <Input
                 className="gestion-panel__search"
                 placeholder="Buscar por nombre o cédula"
-                value={searchTerm}
-                onChange={handleSearch}
+                value={localSearchTerm}
+                onChange={handleLocalSearch}
                 allowClear
               />
               <Select
                 className="gestion-panel__select"
                 placeholder="Filtrar por servicio"
-                onChange={handleServiceSelect}
-                value={selectedService ? selectedService.nombre : undefined}
+                onChange={handleLocalServiceSelect}
+                value={localSelectedService ? localSelectedService.nombre : undefined}
                 allowClear
               >
                 {servicios.map((servicio) => (
@@ -906,17 +1053,17 @@ const GestionPanel = ({
             <Table
               className="gestion-panel__table gestion-panel__fade-in"
               dataSource={
-                filteredPacientes.length > 10
-                  ? paginate(filteredPacientes)
-                  : filteredPacientes
+                localFilteredPacientes.length > 10
+                  ? paginate(localFilteredPacientes)
+                  : localFilteredPacientes
               }
               rowKey={(record) => `paciente-${record.id}`}
               pagination={
-                filteredPacientes.length > 10
+                localFilteredPacientes.length > 10
                   ? {
                       current: currentPage,
                       pageSize: itemsPerPage,
-                      total: filteredPacientes.length,
+                      total: localFilteredPacientes.length,
                       onChange: handlePageChange,
                       showSizeChanger: false,
                       showQuickJumper: false,
@@ -1082,6 +1229,80 @@ const GestionPanel = ({
             ]}
           >
             <Input placeholder="Ingrese el nombre del servicio" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        className="gestion-panel__modal gestion-panel__fade-in"
+        title="Editar Habitación"
+        open={isEditHabitacionModalOpen}
+        onOk={handleUpdateHabitacion}
+        onCancel={closeEditHabitacionModal}
+        okText="Guardar"
+        cancelText="Cancelar"
+      >
+        <Form form={form} layout="vertical" className="gestion-panel__form">
+          <Form.Item
+            name="habitacionName"
+            label="Nombre de la Habitación"
+            rules={[
+              {
+                required: true,
+                message: "Por favor ingrese el nombre de la habitación",
+              },
+            ]}
+          >
+            <Input placeholder="Ingrese el nombre de la habitación" />
+          </Form.Item>
+          <Form.Item
+            name="servicioId"
+            label="Servicio"
+            rules={[
+              {
+                required: true,
+                message: "Por favor seleccione un servicio",
+              },
+            ]}
+          >
+            <Select placeholder="Seleccione un servicio">
+              {servicios
+                .filter((s) => s.activo)
+                .map((servicio) => (
+                  <Option key={servicio.id} value={servicio.id}>
+                    {servicio.nombre}
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        className="gestion-panel__modal gestion-panel__fade-in"
+        title="Editar Cama"
+        open={isEditCamaModalOpen}
+        onOk={handleUpdateCama}
+        onCancel={() => {
+          setIsEditCamaModalOpen(false);
+          form.resetFields();
+          setEditingCama(null);
+        }}
+        okText="Guardar"
+        cancelText="Cancelar"
+      >
+        <Form form={form} layout="vertical" className="gestion-panel__form">
+          <Form.Item
+            name="camaName"
+            label="Nombre de la Cama"
+            rules={[
+              {
+                required: true,
+                message: "Por favor ingrese el nombre de la cama",
+              },
+            ]}
+          >
+            <Input placeholder="Ingrese el nombre de la cama" />
           </Form.Item>
         </Form>
       </Modal>

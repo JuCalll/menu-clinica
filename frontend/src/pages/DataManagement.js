@@ -187,19 +187,11 @@ const DataManagement = () => {
         <Title level={2} className="dm-title">Gestión de Pacientes, Servicios y Habitaciones</Title>
 
         <GestionPanel
-          pacientes={filteredPacientes}
+          pacientes={pacientes}
           servicios={servicios}
           habitaciones={habitaciones}
           dietas={dietas}
           refreshData={refreshData}
-          selectedService={selectedService}
-          selectedRoom={selectedRoom}
-          selectedBed={selectedBed}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          setSelectedService={setSelectedService}
-          setSelectedRoom={setSelectedRoom}
-          setSelectedBed={setSelectedBed}
         />
 
         <div className="dm-active-data">
