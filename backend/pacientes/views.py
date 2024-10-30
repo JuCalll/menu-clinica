@@ -15,8 +15,8 @@ class PacienteListCreateView(generics.ListCreateAPIView):
         changes = {
             'name': response.data.get('name'),
             'cedula': response.data.get('cedula'),
-            'recommended_diet': response.data.get('recommended_diet'),  # Registrar la dieta recomendada
-            'alergias': response.data.get('alergias'),  # Registrar las alergias
+            'recommended_diet': response.data.get('recommended_diet'),
+            'alergias': response.data.get('alergias'),
             'activo': response.data.get('activo'),
         }
         LogEntry.objects.create(
@@ -37,8 +37,8 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
         changes = {
             'name': instance.name,
             'cedula': instance.cedula,
-            'recommended_diet': instance.recommended_diet.id if instance.recommended_diet else None,  # Guardar la dieta recomendada
-            'alergias': instance.alergias,  # Guardar las alergias
+            'recommended_diet': instance.recommended_diet.nombre if instance.recommended_diet else None,
+            'alergias': instance.alergias.nombre if instance.alergias else None,
             'activo': instance.activo,
         }
         LogEntry.objects.create(

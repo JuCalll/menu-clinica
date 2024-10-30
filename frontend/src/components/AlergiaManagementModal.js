@@ -1,65 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Table, Input, Form, Popconfirm, message } from 'antd';
-import { getDietas, createDieta, updateDieta, deleteDieta } from '../services/api'; 
+import { getAlergias, createAlergia, updateAlergia, deleteAlergia } from '../services/api'; 
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
-const DietaManagementModal = ({ visible, onClose }) => {
-  const [dietas, setDietas] = useState([]);
+const AlergiaManagementModal = ({ visible, onClose }) => {
+  const [alergias, setAlergias] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingDieta, setEditingDieta] = useState(null);
+  const [editingAlergia, setEditingAlergia] = useState(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
     if (visible) {
-      fetchDietas();
+      fetchAlergias();
     }
   }, [visible]);
 
-  const fetchDietas = async () => {
+  const fetchAlergias = async () => {
     try {
-      const data = await getDietas();
-      setDietas(data);
+      const data = await getAlergias();
+      setAlergias(data);
     } catch (error) {
-      message.error('Error al cargar las dietas');
+      message.error('Error al cargar las alergias');
     }
   };
 
   const handleAdd = () => {
     setIsEditing(true);
-    setEditingDieta(null);
+    setEditingAlergia(null);
     form.resetFields();
   };
 
-  const handleEdit = (dieta) => {
+  const handleEdit = (alergia) => {
     setIsEditing(true);
-    setEditingDieta(dieta);
-    form.setFieldsValue(dieta);
+    setEditingAlergia(alergia);
+    form.setFieldsValue(alergia);
   };
 
   const handleDelete = async (id) => {
     try {
-      await deleteDieta(id);
-      message.success('Dieta eliminada');
-      fetchDietas();
+      await deleteAlergia(id);
+      message.success('Alergia eliminada');
+      fetchAlergias();
     } catch (error) {
-      message.error('Error al eliminar la dieta');
+      message.error('Error al eliminar la alergia');
     }
   };
 
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      if (editingDieta) {
-        await updateDieta(editingDieta.id, values);
-        message.success('Dieta actualizada');
+      if (editingAlergia) {
+        await updateAlergia(editingAlergia.id, values);
+        message.success('Alergia actualizada');
       } else {
-        await createDieta(values);
-        message.success('Dieta creada');
+        await createAlergia(values);
+        message.success('Alergia creada');
       }
       setIsEditing(false);
-      fetchDietas();
+      fetchAlergias();
     } catch (error) {
-      message.error('Error al guardar la dieta');
+      message.error('Error al guardar la alergia');
     }
   };
 
@@ -89,7 +89,7 @@ const DietaManagementModal = ({ visible, onClose }) => {
             <EditOutlined />
           </Button>
           <Popconfirm
-            title="¿Seguro que deseas eliminar esta dieta?"
+            title="¿Seguro que deseas eliminar esta alergia?"
             onConfirm={() => handleDelete(record.id)}
             okText="Sí"
             cancelText="No"
@@ -109,7 +109,7 @@ const DietaManagementModal = ({ visible, onClose }) => {
   return (
     <Modal
       open={visible}
-      title="Gestión de Dietas"
+      title="Gestión de Alergias"
       onCancel={onClose}
       footer={null}
       width={600}
@@ -121,33 +121,33 @@ const DietaManagementModal = ({ visible, onClose }) => {
           onClick={handleAdd} 
           style={{ width: '100%' }}
         >
-          Añadir Dieta
+          Añadir Alergia
         </Button>
       </div>
       <Table
         columns={columns}
-        dataSource={dietas}
+        dataSource={alergias}
         rowKey="id"
         pagination={false}
       />
       <Modal
         open={isEditing}
-        title={editingDieta ? 'Editar Dieta' : 'Crear Dieta'}
+        title={editingAlergia ? 'Editar Alergia' : 'Crear Alergia'}
         onCancel={() => setIsEditing(false)}
         onOk={handleSave}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="nombre"
-            label="Nombre de la Dieta"
-            rules={[{ required: true, message: 'Por favor, introduce el nombre de la dieta' }]}
+            label="Nombre de la Alergia"
+            rules={[{ required: true, message: 'Por favor, introduce el nombre de la alergia' }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="descripcion"
-            label="Descripción de la Dieta"
-            rules={[{ required: false, message: 'Por favor, introduce la descripción de la dieta' }]}
+            label="Descripción de la Alergia"
+            rules={[{ required: false, message: 'Por favor, introduce la descripción de la alergia' }]}
           >
             <Input.TextArea />
           </Form.Item>
@@ -157,4 +157,4 @@ const DietaManagementModal = ({ visible, onClose }) => {
   );
 };
 
-export default DietaManagementModal;
+export default AlergiaManagementModal;

@@ -14,6 +14,7 @@ const DataManagement = () => {
   const [servicios, setServicios] = useState([]);
   const [habitaciones, setHabitaciones] = useState([]);
   const [dietas, setDietas] = useState([]);
+  const [alergias, setAlergias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("todos");
@@ -37,17 +38,20 @@ const DataManagement = () => {
           serviciosResponse,
           habitacionesResponse,
           dietasResponse,
+          alergiasResponse,
         ] = await Promise.all([
           api.get("/pacientes/"),
           api.get("/servicios/"),
           api.get("/habitaciones/"),
-          api.get("/dietas/"),
+          api.get("/dietas/dietas/"),
+          api.get("/dietas/alergias/"),
         ]);
 
         setPacientes(pacientesResponse.data);
         setServicios(serviciosResponse.data);
         setHabitaciones(habitacionesResponse.data);
         setDietas(dietasResponse.data);
+        setAlergias(alergiasResponse.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -191,6 +195,7 @@ const DataManagement = () => {
           servicios={servicios}
           habitaciones={habitaciones}
           dietas={dietas}
+          alergias={alergias}
           refreshData={refreshData}
         />
 
@@ -287,7 +292,7 @@ const DataManagement = () => {
                       <Text strong>Dieta Recomendada:</Text> {paciente.recommended_diet}
                     </Col>
                     <Col span={12}>
-                      <Text strong>Alergias:</Text> {paciente.alergias || "Ninguna"}
+                      <Text strong>Alergias:</Text> {paciente.alergias}
                     </Col>
                     <Col span={24}>
                       <Text strong>Registrado en:</Text> {paciente.created_at}

@@ -18,6 +18,7 @@ import {
   createPaciente,
 } from "../services/api";
 import DietaManagementModal from "./DietaManagementModal";
+import AlergiaManagementModal from "./AlergiaManagementModal";
 import api from "../services/api";
 import "../styles/GestionPanel.scss";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
@@ -30,6 +31,7 @@ const GestionPanel = ({
   servicios,
   habitaciones,
   dietas,
+  alergias,
   refreshData,
 }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -38,6 +40,7 @@ const GestionPanel = ({
   const [isCamaModalOpen, setIsCamaModalOpen] = useState(false);
   const [isPacienteModalOpen, setIsPacienteModalOpen] = useState(false);
   const [isDietaModalOpen, setIsDietaModalOpen] = useState(false);
+  const [isAlergiaModalOpen, setIsAlergiaModalOpen] = useState(false);
   const [newHabitacionName, setNewHabitacionName] = useState("");
   const [newCamaName, setNewCamaName] = useState("");
   const [newPacienteID, setNewPacienteID] = useState("");
@@ -69,6 +72,10 @@ const GestionPanel = ({
   // Agregar estos estados al inicio del componente
   const [isEditCamaModalOpen, setIsEditCamaModalOpen] = useState(false);
   const [editingCama, setEditingCama] = useState(null);
+
+  // Agregar estos estados al inicio del componente
+  const [isEditPacienteModalOpen, setIsEditPacienteModalOpen] = useState(false);
+  const [editingPaciente, setEditingPaciente] = useState(null);
 
   // Agregar estas funciones de paginación
   const paginate = (items) => {
@@ -202,7 +209,7 @@ const GestionPanel = ({
             "Esta acción desactivará al paciente y liberará su cama asociada. El paciente permanecerá en la base de datos como inactivo.";
           break;
         default:
-          title = "¿Estás seguro de que deseas continuar?";
+          title = "¿Est��s seguro de que deseas continuar?";
           content =
             "Esta acción cambiará el estado del elemento seleccionado a inactivo.";
           break;
@@ -280,6 +287,15 @@ const GestionPanel = ({
       }
 
       updatedItem.cama_id = cama.id;
+
+      if (item.alergias && item.alergias.id) {
+        updatedItem.alergias_id = item.alergias.id;
+      } else if (item.alergias && typeof item.alergias === "string") {
+        const alergia = alergias.find((a) => a.nombre === item.alergias);
+        updatedItem.alergias_id = alergia ? alergia.id : null;
+      } else {
+        updatedItem.alergias_id = null;
+      }
 
       // Verificación y extracción correcta del ID de la dieta recomendada
       if (item.recommended_diet && item.recommended_diet.id) {
@@ -470,7 +486,8 @@ const GestionPanel = ({
       !newPacienteID ||
       !newPacienteName ||
       !selectedCama ||
-      !newRecommendedDiet
+      !newRecommendedDiet ||
+      !newAllergies
     ) {
       notification.error({
         message: "Error",
@@ -484,7 +501,7 @@ const GestionPanel = ({
         name: newPacienteName,
         cama_id: selectedCama,
         recommended_diet_id: newRecommendedDiet,
-        alergias: newAllergies,
+        alergias_id: newAllergies,
         activo: true,
       };
       console.log("Payload que se enviará:", payload);
@@ -494,7 +511,7 @@ const GestionPanel = ({
       setNewPacienteID("");
       setNewPacienteName("");
       setNewRecommendedDiet(null);
-      setNewAllergies("");
+      setNewAllergies(null);
       setSelectedCama(null);
       refreshData();
     } catch (error) {
@@ -518,7 +535,8 @@ const GestionPanel = ({
   const closeCreatePacienteModal = () => setIsPacienteModalOpen(false);
   const openDietaManagementModal = () => setIsDietaModalOpen(true);
   const closeDietaManagementModal = () => setIsDietaModalOpen(false);
-
+  const openAlergiaManagementModal = () => setIsAlergiaModalOpen(true);
+  const closeAlergiaManagementModal = () => setIsAlergiaModalOpen(false);
 
   useEffect(() => {
     console.log("habitacionesFiltradas:", habitacionesFiltradas);
@@ -583,10 +601,10 @@ const GestionPanel = ({
     setEditingHabitacion(habitacion);
     // Asegurarnos de obtener el ID del servicio correctamente
     const servicioId = habitacion.servicio?.id || habitacion.servicio_id;
-    
+
     form.setFieldsValue({
       habitacionName: habitacion.nombre,
-      servicioId: servicioId
+      servicioId: servicioId,
     });
     setIsEditHabitacionModalOpen(true);
   };
@@ -628,7 +646,7 @@ const GestionPanel = ({
   const handleEditCama = (cama) => {
     setEditingCama(cama);
     form.setFieldsValue({
-      camaName: cama.nombre
+      camaName: cama.nombre,
     });
     setIsEditCamaModalOpen(true);
   };
@@ -638,7 +656,7 @@ const GestionPanel = ({
       const values = await form.validateFields();
       const updatedCama = {
         ...editingCama,
-        nombre: values.camaName
+        nombre: values.camaName,
       };
 
       await api.put(`/camas/${editingCama.id}/`, updatedCama);
@@ -666,7 +684,8 @@ const GestionPanel = ({
     if (tienePacienteActivo) {
       notification.error({
         message: "No se puede eliminar la cama",
-        description: "La cama tiene un paciente activo asignado. Debe dar de alta al paciente antes de eliminar la cama.",
+        description:
+          "La cama tiene un paciente activo asignado. Debe dar de alta al paciente antes de eliminar la cama.",
       });
       return;
     }
@@ -692,6 +711,52 @@ const GestionPanel = ({
         }
       },
     });
+  };
+  const handleEditPaciente = (paciente) => {
+    setEditingPaciente(paciente);
+    form.setFieldsValue({
+      pacienteCedula: paciente.cedula,
+      pacienteName: paciente.name,
+      camaId: paciente.cama.id,
+      recommendedDietId: paciente.recommended_diet?.id,
+      alergiasId: paciente.alergias?.id,
+    });
+    setIsEditPacienteModalOpen(true);
+  };
+
+  const handleUpdatePaciente = async () => {
+    try {
+      const values = await form.validateFields();
+      const updatedPaciente = {
+        ...editingPaciente,
+        cedula: values.pacienteCedula,
+        name: values.pacienteName,
+        cama_id: values.camaId,
+        recommended_diet_id: values.recommendedDietId,
+        alergias_id: values.alergiasId,
+      };
+
+      await api.put(`/pacientes/${editingPaciente.id}/`, updatedPaciente);
+      notification.success({
+        message: "Paciente actualizado",
+        description: "El paciente se ha actualizado correctamente",
+      });
+      setIsEditPacienteModalOpen(false);
+      form.resetFields();
+      refreshData();
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description:
+          error.response?.data?.detail || "No se pudo actualizar el paciente",
+      });
+    }
+  };
+
+  const closeEditPacienteModal = () => {
+    setIsEditPacienteModalOpen(false);
+    form.resetFields();
+    setEditingPaciente(null);
   };
 
   const columns = [
@@ -729,18 +794,18 @@ const GestionPanel = ({
 
   useEffect(() => {
     const filtered = pacientes.filter((p) => {
-      const matchesSearch = localSearchTerm ? 
-        p.name.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-        p.cedula.toLowerCase().includes(localSearchTerm.toLowerCase())
+      const matchesSearch = localSearchTerm
+        ? p.name.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
+          p.cedula.toLowerCase().includes(localSearchTerm.toLowerCase())
         : true;
 
-      const matchesService = localSelectedService ?
-        p.cama.habitacion.servicio.id === localSelectedService.id
+      const matchesService = localSelectedService
+        ? p.cama.habitacion.servicio.id === localSelectedService.id
         : true;
 
       return matchesSearch && matchesService;
     });
-    
+
     setLocalFilteredPacientes(filtered);
   }, [pacientes, localSearchTerm, localSelectedService]);
 
@@ -1028,6 +1093,12 @@ const GestionPanel = ({
               >
                 Gestionar Dietas
               </Button>
+              <Button
+                className="gestion-panel__button"
+                onClick={openAlergiaManagementModal}
+              >
+                Gestionar Alergias
+              </Button>
               <Input
                 className="gestion-panel__search"
                 placeholder="Buscar por nombre o cédula"
@@ -1039,7 +1110,9 @@ const GestionPanel = ({
                 className="gestion-panel__select"
                 placeholder="Filtrar por servicio"
                 onChange={handleLocalServiceSelect}
-                value={localSelectedService ? localSelectedService.nombre : undefined}
+                value={
+                  localSelectedService ? localSelectedService.nombre : undefined
+                }
                 allowClear
               >
                 {servicios.map((servicio) => (
@@ -1058,6 +1131,7 @@ const GestionPanel = ({
                   : localFilteredPacientes
               }
               rowKey={(record) => `paciente-${record.id}`}
+              scroll={{ x: 1300 }}
               pagination={
                 localFilteredPacientes.length > 10
                   ? {
@@ -1072,29 +1146,54 @@ const GestionPanel = ({
                   : false
               }
               columns={[
-                { title: "Cédula", dataIndex: "cedula", key: "cedula" },
-                { title: "Nombre", dataIndex: "name", key: "name" },
-                { title: "Cama", dataIndex: ["cama", "nombre"], key: "cama" },
+                {
+                  title: "Cédula",
+                  dataIndex: "cedula",
+                  key: "cedula",
+                  width: 120,
+                },
+                {
+                  title: "Nombre",
+                  dataIndex: "name",
+                  key: "name",
+                  width: 250,
+                },
+                {
+                  title: "Cama",
+                  dataIndex: ["cama", "nombre"],
+                  key: "cama",
+                  width: 150,
+                },
                 {
                   title: "Habitación",
                   dataIndex: ["cama", "habitacion", "nombre"],
                   key: "habitacion",
+                  width: 120,
                 },
                 {
                   title: "Servicio",
                   dataIndex: ["cama", "habitacion", "servicio", "nombre"],
                   key: "servicio",
+                  width: 150,
                 },
                 {
                   title: "Dieta Recomendada",
                   dataIndex: "recommended_diet",
                   key: "recommended_diet",
+                  width: 450,
                 },
-                { title: "Alergias", dataIndex: "alergias", key: "alergias" },
+                {
+                  title: "Alergias",
+                  dataIndex: "alergias",
+                  key: "alergias",
+                  width: 400,
+                },
                 {
                   title: "Activo",
                   key: "activo",
                   align: "center",
+                  width: 100,
+                  fixed: "right",
                   render: (_, record) => (
                     <Switch
                       checked={record.activo}
@@ -1102,13 +1201,119 @@ const GestionPanel = ({
                     />
                   ),
                 },
+                {
+                  title: "Editar",
+                  key: "edit",
+                  width: 80,
+                  align: "center",
+                  render: (_, record) => (
+                    <Button
+                      type="link"
+                      onClick={() => handleEditPaciente(record)}
+                      className="gestion-panel__edit-button"
+                    >
+                      <EditOutlined />
+                    </Button>
+                  ),
+                },
               ]}
             />
+            <Modal
+              className="gestion-panel__modal gestion-panel__fade-in"
+              title="Editar Paciente"
+              open={isEditPacienteModalOpen}
+              onOk={handleUpdatePaciente}
+              onCancel={closeEditPacienteModal}
+              okText="Guardar"
+              cancelText="Cancelar"
+            >
+              <Form
+                form={form}
+                layout="vertical"
+                className="gestion-panel__form"
+              >
+                <Form.Item
+                  name="pacienteCedula"
+                  label="Cédula"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Por favor ingrese la cédula del paciente",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Ingrese la cédula del paciente" />
+                </Form.Item>
+                <Form.Item
+                  name="pacienteName"
+                  label="Nombre"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Por favor ingrese el nombre del paciente",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Ingrese el nombre del paciente" />
+                </Form.Item>
+                <Form.Item
+                  name="camaId"
+                  label="Cama"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Por favor seleccione una cama",
+                    },
+                  ]}
+                >
+                  <Select placeholder="Seleccione una cama">
+                    {habitaciones
+                      .flatMap((h) =>
+                        h.camas.filter(
+                          (c) =>
+                            c.activo &&
+                            (!pacientes.some((p) => p.cama.id === c.id) ||
+                              c.id === editingPaciente?.cama.id)
+                        )
+                      )
+                      .map((cama) => (
+                        <Option key={`cama-${cama.id}`} value={cama.id}>
+                          {cama.nombre}
+                        </Option>
+                      ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item name="recommendedDietId" label="Dieta Recomendada">
+                  <Select placeholder="Seleccione una dieta" allowClear>
+                    {dietas.map((dieta) => (
+                      <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                        {dieta.nombre}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item name="alergiasId" label="Alergias">
+                  <Select placeholder="Seleccione una alergia" allowClear>
+                    {alergias.map((alergia) => (
+                      <Option key={`alergia-${alergia.id}`} value={alergia.id}>
+                        {alergia.nombre}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Form>
+            </Modal>
 
             <DietaManagementModal
               visible={isDietaModalOpen}
               onClose={closeDietaManagementModal}
               dietas={dietas}
+              refreshData={refreshData}
+            />
+            <AlergiaManagementModal
+              visible={isAlergiaModalOpen}
+              onClose={closeAlergiaManagementModal}
+              alergias={alergias}
               refreshData={refreshData}
             />
 
@@ -1161,7 +1366,8 @@ const GestionPanel = ({
                   <Select
                     value={newRecommendedDiet}
                     onChange={(value) => setNewRecommendedDiet(value)}
-                    placeholder="Seleccione la dieta recomendada"
+                    placeholder="Seleccione una dieta"
+                    allowClear
                   >
                     {dietas.map((dieta) => (
                       <Option key={`dieta-${dieta.id}`} value={dieta.id}>
@@ -1171,11 +1377,18 @@ const GestionPanel = ({
                   </Select>
                 </Form.Item>
                 <Form.Item label="Alergias">
-                  <Input
+                  <Select
                     value={newAllergies}
-                    onChange={(e) => setNewAllergies(e.target.value)}
-                    placeholder="Ingrese las alergias del paciente"
-                  />
+                    onChange={(value) => setNewAllergies(value)}
+                    placeholder="Seleccione una alergia"
+                    allowClear
+                  >
+                    {alergias.map((alergia) => (
+                      <Option key={`alergia-${alergia.id}`} value={alergia.id}>
+                        {alergia.nombre}
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </Form>
             </Modal>

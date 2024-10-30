@@ -5,7 +5,7 @@ from .models import Paciente
 from camas.models import Cama
 from habitaciones.models import Habitacion
 from servicios.models import Servicio
-from dietas.models import Dieta  # Importamos el modelo Dieta
+from dietas.models import Dieta, Alergia
 
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,20 +32,28 @@ class DietaSerializer(serializers.ModelSerializer):
         model = Dieta
         fields = ['id', 'nombre', 'descripcion']
 
+class AlergiaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Alergia
+        fields = ['id', 'nombre', 'descripcion']
+
 class PacienteSerializer(serializers.ModelSerializer):
     cama_id = serializers.PrimaryKeyRelatedField(queryset=Cama.objects.all(), source='cama', write_only=True)
     cama = CamaSerializer(read_only=True)
     recommended_diet_id = serializers.PrimaryKeyRelatedField(queryset=Dieta.objects.all(), source='recommended_diet', write_only=True)
-    recommended_diet = serializers.StringRelatedField(read_only=True)  # This displays the diet name
-    alergias = serializers.CharField(allow_blank=True, allow_null=True)
+    recommended_diet = serializers.StringRelatedField(read_only=True)
+    alergias = serializers.StringRelatedField(read_only=True)
+    alergias_id = serializers.PrimaryKeyRelatedField(queryset=Alergia.objects.all(), source='alergias', write_only=True)
 
     class Meta:
         model = Paciente
-        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 'recommended_diet_id', 'recommended_diet', 'alergias', 'activo', 'created_at']
-
+        fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 
+                 'recommended_diet_id', 'recommended_diet', 
+                 'alergias', 'alergias_id', 'activo', 'created_at']
 
     def create(self, validated_data):
-        return Paciente.objects.create(**validated_data)
+        paciente = Paciente.objects.create(**validated_data)
+        return paciente
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)

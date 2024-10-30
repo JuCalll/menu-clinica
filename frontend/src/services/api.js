@@ -61,22 +61,22 @@ export const getPacientes = async () => {
 };
 
 export const getDietas = async () => {
-  const response = await api.get("/dietas/");
+  const response = await api.get("/dietas/dietas/");
   return response.data;
 };
 
 export const createDieta = async (dietaData) => {
-  const response = await api.post("/dietas/", dietaData);
+  const response = await api.post("/dietas/dietas/", dietaData);
   return response.data;
 };
 
 export const updateDieta = async (id, dietaData) => {
-  const response = await api.put(`/dietas/${id}/`, dietaData);
+  const response = await api.put(`/dietas/dietas/${id}/`, dietaData);
   return response.data;
 };
 
 export const deleteDieta = async (id) => {
-  const response = await api.delete(`/dietas/${id}/`);
+  const response = await api.delete(`/dietas/dietas/${id}/`);
   return response.data;
 };
 
@@ -161,6 +161,30 @@ export const deleteCama = async (id) => {
 
 export const updatePaciente = async (id, pacienteData) => {
   const response = await api.put(`/pacientes/${id}/`, pacienteData);
+  return response.data;
+};
+
+// Obtener todas las alergias
+export const getAlergias = async () => {
+  const response = await api.get("/dietas/alergias/");
+  return response.data;
+};
+
+// Crear una nueva alergia
+export const createAlergia = async (alergiaData) => {
+  const response = await api.post("/dietas/alergias/", alergiaData);
+  return response.data;
+};
+
+// Actualizar una alergia existente
+export const updateAlergia = async (id, alergiaData) => {
+  const response = await api.put(`/dietas/alergias/${id}/`, alergiaData);
+  return response.data;
+};
+
+// Eliminar una alergia
+export const deleteAlergia = async (id) => {
+  const response = await api.delete(`/dietas/alergias/${id}/`);
   return response.data;
 };
 
