@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Select, Button, Checkbox, Spin, Collapse, Modal } from "antd";
+import { 
+  Select, 
+  Button, 
+  Checkbox, 
+  Spin, 
+  Collapse, 
+  Modal, 
+  message, 
+  Input 
+} from "antd";
 import { getPacientes, getMenus, createPedido } from "../services/api";
 import "../styles/RealizarPedido.scss";
 
 const { Option } = Select;
 const { Panel } = Collapse;
-
-const sectionNames = {
-  adicionales: "Adicionales",
-  platos_principales: "Platos Principales",
-  acompanantes: "Acompañantes",
-  bebidas: "Bebidas",
-};
 
 const RealizarPedido = () => {
   const [pacientes, setPacientes] = useState([]);
@@ -20,27 +22,42 @@ const RealizarPedido = () => {
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [additionalOptions, setAdditionalOptions] = useState({
-    leche: "",
-    bebida: "",
-    azucarPanela: [],
-    vegetales: "",
-    golosina: false,
-    observaciones: "",
+    observaciones: ""
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [bebidasPreparacion, setBebidasPreparacion] = useState({});
+  const [preparacionModal, setPreparacionModal] = useState({
+    visible: false,
+    bebidaId: null,
+    bebidaNombre: ''
+  });
+
+  // Definimos las opciones de preparación
+  const opcionesPreparado = [
+    { value: 'leche_entera', label: 'En leche entera' },
+    { value: 'leche_deslactosada', label: 'En leche deslactosada' },
+    { value: 'leche_almendras', label: 'En leche de almendras' },
+    { value: 'agua', label: 'En agua' },
+    { value: 'unica_preparacion', label: 'Única preparación' }
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const pacientesResponse = await getPacientes();
-        const menusResponse = await getMenus();
-        setPacientes(pacientesResponse);
-        setMenus(menusResponse);
+        const [pacientesResponse, menusResponse] = await Promise.all([
+          getPacientes(),
+          getMenus()
+        ]);
+        setPacientes(pacientesResponse || []);
+        setMenus(menusResponse || []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data", error);
+        message.error("Error al cargar los datos");
+        setPacientes([]);
+        setMenus([]);
         setLoading(false);
       }
     };
@@ -49,45 +66,50 @@ const RealizarPedido = () => {
 
   const handlePacienteChange = (value) => {
     setSelectedPaciente(value);
-  };
-
-  const filterOption = (input, option) => {
-    return (
-      option?.children?.toString().toLowerCase().indexOf(input.toLowerCase()) >=
-      0
-    );
+    if (!value) {
+      resetForm();
+    }
+    setErrors((prev) => ({ ...prev, paciente: null }));
   };
 
   const handleMenuChange = (value) => {
     const menu = menus.find((menu) => menu.id === value);
     setSelectedMenu(menu);
     setSelectedOptions({});
+    setErrors((prev) => ({ ...prev, menu: null }));
   };
 
-  const handleOptionChange = (sectionName, optionType, optionId, checked) => {
+  const handleOptionChange = (optionType, optionId, checked, opcionTexto) => {
+    if (checked && 
+        (optionType === "bebidas" || 
+         optionType === "bebidas_calientes" || 
+         (optionType === "platos_principales" && selectedMenu?.sections.some(s => s.titulo === "Desayuno")))) {
+      setPreparacionModal({
+        visible: true,
+        bebidaId: optionId,
+        bebidaNombre: opcionTexto
+      });
+    } else if (!checked) {
+      setBebidasPreparacion(prev => {
+        const newPreparaciones = { ...prev };
+        delete newPreparaciones[optionId];
+        return newPreparaciones;
+      });
+    }
+
     setSelectedOptions((prevOptions) => {
       const newOptions = { ...prevOptions };
 
-      if (!newOptions[sectionName]) {
-        newOptions[sectionName] = {};
-      }
-
-      if (!newOptions[sectionName][optionType]) {
-        newOptions[sectionName][optionType] = [];
+      if (!newOptions[optionType]) {
+        newOptions[optionType] = [];
       }
 
       if (checked) {
-        if (optionType === "acompanantes") {
-          if (newOptions[sectionName][optionType].length < 2) {
-            newOptions[sectionName][optionType].push(optionId);
-          }
-        } else {
-          newOptions[sectionName][optionType] = [optionId];
-        }
+        newOptions[optionType].push(optionId);
       } else {
-        newOptions[sectionName][optionType] = newOptions[sectionName][
-          optionType
-        ].filter((id) => id !== optionId);
+        newOptions[optionType] = newOptions[optionType].filter(
+          (id) => id !== optionId
+        );
       }
 
       return newOptions;
@@ -98,74 +120,51 @@ const RealizarPedido = () => {
     const newErrors = {};
 
     if (!selectedPaciente) {
-      newErrors.paciente = "Debe seleccionar un paciente.";
+      newErrors.paciente = "Debe seleccionar un paciente";
     }
 
     if (!selectedMenu) {
-      newErrors.menu = "Debe seleccionar un menú.";
+      newErrors.menu = "Debe seleccionar un menú";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const showConfirmModal = () => {
-    if (validateForm()) {
-      setConfirmVisible(true);
-    } else {
-      Modal.error({
-        title: "Errores de Validación",
-        content: (
-          <ul>
-            {Object.values(errors).map((error, index) => (
-              <li key={index}>{error}</li>
-            ))}
-          </ul>
-        ),
-      });
-    }
-  };
-
   const handleOk = async () => {
     setConfirmVisible(false);
-    try {
-      const opciones = [];
-      for (const section of selectedMenu.sections) {
-        for (const key in section) {
-          if (section[key] instanceof Array) {
-            section[key].forEach((option) => {
-              const selected =
-                selectedOptions[section.titulo]?.[key]?.includes(option.id) ||
-                false;
-              opciones.push({
-                id: option.id,
-                selected: selected,
-              });
-            });
-          }
-        }
-      }
+    if (!validateForm()) return;
 
-      const pedido = {
-        paciente: selectedPaciente,
-        menu: selectedMenu.id,
-        opciones: opciones,
-        adicionales: additionalOptions,
-      };
-
-      await createPedido(pedido);
-      Modal.success({
-        title: "Pedido Realizado",
-        content: "El pedido se ha realizado correctamente.",
+    const opcionesArray = [];
+    Object.entries(selectedOptions).forEach(([optionType, selectedIds]) => {
+      selectedIds.forEach(optionId => {
+        opcionesArray.push({
+          id: optionId,
+          selected: true
+        });
       });
+    });
 
+    const pedidoData = {
+      paciente_id: selectedPaciente,
+      menu_id: selectedMenu.id,
+      opciones: opcionesArray,
+      adicionales: {
+        ...additionalOptions,
+        bebidasPreparacion
+      },
+      status: 'pendiente',
+      sectionStatus: {},
+      observaciones: additionalOptions.observaciones
+    };
+
+    try {
+      await createPedido(pedidoData);
+      message.success('Pedido creado exitosamente');
       resetForm();
     } catch (error) {
-      console.error("Error creating pedido", error);
-      Modal.error({
-        title: "Error",
-        content: "Hubo un error al realizar el pedido. Inténtelo de nuevo.",
-      });
+      console.error('Error al crear el pedido:', error);
+      message.error('Error al crear el pedido');
     }
   };
 
@@ -173,55 +172,185 @@ const RealizarPedido = () => {
     setSelectedPaciente(null);
     setSelectedMenu(null);
     setSelectedOptions({});
+    setBebidasPreparacion({});
     setAdditionalOptions({
-      leche: "",
-      bebida: "",
-      azucarPanela: [],
-      vegetales: "",
-      golosina: false,
-      observaciones: "",
+      observaciones: ""
     });
-    setErrors({});
   };
 
-  const handleCancel = () => {
-    setConfirmVisible(false);
+  const renderMenuSections = () => {
+    if (!selectedMenu?.sections) return null;
+
+    return selectedMenu.sections.map((section) => (
+      <Panel header={section.titulo} key={section.id}>
+        {Object.entries(section.opciones).map(([tipo, opciones]) => {
+          if (!Array.isArray(opciones) || opciones.length === 0) return null;
+
+          return (
+            <div key={tipo} className="option-group">
+              <h4>{formatTitle(tipo)}</h4>
+              <div className="options-container">
+                {opciones.map((opcion) => (
+                  <div key={opcion.id} className="option-item">
+                    <Checkbox
+                      checked={selectedOptions[tipo]?.includes(opcion.id)}
+                      onChange={(e) => handleOptionChange(tipo, opcion.id, e.target.checked, opcion.texto)}
+                    >
+                      {opcion.texto}
+                    </Checkbox>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </Panel>
+    ));
   };
 
-  if (loading) {
-    return <Spin />;
-  }
+  const formatTitle = (title) => {
+    return title
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const filterOption = (input, option) => {
+    if (!input.trim()) return true;
+    
+    const searchText = option.label.toLowerCase();
+    return searchText.includes(input.toLowerCase());
+  };
+
+  const renderAdditionalOptions = () => {
+    if (!selectedPaciente || !selectedMenu) return null;
+
+    const bebidasConPreparacion = Object.entries(bebidasPreparacion);
+    
+    return (
+      <div className="additional-options">
+        <h3>Opciones Adicionales</h3>
+        
+        {bebidasConPreparacion.length > 0 && (
+          <div className="preparaciones-summary">
+            <h4>Preparación de Bebidas:</h4>
+            {bebidasConPreparacion.map(([bebidaId, preparacion]) => {
+              // Buscamos la sección y la bebida
+              let bebida, seccion;
+              selectedMenu?.sections.forEach(s => {
+                Object.entries(s.opciones).forEach(([tipo, opciones]) => {
+                  const encontrada = opciones.find(o => o.id === parseInt(bebidaId));
+                  if (encontrada) {
+                    bebida = encontrada;
+                    seccion = s.titulo;
+                  }
+                });
+              });
+              
+              return (
+                <div key={bebidaId} className="preparacion-item">
+                  <span>{bebida?.texto} ({seccion})</span>
+                  <span>{opcionesPreparado.find(o => o.value === preparacion)?.label}</span>
+                  <Button 
+                    type="link" 
+                    onClick={() => setPreparacionModal({
+                      visible: true,
+                      bebidaId,
+                      bebidaNombre: bebida?.texto
+                    })}
+                  >
+                    Cambiar
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="form-item">
+          <label>Observaciones:</label>
+          <Input.TextArea
+            value={additionalOptions.observaciones}
+            onChange={e => setAdditionalOptions(prev => ({
+              ...prev,
+              observaciones: e.target.value
+            }))}
+            placeholder="Agregue observaciones adicionales"
+            rows={4}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const PreparacionModal = () => (
+    <Modal
+      title={`¿Cómo desea preparar ${preparacionModal.bebidaNombre}?`}
+      open={preparacionModal.visible}
+      closable={false}
+      maskClosable={false}
+      footer={null}
+    >
+      <div className="preparacion-options">
+        {opcionesPreparado.map(opcion => (
+          <Button
+            key={opcion.value}
+            onClick={() => {
+              setBebidasPreparacion(prev => ({
+                ...prev,
+                [preparacionModal.bebidaId]: opcion.value
+              }));
+              setPreparacionModal({ visible: false, bebidaId: null, bebidaNombre: '' });
+            }}
+            className="preparacion-button"
+          >
+            {opcion.label}
+          </Button>
+        ))}
+      </div>
+    </Modal>
+  );
+
+  if (loading) return <Spin size="large" />;
 
   return (
-    <div className="realizar-pedido">
-      <h2>Realizar un Pedido</h2>
+    <div className="realizar-pedido-container">
+      <h2>Realizar Pedido</h2>
+      
       <div className="form-item">
-        <label>Paciente</label>
+        <label>Paciente:</label>
         <Select
           showSearch
-          placeholder="Seleccionar Paciente"
           value={selectedPaciente}
           onChange={handlePacienteChange}
           filterOption={filterOption}
+          className="select-field"
+          placeholder="Seleccione un paciente"
+          optionFilterProp="label"
+          allowClear
         >
-          {pacientes.map((paciente) => (
-            <Option key={paciente.id} value={paciente.id}>
-              {paciente.name} (Cama: {paciente.cama.nombre}, Hab:{" "}
-              {paciente.cama.habitacion.nombre}, Serv:{" "}
-              {paciente.cama.habitacion.servicio.nombre})
+          {Array.isArray(pacientes) && pacientes.map((paciente) => (
+            <Option 
+              key={paciente.id} 
+              value={paciente.id}
+              label={`${paciente.name} - ${paciente.cedula}`}
+            >
+              {paciente.name} - {paciente.cedula}
             </Option>
           ))}
         </Select>
         {errors.paciente && <p className="error">{errors.paciente}</p>}
       </div>
+
       <div className="form-item">
-        <label>Menú</label>
+        <label>Menú:</label>
         <Select
           value={selectedMenu?.id}
           onChange={handleMenuChange}
-          style={{ width: "100%" }}
+          className="select-field"
+          placeholder="Seleccione un menú"
         >
-          {menus.map((menu) => (
+          {Array.isArray(menus) && menus.map((menu) => (
             <Option key={menu.id} value={menu.id}>
               {menu.nombre}
             </Option>
@@ -230,168 +359,36 @@ const RealizarPedido = () => {
         {errors.menu && <p className="error">{errors.menu}</p>}
       </div>
 
-      {selectedMenu &&
-        selectedMenu.sections.map((section) => (
-          <Collapse key={section.id} className="section-collapse">
-            <Panel header={section.titulo}>
-              {Object.keys(section).map(
-                (key) =>
-                  key !== "id" &&
-                  key !== "titulo" &&
-                  section[key].length > 0 && (
-                    <div key={key} className="option-group">
-                      <h4>{sectionNames[key] || key}</h4>
-                      {section[key].map((option) => (
-                        <Checkbox
-                          key={option.id}
-                          checked={selectedOptions[section.titulo]?.[
-                            key
-                          ]?.includes(option.id)}
-                          onChange={(e) =>
-                            handleOptionChange(
-                              section.titulo,
-                              key,
-                              option.id,
-                              e.target.checked
-                            )
-                          }
-                        >
-                          {option.texto}
-                        </Checkbox>
-                      ))}
-                    </div>
-                  )
-              )}
-            </Panel>
-          </Collapse>
-        ))}
-
-      {selectedPaciente && selectedMenu && (
-        <div className="additional-options">
-          <h3>Opciones Adicionales</h3>
-
-          <div className="form-item">
-            <label>Leche</label>
-            <Select
-              value={additionalOptions.leche}
-              onChange={(value) =>
-                setAdditionalOptions((prev) => ({ ...prev, leche: value }))
-              }
-              style={{ width: "100%" }}
-            >
-              <Option value="">Ninguno</Option>
-              <Option value="entera">Leche entera</Option>
-              <Option value="deslactosada">Leche deslactosada</Option>
-            </Select>
-            {errors.leche && <p className="error">{errors.leche}</p>}
-          </div>
-
-          <div className="form-item">
-            <label>Bebida</label>
-            <Select
-              value={additionalOptions.bebida}
-              onChange={(value) =>
-                setAdditionalOptions((prev) => ({ ...prev, bebida: value }))
-              }
-              style={{ width: "100%" }}
-            >
-              <Option value="">Ninguno</Option>
-              <Option value="leche">Bebida en leche</Option>
-              <Option value="agua">Bebida en agua</Option>
-            </Select>
-            {errors.bebida && <p className="error">{errors.bebida}</p>}
-          </div>
-
-          <div className="form-item">
-            <label>Vegetales</label>
-            <Select
-              value={additionalOptions.vegetales}
-              onChange={(value) =>
-                setAdditionalOptions((prev) => ({ ...prev, vegetales: value }))
-              }
-              style={{ width: "100%" }}
-            >
-              <Option value="">Ninguno</Option>
-              <Option value="crudos">Vegetales Crudos</Option>
-              <Option value="calientes">Vegetales Calientes</Option>
-            </Select>
-            {errors.vegetales && <p className="error">{errors.vegetales}</p>}
-          </div>
-
-          <div className="form-item azucar-panela">
-            <label>Azúcar y/o Panela:</label>
-            <Checkbox.Group
-              value={additionalOptions.azucarPanela}
-              onChange={(checkedValues) =>
-                setAdditionalOptions((prev) => ({
-                  ...prev,
-                  azucarPanela: checkedValues,
-                }))
-              }
-            >
-              <Checkbox value="azucar">Azúcar</Checkbox>
-              <Checkbox value="panela">Panela</Checkbox>
-            </Checkbox.Group>
-          </div>
-
-          <div className="form-item golosina">
-            <label>Golosina Opcional:</label>
-            <Checkbox
-              checked={additionalOptions.golosina}
-              onChange={(e) =>
-                setAdditionalOptions((prev) => ({
-                  ...prev,
-                  golosina: e.target.checked,
-                }))
-              }
-            >
-              Golosina
-            </Checkbox>
-          </div>
-          <div className="form-item observaciones">
-            <label>Observaciones:</label>
-            <textarea
-              value={additionalOptions.observaciones}
-              onChange={(e) =>
-                setAdditionalOptions((prev) => ({
-                  ...prev,
-                  observaciones: e.target.value,
-                }))
-              }
-              rows={4}
-              style={{ width: "100%" }}
-              placeholder="Escribe tus observaciones aquí..."
-            />
-          </div>
-        </div>
+      {selectedMenu && (
+        <Collapse defaultActiveKey={['0']} expandIconPosition="end">
+          {renderMenuSections()}
+        </Collapse>
       )}
-      <Button
-        onClick={showConfirmModal}
-        type="primary"
-        className="custom-button"
-      >
-        Realizar Pedido
-      </Button>
+
+      {renderAdditionalOptions()}
+
+      <div className="form-actions">
+        <Button 
+          type="primary" 
+          onClick={() => setConfirmVisible(true)}
+          disabled={!selectedPaciente || !selectedMenu}
+        >
+          Crear Pedido
+        </Button>
+      </div>
+
       <Modal
-        title="Confirmación de Pedido"
+        title="Confirmar Pedido"
         open={confirmVisible}
         onOk={handleOk}
-        onCancel={handleCancel}
+        onCancel={() => setConfirmVisible(false)}
+        okText="Confirmar"
+        cancelText="Cancelar"
       >
-        <p>
-          Pacientes con restricción de azúcares o dieta hipoglúcida no deben
-          consumir alimentos con mermelada, galletas dulces, ni harinas
-          adicionales.
-        </p>
-        <p>
-          Prima la dieta recomendada por el médico tratante con las
-          restricciones.
-        </p>
-        <p>
-          Asegúrese de los elementos seleccionados según las restricciones del
-          paciente.
-        </p>
+        <p>¿Está seguro que desea crear este pedido?</p>
       </Modal>
+
+      <PreparacionModal />
     </div>
   );
 };

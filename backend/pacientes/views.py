@@ -10,21 +10,19 @@ class PacienteListCreateView(generics.ListCreateAPIView):
         return Paciente.objects.filter(activo=True)
 
     def create(self, request, *args, **kwargs):
-        print("Datos recibidos para crear paciente:", request.data)
         response = super().create(request, *args, **kwargs)
-        changes = {
-            'name': response.data.get('name'),
-            'cedula': response.data.get('cedula'),
-            'recommended_diet': response.data.get('recommended_diet'),
-            'alergias': response.data.get('alergias'),
-            'activo': response.data.get('activo'),
-        }
         LogEntry.objects.create(
             user=self.request.user,
             action='CREATE',
-            model='Paciente',
+            model_name='Paciente',
             object_id=response.data['id'],
-            changes=changes,
+            details={
+                'name': response.data.get('name'),
+                'cedula': response.data.get('cedula'),
+                'recommended_diet': response.data.get('recommended_diet'),
+                'alergias': response.data.get('alergias'),
+                'activo': response.data.get('activo'),
+            }
         )
         return response
 
@@ -34,26 +32,26 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        changes = {
-            'name': instance.name,
-            'cedula': instance.cedula,
-            'recommended_diet': instance.recommended_diet.nombre if instance.recommended_diet else None,
-            'alergias': instance.alergias.nombre if instance.alergias else None,
-            'activo': instance.activo,
-        }
         LogEntry.objects.create(
             user=self.request.user,
             action='UPDATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=changes,
+            details={
+                'name': instance.name,
+                'cedula': instance.cedula,
+                'recommended_diet': instance.recommended_diet.nombre if instance.recommended_diet else None,
+                'alergias': instance.alergias.nombre if instance.alergias else None,
+                'activo': instance.activo,
+            }
         )
 
     def perform_destroy(self, instance):
         LogEntry.objects.create(
             user=self.request.user,
             action='DELETE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
+            details={}
         )
         instance.delete()

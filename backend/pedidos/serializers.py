@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from pedidos.models import Pedido, PedidoMenuOption
 from pacientes.models import Paciente
+from menus.models import Menu, MenuOption, MenuSection
 from pacientes.serializers import PacienteSerializer
-from menus.models import Menu, MenuOption
-from menus.serializers import MenuSerializer, MenuOptionSerializer
+from menus.serializers import MenuSerializer, MenuSectionSerializer, MenuOptionSerializer
 
 class PedidoMenuOptionSerializer(serializers.ModelSerializer):
     menu_option = MenuOptionSerializer()
@@ -14,34 +14,60 @@ class PedidoMenuOptionSerializer(serializers.ModelSerializer):
 
 class PedidoSerializer(serializers.ModelSerializer):
     paciente = PacienteSerializer(read_only=True)
+    paciente_id = serializers.PrimaryKeyRelatedField(
+        queryset=Paciente.objects.filter(activo=True),
+        source='paciente',
+        write_only=True
+    )
     menu = MenuSerializer(read_only=True)
+    menu_id = serializers.PrimaryKeyRelatedField(
+        queryset=Menu.objects.all(),
+        source='menu',
+        write_only=True
+    )
     opciones = PedidoMenuOptionSerializer(source='pedidomenuoption_set', many=True, read_only=True)
 
     class Meta:
         model = Pedido
-        fields = ['id', 'paciente', 'menu', 'opciones', 'status', 'fecha_pedido', 'adicionales', 'sectionStatus']
+        fields = [
+            'id', 'paciente', 'paciente_id', 
+            'menu', 'menu_id',
+            'opciones', 'status', 'fecha_pedido', 
+            'adicionales', 'sectionStatus',
+            'observaciones'
+        ]
+
+    def validate(self, data):
+        if data.get('paciente') and not data['paciente'].activo:
+            raise serializers.ValidationError({
+                'paciente': 'No se puede crear un pedido para un paciente inactivo'
+            })
+        
+        return data
 
     def create(self, validated_data):
         opciones_data = self.initial_data.get('opciones', [])
-        adicionales_data = validated_data.pop('adicionales')
+        adicionales_data = validated_data.pop('adicionales', {})
         section_status_data = validated_data.pop('sectionStatus', {})
-        paciente_id = self.initial_data.get('paciente')
-        menu_id = self.initial_data.get('menu')
 
-        paciente = Paciente.objects.get(id=paciente_id)
-        menu = Menu.objects.get(id=menu_id)
-
-        pedido = Pedido.objects.create(paciente=paciente, menu=menu, sectionStatus=section_status_data, **validated_data)
+        pedido = Pedido.objects.create(
+            paciente=validated_data['paciente'],
+            menu=validated_data['menu'],
+            adicionales=adicionales_data,
+            sectionStatus=section_status_data,
+            observaciones=validated_data.get('observaciones', '')
+        )
 
         for opcion_data in opciones_data:
-            opcion_id = opcion_data.get('id')
-            if opcion_id is not None:
-                selected = opcion_data.get('selected', False)
-                menu_option = MenuOption.objects.get(id=opcion_id)
-                PedidoMenuOption.objects.create(pedido=pedido, menu_option=menu_option, selected=selected)
-
-        pedido.adicionales = adicionales_data
-        pedido.save()
+            try:
+                menu_option = MenuOption.objects.get(id=opcion_data['id'])
+                PedidoMenuOption.objects.create(
+                    pedido=pedido,
+                    menu_option=menu_option,
+                    selected=opcion_data.get('selected', False)
+                )
+            except MenuOption.DoesNotExist:
+                continue
 
         return pedido
 
@@ -50,9 +76,9 @@ class PedidoSerializer(serializers.ModelSerializer):
         adicionales_data = validated_data.pop('adicionales', instance.adicionales)
         section_status_data = validated_data.pop('sectionStatus', instance.sectionStatus)
 
-        instance.paciente = validated_data.get('paciente', instance.paciente)
-        instance.menu = validated_data.get('menu', instance.menu)
-        instance.status = validated_data.get('status', instance.status)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
         instance.adicionales = adicionales_data
         instance.sectionStatus = section_status_data
         instance.save()
@@ -63,11 +89,10 @@ class PedidoSerializer(serializers.ModelSerializer):
                 if opcion_id is not None:
                     try:
                         menu_option = MenuOption.objects.get(id=opcion_id)
-                        selected = opcion_data['selected']
                         PedidoMenuOption.objects.update_or_create(
                             pedido=instance,
                             menu_option=menu_option,
-                            defaults={'selected': selected}
+                            defaults={'selected': opcion_data.get('selected', False)}
                         )
                     except MenuOption.DoesNotExist:
                         continue

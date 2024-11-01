@@ -56,40 +56,32 @@ const GestionPanel = ({
 
   const [form] = Form.useForm();
 
-  // Agregar estos estados al inicio del componente
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Agregar estos estados al inicio del componente
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
 
-  // Agregar estos estados al inicio del componente
   const [isEditHabitacionModalOpen, setIsEditHabitacionModalOpen] =
     useState(false);
   const [editingHabitacion, setEditingHabitacion] = useState(null);
 
-  // Agregar estos estados al inicio del componente
   const [isEditCamaModalOpen, setIsEditCamaModalOpen] = useState(false);
   const [editingCama, setEditingCama] = useState(null);
 
-  // Agregar estos estados al inicio del componente
   const [isEditPacienteModalOpen, setIsEditPacienteModalOpen] = useState(false);
   const [editingPaciente, setEditingPaciente] = useState(null);
 
-  // Agregar estas funciones de paginación
   const paginate = (items) => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     return items.slice(indexOfFirstItem, indexOfLastItem);
   };
 
-  // Función para manejar el cambio de página
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  // Función de ordenamiento para habitaciones
   const ordenarHabitaciones = (habitaciones) => {
     return [...habitaciones].sort((a, b) => {
       const aMatch = a.nombre.match(/^([A-Za-z]+).*?(\d+)/);
@@ -109,7 +101,6 @@ const GestionPanel = ({
     });
   };
 
-  // Modificar el useEffect para usar la función de ordenamiento
   useEffect(() => {
     if (selectedServicio) {
       const filtradas = habitaciones.filter((h) => {
@@ -121,10 +112,8 @@ const GestionPanel = ({
         );
       });
 
-      // Aplicar el ordenamiento a las habitaciones filtradas
       setHabitacionesFiltradas(ordenarHabitaciones(filtradas));
     } else {
-      // Aplicar el ordenamiento a todas las habitaciones
       setHabitacionesFiltradas(ordenarHabitaciones(habitaciones));
     }
   }, [habitaciones, selectedServicio]);
@@ -136,17 +125,23 @@ const GestionPanel = ({
       Modal.confirm({
         title,
         content,
+        okText: "Sí",
+        cancelText: "No",
         onOk: async () => {
           try {
             const updatedItem = await updateItem(item, type, isActivating);
             await api.put(`/${type}/${item.id}/`, updatedItem);
+            showNotification(
+              "success",
+              isActivating ? "Elemento activado" : "Elemento desactivado",
+              `El ${type.slice(0, -1)} se ha ${
+                isActivating ? "activado" : "desactivado"
+              } correctamente`
+            );
             refreshData();
           } catch (error) {
             handleError(error);
           }
-        },
-        onCancel() {
-          console.log("Acción cancelada por el usuario");
         },
       });
     };
@@ -155,68 +150,110 @@ const GestionPanel = ({
   };
 
   const getConfirmationMessages = (isActivating, type) => {
-    let title = "";
-    let content = "";
+    const getTypeInSpanish = (type) => {
+      const types = {
+        servicios: "servicio",
+        habitaciones: "habitación",
+        camas: "cama",
+        pacientes: "paciente",
+      };
+      return types[type] || "elemento";
+    };
 
-    if (isActivating) {
-      switch (type) {
-        case "servicios":
-          title = "¿Ests seguro de que deseas activar este servicio?";
-          content =
-            "Esta acción activará el servicio y permitirá activar habitaciones y camas relacionadas a él.";
-          break;
-        case "habitaciones":
-          title = "¿Estás seguro de que deseas activar esta habitación?";
-          content =
-            "Esta acción activará la habitación y permitirá activar las camas relacionadas a ella.";
-          break;
-        case "camas":
-          title = "¿Estás seguro de que deseas activar esta cama?";
-          content =
-            "Esta acción activará la cama para ser asignada a un paciente.";
-          break;
-        case "pacientes":
-          title = "¿Estás seguro de que deseas activar a este paciente?";
-          content =
-            "Esta acción activará al paciente y asignará su cama asociada.";
-          break;
-        default:
-          title = "¿Estás seguro de que deseas continuar?";
-          content =
-            "Esta acción cambiará el estado del elemento seleccionado a activo.";
-          break;
-      }
-    } else {
-      switch (type) {
-        case "servicios":
-          title = "¿Estás seguro de que deseas desactivar este servicio?";
-          content =
-            "Esta acción desactivará el servicio y todas las habitaciones y camas asociadas a él. El servicio permanecerá en la base de datos como inactivo.";
-          break;
-        case "habitaciones":
-          title = "¿Estás seguro de que deseas desactivar esta habitación?";
-          content =
-            "Esta acción desactivará la habitación y todas las camas asociadas a ella. La habitación permanecerá en la base de datos como inactiva.";
-          break;
-        case "camas":
-          title = "¿Estás seguro de que deseas desactivar esta cama?";
-          content =
-            "Esta acción desactivará la cama y quedará disponible para ser asignada a un nuevo paciente. La cama permanecerá en la base de datos como inactiva.";
-          break;
-        case "pacientes":
-          title = "¿Estás seguro de que deseas desactivar a este paciente?";
-          content =
-            "Esta acción desactivará al paciente y liberará su cama asociada. El paciente permanecerá en la base de datos como inactivo.";
-          break;
-        default:
-          title = "¿Est��s seguro de que deseas continuar?";
-          content =
-            "Esta acción cambiará el estado del elemento seleccionado a inactivo.";
-          break;
-      }
-    }
+    const typeInSpanish = getTypeInSpanish(type);
+    const action = isActivating ? "activar" : "desactivar";
 
-    return { title, content };
+    const getTitle = () => {
+      return (
+        <div style={{ fontSize: "16px", fontWeight: 600, color: "#262626" }}>
+          ¿Estás seguro de que deseas {action}{" "}
+          {typeInSpanish === "paciente" ? "a este" : "este"} {typeInSpanish}?
+        </div>
+      );
+    };
+
+    const getContent = () => {
+      if (isActivating) {
+        const activationMessages = {
+          servicios:
+            "Esta acción activará el servicio y habilitará la posibilidad de activar las habitaciones y camas relacionadas.",
+          habitaciones:
+            "Esta acción activará la habitación y permitirá la activación de las camas asociadas a ella.",
+          camas:
+            "Esta acción habilitará la cama para poder ser asignada a pacientes.",
+          pacientes:
+            "Esta acción activará al paciente y asignará automáticamente su cama asociada.",
+        };
+        return (
+          <div style={{ fontSize: "14px", color: "#595959" }}>
+            {activationMessages[type] ||
+              "Esta acción cambiará el estado del elemento a activo."}
+          </div>
+        );
+      } else {
+        const deactivationMessages = {
+          servicios: (
+            <div style={{ fontSize: "14px", color: "#595959" }}>
+              <p>Esta acción tendrá los siguientes efectos:</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
+                <li>El servicio quedará desactivado</li>
+                <li>Todas las habitaciones asociadas serán desactivadas</li>
+                <li>Todas las camas del servicio quedarán desactivadas</li>
+                <li>
+                  El servicio permanecerá en la base de datos como inactivo
+                </li>
+              </ul>
+            </div>
+          ),
+          habitaciones: (
+            <div style={{ fontSize: "14px", color: "#595959" }}>
+              <p>Esta acción tendrá los siguientes efectos:</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
+                <li>La habitación quedará desactivada</li>
+                <li>Todas las camas asociadas serán desactivadas</li>
+                <li>
+                  La habitación permanecerá en la base de datos como inactiva
+                </li>
+              </ul>
+            </div>
+          ),
+          camas: (
+            <div style={{ fontSize: "14px", color: "#595959" }}>
+              <p>Esta acción tendrá los siguientes efectos:</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
+                <li>La cama quedará desactivada</li>
+                <li>No podrá ser asignada a nuevos pacientes</li>
+                <li>La cama permanecerá en la base de datos como inactiva</li>
+              </ul>
+            </div>
+          ),
+          pacientes: (
+            <div style={{ fontSize: "14px", color: "#595959" }}>
+              <p>Esta acción tendrá los siguientes efectos:</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
+                <li>El paciente quedará desactivado</li>
+                <li>La cama asociada quedará disponible</li>
+                <li>
+                  El paciente permanecerá en la base de datos como inactivo
+                </li>
+              </ul>
+            </div>
+          ),
+        };
+        return (
+          deactivationMessages[type] || (
+            <div style={{ fontSize: "14px", color: "#595959" }}>
+              Esta acción cambiará el estado del elemento a inactivo.
+            </div>
+          )
+        );
+      }
+    };
+
+    return {
+      title: getTitle(),
+      content: getContent(),
+    };
   };
 
   const updateItem = async (item, type, isActivating) => {
@@ -249,29 +286,21 @@ const GestionPanel = ({
       const cama = item.cama ? item.cama : null;
 
       if (!cama) {
-        console.error("Error: No se encontró la cama asociada al paciente.");
         return;
       }
 
       const habitacion = cama.habitacion ? cama.habitacion : null;
 
       if (!habitacion) {
-        console.error(
-          "Error: No se encontró la habitación asociada a la cama."
-        );
         return;
       }
 
       const servicio = habitacion.servicio ? habitacion.servicio : null;
 
       if (!servicio) {
-        console.error(
-          "Error: No se encontró el servicio asociado a la habitación."
-        );
         return;
       }
 
-      // Verificación de estados
       const camaActiva =
         cama.activo !== undefined ? cama.activo : "no definido";
       const habitacionActiva =
@@ -297,7 +326,6 @@ const GestionPanel = ({
         updatedItem.alergias_id = null;
       }
 
-      // Verificación y extracción correcta del ID de la dieta recomendada
       if (item.recommended_diet && item.recommended_diet.id) {
         updatedItem.recommended_diet_id = item.recommended_diet.id;
       } else if (
@@ -315,211 +343,216 @@ const GestionPanel = ({
   };
 
   const handleError = (error) => {
-    if (error.response && error.response.status === 400) {
-      const errorMessage =
-        error.response.data.detail || "Error en la operación.";
-      notification.error({
-        message: "Error",
-        description: errorMessage,
-      });
-    } else {
-      console.error("Error:", error.response ? error.response.data : error);
-      notification.error({
-        message: "Error",
-        description: "Ha ocurrido un error inesperado.",
-      });
-    }
+    const errorMessage = error.response?.data?.detail || "Ha ocurrido un error";
+    showNotification("error", "Error", errorMessage);
+  };
+  
+  const resetPacienteForm = () => {
+    setNewPacienteID("");
+    setNewPacienteName("");
+    setSelectedCama(null);
+    setNewRecommendedDiet(null);
+    setNewAllergies(null);
   };
 
-  const closeCreateServicioModal = () => {
-    setIsModalOpen(false);
-    form.resetFields();
+  const closeModal = (modalType) => {
+    const modalSetters = {
+      servicio: {
+        setModal: setIsModalOpen,
+        setEditing: null,
+        resetState: () => {},
+      },
+      editServicio: {
+        setModal: setIsEditModalOpen,
+        setEditing: setEditingService,
+        resetState: () => {},
+      },
+      habitacion: {
+        setModal: setIsHabitacionModalOpen,
+        setEditing: null,
+        resetState: () => setNewHabitacionName(""),
+      },
+      editHabitacion: {
+        setModal: setIsEditHabitacionModalOpen,
+        setEditing: setEditingHabitacion,
+        resetState: () => {},
+      },
+      cama: {
+        setModal: setIsCamaModalOpen,
+        setEditing: null,
+        resetState: () => {
+          setNewCamaName("");
+          setSelectedHabitacion(null);
+        },
+      },
+      editCama: {
+        setModal: setIsEditCamaModalOpen,
+        setEditing: setEditingCama,
+        resetState: () => {},
+      },
+      paciente: {
+        setModal: setIsPacienteModalOpen,
+        setEditing: null,
+        resetState: resetPacienteForm,
+      },
+      editPaciente: {
+        setModal: setIsEditPacienteModalOpen,
+        setEditing: setEditingPaciente,
+        resetState: () => {},
+      },
+      dieta: {
+        setModal: setIsDietaModalOpen,
+        setEditing: null,
+        resetState: () => {},
+      },
+      alergia: {
+        setModal: setIsAlergiaModalOpen,
+        setEditing: null,
+        resetState: () => {},
+      },
+    };
+
+    return () => {
+      modalSetters[modalType].setModal(false);
+      form.resetFields();
+      if (modalSetters[modalType].setEditing) {
+        modalSetters[modalType].setEditing(null);
+      }
+      modalSetters[modalType].resetState();
+    };
   };
+
+  const closeCreateServicioModal = closeModal("servicio");
+  const closeEditModal = closeModal("editServicio");
+  const closeCreateHabitacionModal = closeModal("habitacion");
+  const closeEditHabitacionModal = closeModal("editHabitacion");
+  const closeCreateCamaModal = closeModal("cama");
+  const closeEditCamaModal = closeModal("editCama");
+  const closeCreatePacienteModal = closeModal("paciente");
+  const closeEditPacienteModal = closeModal("editPaciente");
+  const closeDietaManagementModal = closeModal("dieta");
+  const closeAlergiaManagementModal = closeModal("alergia");
 
   const handleCreateServicio = async () => {
     try {
       const values = await form.validateFields();
-      const normalizedNewName = values.servicioName.trim().replace(/\s+/g, " ");
-
-      if (
-        servicios.some(
-          (s) =>
-            s.nombre.trim().replace(/\s+/g, " ").toLowerCase() ===
-            normalizedNewName.toLowerCase()
-        )
-      ) {
-        notification.error({
-          message: "Error",
-          description:
-            "Ya existe un servicio con este nombre o uno muy similar.",
-        });
-        return;
-      }
-
-      await createServicio({ nombre: normalizedNewName });
-      notification.success({ message: "Servicio creado exitosamente" });
-      closeCreateServicioModal();
+      await createServicio({ nombre: values.servicioName });
+      showNotification(
+        "success",
+        "Servicio creado",
+        "El servicio se ha creado correctamente"
+      );
+      setIsModalOpen(false);
+      form.resetFields();
       refreshData();
     } catch (error) {
       if (error.errorFields) {
-        form.scrollToField(error.errorFields[0].name);
+        showNotification(
+          "error",
+          "Error de validación",
+          "Por favor, complete todos los campos requeridos"
+        );
       } else {
-        notification.error({
-          message: "Error al crear el servicio",
-          description: error.response?.data?.message || error.message,
-        });
+        handleError(error);
       }
     }
   };
 
   const handleCreateHabitacion = async () => {
-    // Eliminar espacios al inicio y al final, y reemplazar múltiples espacios por uno solo
-    const normalizedNewName = newHabitacionName.trim().replace(/\s+/g, " ");
-
-    if (!/^[A-Za-z]+.*?\d+$/.test(normalizedNewName)) {
-      notification.error({
-        message: "Error",
-        description:
-          "El nombre de la habitación debe comenzar con una letra y contener al menos un número.",
-      });
-      return;
-    }
-
-    // Comparar nombres normalizados
-    if (
-      habitaciones.some(
-        (h) =>
-          h.nombre.trim().replace(/\s+/g, " ").toLowerCase() ===
-          normalizedNewName.toLowerCase()
-      )
-    ) {
-      notification.error({
-        message: "Error",
-        description:
-          "Ya existe una habitación con este nombre o uno muy similar.",
-      });
-      return;
-    }
-
-    if (!normalizedNewName || !selectedServicio) {
-      notification.error({
-        message: "Error",
-        description:
-          "El nombre de la habitación y la selección de un servicio son obligatorios",
-      });
+    if (!newHabitacionName.trim() || !selectedServicio) {
+      showNotification(
+        "error",
+        "Error de validación",
+        "Por favor complete todos los campos requeridos"
+      );
       return;
     }
 
     try {
-      const payload = {
-        nombre: normalizedNewName,
+      await createHabitacion({
+        nombre: newHabitacionName,
         servicio_id: selectedServicio,
-        activo: false,
-        camas: [],
-      };
-
-      await createHabitacion(payload);
-      notification.success({ message: "Habitación creada exitosamente" });
+      });
+      showNotification(
+        "success",
+        "Habitación creada",
+        "La habitación se ha creado correctamente"
+      );
       setIsHabitacionModalOpen(false);
       setNewHabitacionName("");
       setSelectedServicio(null);
       refreshData();
     } catch (error) {
-      notification.error({
-        message: "Error al crear la habitación",
-        description: error.response?.data?.message || error.message,
-      });
+      handleError(error);
     }
   };
 
   const handleCreateCama = async () => {
-    const normalizedNewName = newCamaName.trim().replace(/\s+/g, " ");
-
-    if (!normalizedNewName || !selectedHabitacion) {
-      notification.error({
-        message: "Error",
-        description:
-          "El nombre de la cama y la selección de una habitación son obligatorios",
-      });
-      return;
-    }
-
-    if (
-      habitaciones
-        .flatMap((h) => h.camas)
-        .some(
-          (c) =>
-            c.nombre.trim().replace(/\s+/g, " ").toLowerCase() ===
-            normalizedNewName.toLowerCase()
-        )
-    ) {
-      notification.error({
-        message: "Error",
-        description: "Ya existe una cama con este nombre o uno muy similar.",
-      });
-      return;
-    }
-
     try {
-      const payload = {
-        nombre: normalizedNewName,
-        habitacion: selectedHabitacion,
-        activo: false,
-      };
+      if (!newCamaName.trim() || !selectedHabitacion) {
+        showNotification(
+          "error",
+          "Error de validación",
+          "Por favor complete todos los campos requeridos"
+        );
+        return;
+      }
 
-      await createCama(payload);
-      notification.success({ message: "Cama creada exitosamente" });
+      await createCama({
+        nombre: newCamaName,
+        habitacion: selectedHabitacion,
+      });
+
+      showNotification(
+        "success",
+        "Cama creada",
+        "La cama se ha creado correctamente"
+      );
       setIsCamaModalOpen(false);
       setNewCamaName("");
       setSelectedHabitacion(null);
       refreshData();
     } catch (error) {
-      notification.error({
-        message: "Error al crear la cama",
-        description: error.response?.data?.message || error.message,
-      });
+      handleError(error);
     }
   };
 
   const handleCreatePaciente = async () => {
-    if (
-      !newPacienteID ||
-      !newPacienteName ||
-      !selectedCama ||
-      !newRecommendedDiet ||
-      !newAllergies
-    ) {
-      notification.error({
-        message: "Error",
-        description: "Todos los campos son obligatorios para crear un paciente",
-      });
+    if (!newPacienteID.trim() || !newPacienteName.trim() || !selectedCama) {
+      showNotification(
+        "error",
+        "Error de validación",
+        "Por favor complete los campos obligatorios (Cédula, Nombre y Cama)"
+      );
       return;
     }
+
     try {
-      const payload = {
+      await createPaciente({
         cedula: newPacienteID,
         name: newPacienteName,
         cama_id: selectedCama,
-        recommended_diet_id: newRecommendedDiet,
-        alergias_id: newAllergies,
-        activo: true,
-      };
-      console.log("Payload que se enviará:", payload);
-      await createPaciente(payload);
-      notification.success({ message: "Paciente creado exitosamente" });
+        recommended_diet_id: newRecommendedDiet || null,
+        alergias_id: newAllergies || null,
+      });
+      showNotification(
+        "success",
+        "Paciente creado",
+        "El paciente se ha creado correctamente"
+      );
       setIsPacienteModalOpen(false);
-      setNewPacienteID("");
-      setNewPacienteName("");
-      setNewRecommendedDiet(null);
-      setNewAllergies(null);
-      setSelectedCama(null);
+      resetPacienteForm();
       refreshData();
     } catch (error) {
-      console.error("Error al crear paciente:", error);
-      notification.error({
-        message: "Error al crear el paciente",
-        description: error.response?.data?.message || error.message,
-      });
+      if (error.response?.status === 400) {
+        showNotification(
+          "error",
+          "Error de validación",
+          error.response.data.detail || "La cédula ingresada ya existe"
+        );
+      } else {
+        handleError(error);
+      }
     }
   };
 
@@ -528,15 +561,10 @@ const GestionPanel = ({
     setIsModalOpen(true);
   };
   const openCreateHabitacionModal = () => setIsHabitacionModalOpen(true);
-  const closeCreateHabitacionModal = () => setIsHabitacionModalOpen(false);
   const openCreateCamaModal = () => setIsCamaModalOpen(true);
-  const closeCreateCamaModal = () => setIsCamaModalOpen(false);
   const openCreatePacienteModal = () => setIsPacienteModalOpen(true);
-  const closeCreatePacienteModal = () => setIsPacienteModalOpen(false);
   const openDietaManagementModal = () => setIsDietaModalOpen(true);
-  const closeDietaManagementModal = () => setIsDietaModalOpen(false);
   const openAlergiaManagementModal = () => setIsAlergiaModalOpen(true);
-  const closeAlergiaManagementModal = () => setIsAlergiaModalOpen(false);
 
   useEffect(() => {
     console.log("habitacionesFiltradas:", habitacionesFiltradas);
@@ -554,7 +582,6 @@ const GestionPanel = ({
     );
   }, [habitaciones]);
 
-  // Manejar el cambio de pestañas
   const handleTabChange = (activeKey) => {
     if (activeKey === "2" || activeKey === "3") {
       setSelectedServicio(null);
@@ -571,35 +598,25 @@ const GestionPanel = ({
   const handleUpdateService = async () => {
     try {
       const values = await form.validateFields();
-      const updatedService = {
+      await api.put(`/servicios/${editingService.id}/`, {
         ...editingService,
         nombre: values.servicioName,
-      };
-
-      await api.put(`/servicios/${editingService.id}/`, updatedService);
-      notification.success({
-        message: "Servicio actualizado",
-        description: "El servicio se ha actualizado correctamente",
       });
+      showNotification(
+        "success",
+        "Servicio actualizado",
+        "El servicio se ha actualizado correctamente"
+      );
       setIsEditModalOpen(false);
+      form.resetFields();
       refreshData();
     } catch (error) {
-      notification.error({
-        message: "Error",
-        description: "No se pudo actualizar el servicio",
-      });
+      handleError(error);
     }
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    form.resetFields();
-    setEditingService(null);
   };
 
   const handleEditHabitacion = (habitacion) => {
     setEditingHabitacion(habitacion);
-    // Asegurarnos de obtener el ID del servicio correctamente
     const servicioId = habitacion.servicio?.id || habitacion.servicio_id;
 
     form.setFieldsValue({
@@ -622,25 +639,17 @@ const GestionPanel = ({
         `/habitaciones/${editingHabitacion.id}/`,
         updatedHabitacion
       );
-      notification.success({
-        message: "Habitación actualizada",
-        description: "La habitación se ha actualizado correctamente",
-      });
+      showNotification(
+        "success",
+        "Habitación actualizada",
+        "La habitación se ha actualizado correctamente"
+      );
       setIsEditHabitacionModalOpen(false);
       form.resetFields();
       refreshData();
     } catch (error) {
-      notification.error({
-        message: "Error",
-        description: "No se pudo actualizar la habitación",
-      });
+      handleError(error);
     }
-  };
-
-  const closeEditHabitacionModal = () => {
-    setIsEditHabitacionModalOpen(false);
-    form.resetFields();
-    setEditingHabitacion(null);
   };
 
   const handleEditCama = (cama) => {
@@ -660,33 +669,30 @@ const GestionPanel = ({
       };
 
       await api.put(`/camas/${editingCama.id}/`, updatedCama);
-      notification.success({
-        message: "Cama actualizada",
-        description: "La cama se ha actualizado correctamente",
-      });
+      showNotification(
+        "success",
+        "Cama actualizada",
+        "La cama se ha actualizado correctamente"
+      );
       setIsEditCamaModalOpen(false);
       form.resetFields();
       refreshData();
     } catch (error) {
-      notification.error({
-        message: "Error",
-        description: "No se pudo actualizar la cama",
-      });
+      handleError(error);
     }
   };
 
   const handleDeleteCama = async (cama) => {
-    // Verificar si la cama tiene un paciente activo
     const tienePacienteActivo = pacientes.some(
       (paciente) => paciente.cama?.id === cama.id && paciente.activo
     );
 
     if (tienePacienteActivo) {
-      notification.error({
-        message: "No se puede eliminar la cama",
-        description:
-          "La cama tiene un paciente activo asignado. Debe dar de alta al paciente antes de eliminar la cama.",
-      });
+      showNotification(
+        "error",
+        "No se puede eliminar la cama",
+        "La cama tiene un paciente activo asignado. Debe dar de alta al paciente antes de eliminar la cama."
+      );
       return;
     }
 
@@ -698,16 +704,14 @@ const GestionPanel = ({
       onOk: async () => {
         try {
           await api.delete(`/camas/${cama.id}/`);
-          notification.success({
-            message: "Cama eliminada",
-            description: "La cama se ha eliminado correctamente",
-          });
+          showNotification(
+            "success",
+            "Cama eliminada",
+            "La cama se ha eliminado correctamente"
+          );
           refreshData();
         } catch (error) {
-          notification.error({
-            message: "Error",
-            description: "No se pudo eliminar la cama",
-          });
+          handleError(error);
         }
       },
     });
@@ -737,26 +741,17 @@ const GestionPanel = ({
       };
 
       await api.put(`/pacientes/${editingPaciente.id}/`, updatedPaciente);
-      notification.success({
-        message: "Paciente actualizado",
-        description: "El paciente se ha actualizado correctamente",
-      });
+      showNotification(
+        "success",
+        "Paciente actualizado",
+        "El paciente se ha actualizado correctamente"
+      );
       setIsEditPacienteModalOpen(false);
       form.resetFields();
       refreshData();
     } catch (error) {
-      notification.error({
-        message: "Error",
-        description:
-          error.response?.data?.detail || "No se pudo actualizar el paciente",
-      });
+      handleError(error);
     }
-  };
-
-  const closeEditPacienteModal = () => {
-    setIsEditPacienteModalOpen(false);
-    form.resetFields();
-    setEditingPaciente(null);
   };
 
   const columns = [
@@ -764,8 +759,8 @@ const GestionPanel = ({
     {
       title: "Editar",
       key: "edit",
-      width: 80, // Ancho fijo para la columna
-      align: "center", // Alinear contenido al centro
+      width: 80,
+      align: "center",
       render: (_, record) => (
         <Button
           type="link"
@@ -816,6 +811,15 @@ const GestionPanel = ({
   const handleLocalServiceSelect = (value) => {
     const servicio = servicios.find((s) => s.nombre === value);
     setLocalSelectedService(servicio);
+  };
+
+  const showNotification = (type, message, description) => {
+    notification[type]({
+      message,
+      description,
+      placement: "topRight",
+      duration: 3,
+    });
   };
 
   return (
@@ -1496,11 +1500,7 @@ const GestionPanel = ({
         title="Editar Cama"
         open={isEditCamaModalOpen}
         onOk={handleUpdateCama}
-        onCancel={() => {
-          setIsEditCamaModalOpen(false);
-          form.resetFields();
-          setEditingCama(null);
-        }}
+        onCancel={closeEditCamaModal}
         okText="Guardar"
         cancelText="Cancelar"
       >

@@ -12,9 +12,9 @@ class MenuListCreateView(generics.ListCreateAPIView):
         LogEntry.objects.create(
             user=self.request.user,
             action='CREATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=serializer.validated_data,
+            details=serializer.validated_data
         )
 
 
@@ -27,16 +27,17 @@ class MenuDetailView(generics.RetrieveUpdateDestroyAPIView):
         LogEntry.objects.create(
             user=self.request.user,
             action='UPDATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=serializer.validated_data,
+            details=serializer.validated_data
         )
 
     def perform_destroy(self, instance):
         LogEntry.objects.create(
             user=self.request.user,
             action='DELETE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
+            details={}
         )
         instance.delete()

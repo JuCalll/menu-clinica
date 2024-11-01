@@ -24,9 +24,9 @@ class RegisterView(generics.CreateAPIView):
         LogEntry.objects.create(
             user=self.request.user,
             action='CREATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=serializer.validated_data,
+            details=serializer.validated_data
         )
 
 class LoginView(generics.GenericAPIView):
@@ -43,15 +43,38 @@ class LoginView(generics.GenericAPIView):
 
         if user and user.activo:
             refresh = RefreshToken.for_user(user)
+            
+            # Registrar el login exitoso
+            LogEntry.objects.create(
+                user=user,
+                action='LOGIN',
+                model_name='CustomUser',
+                object_id=user.id,
+                details={
+                    'username': user.username,
+                    'role': user.role
+                }
+            )
+            
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'user': {
                     'role': user.role,
-                    'name': user.name  
+                    'name': user.name
                 }
             })
         else:
+            # Registrar el intento fallido de login
+            LogEntry.objects.create(
+                user=None,
+                action='LOGIN_FAILED',
+                model_name='CustomUser',
+                details={
+                    'username': serializer.validated_data['username'],
+                    'reason': 'Invalid credentials or user inactive'
+                }
+            )
             return Response({"error": "Invalid credentials or user inactive"}, status=400)
 
 class UserListView(generics.ListAPIView):
@@ -66,7 +89,9 @@ class UserListView(generics.ListAPIView):
         LogEntry.objects.create(
             user=self.request.user,
             action='LIST',
-            model='CustomUser',
+            model_name='CustomUser',
+            object_id=None,
+            details={'count': len(response.data)}
         )
         return response
 
@@ -80,17 +105,18 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         LogEntry.objects.create(
             user=self.request.user,
             action='UPDATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=serializer.validated_data,
+            details=serializer.validated_data
         )
 
     def perform_destroy(self, instance):
         LogEntry.objects.create(
             user=self.request.user,
             action='DELETE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
+            details={}
         )
         instance.delete()
 
@@ -105,10 +131,18 @@ class CustomTokenRefreshView(TokenRefreshView):
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
+        
+        # Registrar el refresh del token
+        LogEntry.objects.create(
+            user=request.user,
+            action='TOKEN_REFRESH',
+            model_name='Token',
+            details={'status': 'success'}
+        )
 
         response_data = {
             "access": data.get("access"),
-            "refresh": data.get("refresh"),  
+            "refresh": data.get("refresh"),
         }
 
         return Response(response_data, status=status.HTTP_200_OK)

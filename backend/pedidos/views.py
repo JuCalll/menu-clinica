@@ -1,54 +1,57 @@
-from rest_framework import generics, views
+from rest_framework import generics, views, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django.db.models import Q
+from datetime import datetime, timedelta
 from .models import Pedido
 from .serializers import PedidoSerializer
-from logs.models import LogEntry 
-import usb.core
-import usb.util
+from logs.models import LogEntry
 import socket
 
 class PedidoListCreateView(generics.ListCreateAPIView):
-    queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
+
+    def get_queryset(self):
+        queryset = Pedido.objects.all()
+        status = self.request.query_params.get('status', None)
+        paciente_id = self.request.query_params.get('paciente_id', None)
+        fecha_inicio = self.request.query_params.get('fecha_inicio', None)
+        fecha_fin = self.request.query_params.get('fecha_fin', None)
+
+        if status:
+            queryset = queryset.filter(status=status)
+        if paciente_id:
+            queryset = queryset.filter(paciente_id=paciente_id)
+        if fecha_inicio:
+            queryset = queryset.filter(fecha_pedido__gte=fecha_inicio)
+        if fecha_fin:
+            queryset = queryset.filter(fecha_pedido__lte=fecha_fin)
+
+        return queryset.select_related(
+            'paciente',
+            'menu',
+            'paciente__cama',
+            'paciente__cama__habitacion',
+            'paciente__cama__habitacion__servicio'
+        )
 
     def perform_create(self, serializer):
         instance = serializer.save()
         LogEntry.objects.create(
             user=self.request.user,
             action='CREATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=serializer.validated_data,
+            details={
+                'paciente_id': instance.paciente.id,
+                'paciente_nombre': instance.paciente.name,
+                'menu_id': instance.menu.id,
+                'menu_nombre': instance.menu.nombre,
+                'status': instance.status,
+                'fecha_pedido': instance.fecha_pedido.isoformat()
+            }
         )
-
-    @action(detail=False, methods=['get'])
-    def pendientes(self, request):
-        pedidos_pendientes = Pedido.objects.filter(status='pendiente')
-        serializer = self.get_serializer(pedidos_pendientes, many=True)
-        LogEntry.objects.create(
-            user=self.request.user,
-            action='LIST',
-            model='Pedido',
-        )
-        return Response(serializer.data)
-
-class PedidoCompletadosView(views.APIView):
-    def get(self, request):
-        paciente_id = request.query_params.get('paciente', None)
-        pedidos_completados = Pedido.objects.filter(status='completado')
-        
-        if paciente_id:
-            pedidos_completados = pedidos_completados.filter(paciente__id=paciente_id)
-
-        LogEntry.objects.create(
-            user=self.request.user,
-            action='LIST',
-            model='Pedido',
-        )
-
-        serializer = PedidoSerializer(pedidos_completados, many=True)
-        return Response(serializer.data)
+        return instance
 
 class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido.objects.all()
@@ -59,19 +62,31 @@ class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
         LogEntry.objects.create(
             user=self.request.user,
             action='UPDATE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
-            changes=serializer.validated_data,
+            details=serializer.validated_data
         )
 
     def perform_destroy(self, instance):
         LogEntry.objects.create(
             user=self.request.user,
             action='DELETE',
-            model=instance.__class__.__name__,
+            model_name=instance.__class__.__name__,
             object_id=instance.id,
+            details={}
         )
         instance.delete()
+
+class PedidoCompletadosView(views.APIView):
+    def get(self, request):
+        paciente_id = request.query_params.get('paciente', None)
+        pedidos_completados = Pedido.objects.filter(status='completado')
+        
+        if paciente_id:
+            pedidos_completados = pedidos_completados.filter(paciente__id=paciente_id)
+
+        serializer = PedidoSerializer(pedidos_completados, many=True)
+        return Response(serializer.data)
 
 class PedidoStatusUpdateView(generics.UpdateAPIView):
     queryset = Pedido.objects.all()
@@ -82,13 +97,6 @@ class PedidoStatusUpdateView(generics.UpdateAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        LogEntry.objects.create(
-            user=self.request.user,
-            action='UPDATE',
-            model=instance.__class__.__name__,
-            object_id=instance.id,
-            changes=request.data,
-        )
         return Response(serializer.data)
 
 class PedidoPrintView(views.APIView):
@@ -103,11 +111,9 @@ class PedidoPrintView(views.APIView):
             return Response({"status": "error", "message": str(e)}, status=500)
 
     def print_pedido(self, pedido):
-        # Dirección IP y puerto de la impresora
-        printer_ip = '172.168.11.177'  # La IP de tu impresora
-        printer_port = 9100  # El puerto estándar para impresoras de red
+        printer_ip = '172.168.11.177'
+        printer_port = 9100
 
-        # Datos a imprimir
         print_data = (
             "===============================\n"
             f"Paciente: {pedido.paciente.name}\n"
@@ -118,21 +124,12 @@ class PedidoPrintView(views.APIView):
         )
 
         try:
-            # Crear un socket TCP/IP
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(10)  # Tiempo de espera de 10 segundos
-
-            # Conectar con la impresora
+            sock.settimeout(10)
             sock.connect((printer_ip, printer_port))
-
-            # Comandos ESC/POS para inicializar y finalizar la impresión
-            initialize_printer = b'\x1b\x40'  # Inicializar la impresora
-            cut_paper = b'\x1d\x56\x00'      # Comando para corte parcial de papel
-
-            # Construir el mensaje completo
+            initialize_printer = b'\x1b\x40'
+            cut_paper = b'\x1d\x56\x00'
             message = initialize_printer + print_data.encode('utf-8') + b'\n\n\n\n\n' + cut_paper
-
-            # Enviar el mensaje a la impresora
             sock.sendall(message)
         except socket.error as e:
             raise Exception(f"Error al conectar con la impresora: {e}")

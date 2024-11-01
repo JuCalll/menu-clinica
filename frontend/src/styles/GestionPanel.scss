@@ -350,6 +350,51 @@ $font-size-xxlarge: 28px;
       }
     }
   }
+
+  &__confirmation {
+    &-title {
+      font-size: $font-size-large;
+      font-weight: 600;
+      color: #262626;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    &-content {
+      font-size: 14px;
+      color: #595959;
+      text-align: center;
+
+      p {
+        margin-bottom: 16px;
+      }
+    }
+
+    &-effects {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #f5f5f5;
+      border-radius: $border-radius;
+      padding: 16px;
+      margin: 0 auto;
+      max-width: 400px;
+    }
+
+    &-effect {
+      background: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      text-align: left;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+    }
+  }
 }
 
 @keyframes fadeIn {
@@ -386,6 +431,50 @@ $font-size-xxlarge: 28px;
       .gestion-panel__search {
         width: 100%;
         max-width: none;
+      }
+    }
+  }
+}
+
+// Sobrescribir estilos del Modal de confirmación de Ant Design
+.ant-modal-confirm {
+  .ant-modal-content {
+    padding: 24px !important;
+    border-radius: $border-radius;
+  }
+
+  .ant-modal-body {
+    padding: 24px 0;
+  }
+
+  .ant-modal-confirm-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    width: 100%;
+
+    button {
+      flex: 1;
+      height: 40px;
+      font-size: $font-size-base;
+      border-radius: $border-radius;
+
+      &.ant-btn-primary {
+        background: $button-gradient;
+        border: none;
+        
+        &:hover {
+          background: linear-gradient(to right, darken(#1890ff, 10%), darken(#40a9ff, 10%));
+        }
+      }
+      
+      &.ant-btn-default {
+        border: 1px solid $primary-color;
+        color: $primary-color;
+        
+        &:hover {
+          background-color: rgba($primary-color, 0.1);
+        }
       }
     }
   }
