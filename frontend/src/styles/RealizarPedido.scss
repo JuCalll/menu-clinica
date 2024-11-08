@@ -1,132 +1,348 @@
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$title-color: #174288;
+$font-size-base: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 28px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow;
+  }
+}
+
+// Estilos principales
 .realizar-pedido-container {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+  padding: 30px;
+  background-color: $background-color;
+  font-family: $font-family;
+  min-height: 100vh;
+  animation: fadeIn 0.3s ease-out;
+
+  h2 {
+    color: $title-color;
+    font-size: $font-size-xxlarge;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+  }
 
   .form-item {
     margin-bottom: 20px;
+    
+    label {
+      display: block;
+      color: $title-color;
+      font-size: $font-size-large;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .select-field {
+      width: 100%;
+      
+      .ant-select-selector {
+        border-radius: $border-radius;
+        height: 40px;
+        
+        .ant-select-selection-search-input {
+          height: 38px;
+        }
+      }
+    }
+
+    .error {
+      color: $secondary-color;
+      margin-top: 5px;
+      font-size: $font-size-base;
+    }
   }
 
-  .select-field {
-    width: 100%;
+  // Estilos para el Collapse y opciones
+  .ant-collapse {
+    background: transparent;
+    border: none;
+    
+    .ant-collapse-item {
+      margin-bottom: 20px;
+      border-radius: $border-radius;
+      background: white;
+      
+      .ant-collapse-header {
+        font-size: $font-size-large;
+        color: $title-color;
+        padding: 20px 24px;
+        background: linear-gradient(to right, rgba($primary-color, 0.05), transparent);
+        border-radius: $border-radius $border-radius 0 0;
+        
+        &:hover {
+          background: linear-gradient(to right, rgba($primary-color, 0.1), transparent);
+        }
+      }
+
+      .ant-collapse-content {
+        border-top: 1px solid rgba($title-color, 0.1);
+      }
+    }
   }
 
   .option-group {
-    margin: 15px 0;
+    padding: 24px;
     
     h4 {
-      color: #1890ff;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-      border-bottom: 1px solid #f0f0f0;
+      color: $title-color;
+      font-size: $font-size-large;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba($primary-color, 0.2);
+      font-weight: 500;
     }
 
     .options-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-      padding: 10px 0;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 8px;
+    }
+
+    .option-item {
+      padding: 16px;
+      border-radius: $border-radius;
+      background: white;
+      border: 1px solid rgba($title-color, 0.1);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: rgba($primary-color, 0.3);
+      }
+
+      .ant-checkbox-wrapper {
+        font-size: $font-size-base;
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        
+        .ant-checkbox {
+          margin-top: 3px;
+        }
+        
+        span:last-child {
+          padding-left: 12px;
+          padding-right: 8px;
+          line-height: 1.4;
+        }
+      }
+
+      .ant-checkbox-checked + span {
+        color: $primary-color;
+        font-weight: 500;
+      }
+    }
+
+    &[data-type="bebidas"],
+    &[data-type="bebidas_calientes"] {
+      .option-item {
+        background: rgba($primary-color, 0.02);
+        border: 1px solid rgba($primary-color, 0.15);
+      }
+    }
+
+    &[data-type="platos_principales"] {
+      .option-item {
+        background: rgba(#52c41a, 0.02);
+        border: 1px solid rgba(#52c41a, 0.15);
+      }
     }
   }
 
-  .option-item {
-    padding: 8px;
-    border-radius: 4px;
-    transition: background-color 0.3s;
+  .additional-options {
+    background: white;
+    padding: 24px;
+    border-radius: $border-radius;
+    margin: 20px 0;
+    @include hover-effect;
 
-    &:hover {
-      background-color: #f5f5f5;
+    h3 {
+      color: $title-color;
+      font-size: $font-size-xlarge;
+      margin-bottom: 20px;
     }
 
-    .ant-checkbox-wrapper {
-      width: 100%;
-      display: flex;
-      align-items: flex-start;
-      
-      span:last-child {
-        padding-right: 8px;
+    .preparaciones-summary {
+      margin-bottom: 24px;
+
+      h4 {
+        color: $title-color;
+        font-size: $font-size-large;
+        margin-bottom: 16px;
+      }
+
+      .preparacion-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid rgba($title-color, 0.1);
+        
+        &:last-child {
+          border-bottom: none;
+        }
+
+        span {
+          font-size: $font-size-base;
+        }
+
+        .ant-btn-link {
+          color: $primary-color;
+          font-size: $font-size-base;
+        }
       }
     }
   }
 
   .form-actions {
-    margin-top: 20px;
+    margin-top: 30px;
     text-align: right;
-  }
 
-  .error {
-    color: #ff4d4f;
-    margin-top: 5px;
-  }
-
-  .ant-collapse {
-    margin-top: 20px;
-    background-color: #fff;
-  }
-
-  .ant-collapse-header {
-    font-weight: 500;
-  }
-
-  .additional-options {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 4px;
-    border: 1px solid #f0f0f0;
-
-    h3 {
-      margin-bottom: 20px;
-      color: #1890ff;
-      font-weight: 500;
-    }
-
-    .form-item {
-      margin-bottom: 20px;
-
-      label {
-        display: block;
-        margin-bottom: 8px;
-      }
-
-      .ant-select,
-      .ant-input {
-        width: 100%;
+    .ant-btn {
+      height: 40px;
+      padding: 0 30px;
+      font-size: $font-size-base;
+      border-radius: $border-radius;
+      background: $button-gradient;
+      border: none;
+      
+      &:disabled {
+        background: #d9d9d9;
       }
     }
   }
 }
 
-.preparacion-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  .preparacion-button {
-    height: 40px;
-    text-align: left;
+// Estilos para el modal de preparación (fuera del contenedor principal)
+.preparacion-modal {
+  .ant-modal-content {
+    border-radius: $border-radius;
+    overflow: hidden;
     
-    &:hover {
-      background-color: #f5f5f5;
+    .ant-modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba($title-color, 0.1);
+      background: white;
+      
+      .ant-modal-title {
+        color: $title-color;
+        font-size: $font-size-large;
+        font-weight: 500;
+        text-align: center;
+      }
+    }
+    
+    .ant-modal-body {
+      padding: 24px;
+      background: rgba($background-color, 0.5);
     }
   }
-}
 
-.preparaciones-summary {
-  margin-bottom: 20px;
-  
-  .preparacion-item {
+  .preparacion-options {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-    
-    &:last-child {
-      border-bottom: none;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 0;
+
+    .preparacion-button {
+      flex: 1 1 calc(50% - 6px);
+      min-width: 160px;
+      height: 44px;
+      text-align: center;
+      border-radius: $border-radius;
+      font-size: $font-size-base;
+      border: 1px solid rgba($primary-color, 0.15);
+      background: white;
+      color: $title-color;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: rgba($primary-color, 0.05);
+        border-color: $primary-color;
+        color: $primary-color;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba($primary-color, 0.1);
+      }
     }
   }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .realizar-pedido-container {
+    padding: 15px;
+
+    .options-container {
+      grid-template-columns: 1fr !important;
+    }
+
+    .preparacion-item {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start !important;
+    }
+  }
+
+  .option-group {
+    padding: 16px;
+
+    .options-container {
+      grid-template-columns: 1fr;
+    }
+
+    .option-item {
+      padding: 12px;
+      
+      .ant-checkbox-wrapper {
+        font-size: 15px;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .preparacion-modal {
+    .preparacion-options {
+      .preparacion-button {
+        flex: 1 1 100%;
+      }
+    }
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
   

@@ -187,7 +187,7 @@ const RealizarPedido = () => {
           if (!Array.isArray(opciones) || opciones.length === 0) return null;
 
           return (
-            <div key={tipo} className="option-group">
+            <div key={tipo} className="option-group" data-type={tipo.toLowerCase()}>
               <h4>{formatTitle(tipo)}</h4>
               <div className="options-container">
                 {opciones.map((opcion) => (
@@ -290,6 +290,8 @@ const RealizarPedido = () => {
       closable={false}
       maskClosable={false}
       footer={null}
+      className="preparacion-modal"
+      width={500}
     >
       <div className="preparacion-options">
         {opcionesPreparado.map(opcion => (
@@ -303,6 +305,7 @@ const RealizarPedido = () => {
               setPreparacionModal({ visible: false, bebidaId: null, bebidaNombre: '' });
             }}
             className="preparacion-button"
+            type="default"
           >
             {opcion.label}
           </Button>
