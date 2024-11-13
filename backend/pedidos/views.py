@@ -59,12 +59,17 @@ class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
+        log_data = {
+            'status': serializer.validated_data.get('status'),
+            'sectionStatus': serializer.validated_data.get('sectionStatus'),
+        }
+        
         LogEntry.objects.create(
             user=self.request.user,
             action='UPDATE',
             model_name=instance.__class__.__name__,
             object_id=instance.id,
-            details=serializer.validated_data
+            details=log_data
         )
 
     def perform_destroy(self, instance):
@@ -100,39 +105,149 @@ class PedidoStatusUpdateView(generics.UpdateAPIView):
         return Response(serializer.data)
 
 class PedidoPrintView(views.APIView):
+    INITIALIZE_PRINTER = b'\x1b\x40'
+    CODEPAGE_LATINO = b'\x1b\x74\x10'
+    CUT_PAPER = b'\x1d\x56\x00'
+    PRINTER_IP = '172.168.11.177'
+    PRINTER_PORT = 9100
+
+    def format_title(self, title):
+        formatted_names = {
+            "acompanante": "Acompanante",
+            "bebidas_calientes": "Bebidas Calientes",
+            "bebidas_frias": "Bebidas Frias",
+            "sopa_del_dia": "Sopa del Dia",
+            "plato_principal": "Plato Principal",
+            "media_manana_fit": "Media Manana Fit",
+            "media_manana_tradicional": "Media Manana Tradicional",
+            "refrigerio_fit": "Refrigerio Fit",
+            "refrigerio_tradicional": "Refrigerio Tradicional",
+            "entrada": "Entrada",
+            "huevos": "Huevos",
+            "toppings": "Toppings",
+            "bebidas": "Bebidas",
+            "vegetariano": "Vegetariano",
+            "vegetales": "Vegetales",
+            "adicionales": "Adicionales",
+            "leche_entera": "Leche Entera",
+            "leche_deslactosada": "Leche Deslactosada",
+            "leche_almendras": "Leche de Almendras",
+            "agua": "Agua",
+            "unica_preparacion": "Única Preparación"
+        }
+        return formatted_names.get(title.lower(), title.replace('_', ' ').title())
+
     def post(self, request, pk):
         try:
-            pedido = Pedido.objects.get(pk=pk)
-            self.print_pedido(pedido)
-            return Response({"status": "success", "message": "Pedido impreso con éxito."})
+            pedido = Pedido.objects.get(id=pk)
+            section_title = request.data.get('section_title')
+            
+            if not section_title:
+                return Response(
+                    {'error': 'Título de sección no proporcionado'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            self.print_pedido(pedido, section_title)
+            return Response({'status': 'success'})
         except Pedido.DoesNotExist:
-            return Response({"status": "error", "message": "Pedido no encontrado."}, status=404)
+            return Response(
+                {'error': 'Pedido no encontrado'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
-            return Response({"status": "error", "message": str(e)}, status=500)
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-    def print_pedido(self, pedido):
-        printer_ip = '172.168.11.177'
-        printer_port = 9100
-
-        print_data = (
-            "===============================\n"
-            f"Paciente: {pedido.paciente.name}\n"
-            f"Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}\n"
-            f"Habitación: {pedido.paciente.cama.habitacion.nombre}\n"
-            f"Cama: {pedido.paciente.cama.nombre}\n"
-            "===============================\n\n\n"
-        )
-
+    def print_pedido(self, pedido, section_title):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(10)
-            sock.connect((printer_ip, printer_port))
-            initialize_printer = b'\x1b\x40'
-            cut_paper = b'\x1d\x56\x00'
-            message = initialize_printer + print_data.encode('utf-8') + b'\n\n\n\n\n' + cut_paper
+            sock.connect((self.PRINTER_IP, self.PRINTER_PORT))
+
+            print_data = ""
+            
+            # 1. DATOS DEL PACIENTE
+            print_data += "=== DATOS DEL PACIENTE ===\n"
+            print_data += "-------------------------------\n"
+            print_data += f"Pedido: {pedido.id}\n"
+            print_data += f"Paciente: {pedido.paciente.name}\n"
+            print_data += f"Dieta: {pedido.paciente.recommended_diet or 'No especificada'}\n"
+            if pedido.paciente.alergias:
+                print_data += f"Alergias: {pedido.paciente.alergias}\n"
+            print_data += "-------------------------------\n\n"
+
+            # 2. UBICACION
+            print_data += "=== UBICACION ===\n"
+            print_data += "-------------------------------\n"
+            print_data += f"Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}\n"
+            print_data += f"Habitacion: {pedido.paciente.cama.habitacion.nombre}\n"
+            print_data += f"Cama: {pedido.paciente.cama.nombre}\n"
+            print_data += "-------------------------------\n\n"
+
+            # 3. DETALLES DEL PEDIDO
+            print_data += f"=== {self.format_title(section_title)} ===\n"
+            print_data += "-------------------------------\n"
+
+            selected_options = pedido.pedidomenuoption_set.filter(
+                menu_option__section__titulo=section_title,
+                selected=True
+            ).select_related('menu_option')
+
+            options_by_type = {}
+            for pmo in selected_options:
+                option = pmo.menu_option
+                tipo = option.tipo
+                if tipo not in options_by_type:
+                    options_by_type[tipo] = []
+                options_by_type[tipo].append(option)
+
+            for tipo, opciones in options_by_type.items():
+                if opciones:
+                    print_data += f"{self.format_title(tipo)}:\n"
+                    for opcion in opciones:
+                        print_data += f"- {opcion.texto}\n"
+                        if section_title in ["bebidas_calientes", "bebidas_frias"] and \
+                           pedido.adicionales and \
+                           'bebidasPreparacion' in pedido.adicionales and \
+                           str(opcion.id) in pedido.adicionales['bebidasPreparacion']:
+                            prep = pedido.adicionales['bebidasPreparacion'][str(opcion.id)]
+                            print_data += f"  Preparacion: {self.format_title(prep)}\n"
+            print_data += "-------------------------------\n\n"
+
+            # 4. OBSERVACIONES (si existen)
+            if pedido.observaciones:
+                print_data += "=== OBSERVACIONES ===\n"
+                print_data += "-------------------------------\n"
+                print_data += f"{pedido.observaciones}\n"
+                print_data += "-------------------------------\n\n"
+
+            # 5. FECHA
+            print_data += "=== FECHA Y HORA ===\n"
+            print_data += "-------------------------------\n"
+            print_data += f"{pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M')}\n"
+            print_data += "===============================\n"
+
+            # Reemplazar caracteres especiales
+            char_map = {
+                'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+                'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
+                'ñ': 'n', 'Ñ': 'N', 'ü': 'u', 'Ü': 'U'
+            }
+            for original, replacement in char_map.items():
+                print_data = print_data.replace(original, replacement)
+
+            message = (
+                self.INITIALIZE_PRINTER +
+                self.CODEPAGE_LATINO +
+                print_data.encode('cp850', errors='replace') +
+                b'\n\n\n\n\n' +
+                self.CUT_PAPER
+            )
+            
             sock.sendall(message)
-        except socket.error as e:
-            raise Exception(f"Error al conectar con la impresora: {e}")
+            
         finally:
             sock.close()
 

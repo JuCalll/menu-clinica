@@ -1,90 +1,469 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$title-color: #174288;
+$font-size-base: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 28px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow;
+  }
+}
+
 .pedidos-pendientes {
-  font-family: "Syne", sans-serif;
+  font-family: $font-family;
   padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-out;
 
   h2 {
     text-align: center;
-    margin-bottom: 20px;
-    color: #174288;
+    margin-bottom: 24px;
+    color: $title-color;
+    font-size: $font-size-xxlarge;
+    font-weight: 700;
   }
 
-  .pedido-panel {
-    .ant-collapse-header {
-      background-color: #e6f7ff;
-      font-weight: bold;
-      padding: 10px 16px;
-      border-radius: 5px;
-      border: 1px solid #d6e9f8;
-      margin-bottom: 8px;
-    }
-
-    .pedido-card {
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      border-radius: 10px;
-      background-color: #fff;
-      margin-top: 10px;
-    }
+  .loading-container {
+    @include flex-center;
+    min-height: 200px;
   }
 
-  .section {
-    margin-bottom: 20px;
+  .no-pedidos {
+    text-align: center;
+    padding: 20px;
+    background-color: $background-color;
+    border-radius: $border-radius;
+    color: rgba($title-color, 0.65);
+    font-size: $font-size-base;
+  }
 
-    h4 {
-      color: #174288;
-      margin-bottom: 10px;
-      font-size: 18px;
-      text-transform: capitalize;
-    }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 
-    h5 {
-      color: #333;
-      margin-bottom: 5px;
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    div {
-      margin-bottom: 5px;
-    }
-
-    .custom-button {
-      margin-top: 10px;
-      background-color: #174288;
-      border-color: #174288;
-      font-weight: 700;
-
-      &:hover,
-      &:focus {
-        background-color: #00a7e2;
-        border-color: #00a7e2;
-      }
-
-      &:disabled {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        cursor: not-allowed;
-      }
-    }
-
-    .buttons-container {
+    .panel-header-left {
       display: flex;
-      justify-content: flex-start;
-      gap: 10px;
-      margin-top: 10px;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+
+      .section-counter {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba($primary-color, 0.1);
+        padding: 4px 12px;
+        border-radius: 16px;
+        color: $primary-color;
+        font-weight: 500;
+        width: fit-content;
+
+        .counter-text {
+          margin-right: 8px;
+        }
+
+        .info-button {
+          padding: 2px;
+          height: auto;
+          color: rgba($primary-color, 0.65);
+          margin-left: 4px;
+          
+          &:hover {
+            color: $primary-color;
+            background: transparent;
+          }
+        }
+      }
+
+      .patient-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .patient-main-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .pedido-info {
+            font-weight: 600;
+            color: $title-color;
+          }
+
+          .ubicacion-info {
+            color: rgba($title-color, 0.65);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .info-item {
+              white-space: nowrap;
+            }
+
+            .separator {
+              color: rgba($title-color, 0.3);
+              font-size: 0.8em;
+            }
+          }
+        }
+
+        .patient-medical-info {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          .ant-tag {
+            margin-right: 0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+          }
+        }
+      }
+    }
+
+    .panel-header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .info-button {
+        padding: 4px 8px;
+        height: auto;
+        color: rgba($primary-color, 0.65);
+        
+        &:hover {
+          color: $primary-color;
+          background: rgba($primary-color, 0.1);
+        }
+      }
+
+      .ubicacion-info {
+        color: rgba($title-color, 0.65);
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .info-item {
+          white-space: nowrap;
+        }
+
+        .separator {
+          color: rgba($title-color, 0.3);
+          font-size: 0.8em;
+        }
+      }
     }
   }
 
-  .additional-options {
+  .pedido-card {
+    box-shadow: $box-shadow;
+    border-radius: $border-radius;
+    background: white;
+    margin-top: 12px;
+    
+    .section {
+      margin-bottom: 24px;
+      padding: 16px;
+      border: 1px solid rgba($title-color, 0.1);
+      border-radius: $border-radius;
+      background-color: $background-color;
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+
+        h4 {
+          color: $title-color;
+          margin: 0;
+          font-size: $font-size-large;
+          font-weight: 600;
+        }
+      }
+
+      .buttons-container {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+
+        .ant-btn {
+          height: 40px;
+          font-size: $font-size-base;
+          border-radius: $border-radius;
+          @include hover-effect;
+
+          &-primary {
+            background: $button-gradient;
+            border: none;
+            
+            &:hover {
+              background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+            }
+
+            &:disabled {
+              background: #d9d9d9;
+              transform: none;
+              box-shadow: none;
+            }
+          }
+
+          &-default {
+            border: 1px solid rgba($title-color, 0.2);
+            
+            &:hover {
+              color: $primary-color;
+              border-color: $primary-color;
+            }
+          }
+        }
+      }
+
+      .option-group {
+        margin-bottom: 16px;
+        background: white;
+        padding: 12px;
+        border-radius: $border-radius;
+
+        h5 {
+          color: $title-color;
+          margin-bottom: 12px;
+          font-size: $font-size-base;
+          font-weight: 600;
+          padding-bottom: 8px;
+          border-bottom: 1px solid rgba($title-color, 0.1);
+        }
+
+        .option-item {
+          display: flex;
+          align-items: center;
+          padding: 8px;
+          background: $background-color;
+          border-radius: $border-radius;
+          margin-bottom: 8px;
+
+          .option-text {
+            flex: 1;
+            color: rgba($title-color, 0.85);
+            font-size: $font-size-base;
+          }
+
+          .preparacion-tag {
+            margin-left: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .observaciones {
     margin-top: 20px;
+    padding: 16px;
+    background: $background-color;
+    border-radius: $border-radius;
+    border: 1px solid rgba($title-color, 0.1);
 
     h4 {
-      color: #174288;
-      margin-bottom: 10px;
+      color: $title-color;
+      margin-bottom: 8px;
+      font-size: $font-size-base;
+      font-weight: 600;
     }
 
-    div {
-      margin-bottom: 5px;
+    p {
+      color: rgba($title-color, 0.85);
+      margin: 0;
+      font-size: $font-size-base;
+    }
+  }
+}
+
+// Modal de confirmación
+.pedido-completado-modal {
+  .ant-modal-content {
+    border-radius: $border-radius;
+    overflow: hidden;
+    
+    .ant-modal-body {
+      padding: 24px;
+      text-align: center;
+    }
+
+    .ant-modal-confirm-title {
+      color: $title-color;
+      font-size: $font-size-xlarge;
+      font-weight: 600;
+    }
+
+    .ant-modal-confirm-content {
+      margin: 16px 0 24px;
+      color: rgba($title-color, 0.65);
+    }
+
+    .ant-modal-confirm-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      
+      .ant-btn {
+        min-width: 120px;
+        height: 40px;
+        padding: 0 24px;
+        font-size: $font-size-base;
+        border-radius: $border-radius;
+        @include hover-effect;
+        
+        &-primary {
+          background: $button-gradient;
+          border: none;
+          
+          &:hover {
+            background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+          }
+        }
+        
+        &-default {
+          border: 1px solid rgba($title-color, 0.2);
+          color: $title-color;
+          
+          &:hover {
+            color: $primary-color;
+            border-color: $primary-color;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .pedidos-pendientes {
+    padding: 12px;
+
+    .panel-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+
+      .panel-header-left {
+        width: 100%;
+
+        .patient-details {
+          .patient-main-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+          }
+        }
+      }
+
+      .panel-header-right {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+      }
+    }
+
+    .section {
+      padding: 12px;
+
+      .buttons-container {
+        flex-direction: column;
+        
+        .ant-btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .pedido-completado-modal {
+    .ant-modal-content {
+      margin: 0 12px;
+      
+      .ant-modal-confirm-btns {
+        flex-direction: column-reverse;
+        
+        .ant-btn {
+          width: 100%;
+          max-width: none;
+        }
+      }
+    }
+  }
+
+  .sections-status-detail {
+    min-width: 200px;
+  }
+
+  .ubicacion-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    .separator {
+      display: none;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Estilos para el contenido del Popover
+.sections-status-detail {
+  min-width: 250px;
+  max-width: 300px;
+
+  .section-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba($title-color, 0.1);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .section-name {
+      color: rgba($title-color, 0.85);
+      font-size: $font-size-base;
+      margin-right: 12px;
+    }
+
+    .status-tag {
+      flex-shrink: 0;
     }
   }
 }

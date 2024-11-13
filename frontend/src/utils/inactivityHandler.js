@@ -1,8 +1,19 @@
-function inactivityTime(showWarningCallback) {
+function inactivityTime(showWarningCallback, onActivity) {
   let warningTimeout;
+  let logoutTimeout;
+  const WARNING_TIME = 50 * 60 * 1000;  // 50 minutos
+  const LOGOUT_TIME = 55 * 60 * 1000;   // 55 minutos
+
+  function handleActivity() {
+    if (typeof onActivity === "function") {
+      onActivity();
+    }
+    resetTimer();
+  }
 
   function resetTimer() {
     clearTimeout(warningTimeout);
+    clearTimeout(logoutTimeout);
     startTimer();
   }
 
@@ -10,12 +21,15 @@ function inactivityTime(showWarningCallback) {
     warningTimeout = setTimeout(() => {
       if (typeof showWarningCallback === "function") {
         showWarningCallback(true);
+        // Iniciar el temporizador para el cierre de sesión automático
+        logoutTimeout = setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('tokenExpired'));
+        }, LOGOUT_TIME - WARNING_TIME);
       }
-    }, 30 * 60 * 1000); 
+    }, WARNING_TIME);
   }
 
   const events = [
-    'load',
     'mousemove',
     'mousedown',
     'click',
@@ -26,16 +40,17 @@ function inactivityTime(showWarningCallback) {
   ];
 
   events.forEach(event => {
-    window.addEventListener(event, resetTimer);
+    window.addEventListener(event, handleActivity);
   });
 
   startTimer();
 
   return () => {
     events.forEach(event => {
-      window.removeEventListener(event, resetTimer);
+      window.removeEventListener(event, handleActivity);
     });
     clearTimeout(warningTimeout);
+    clearTimeout(logoutTimeout);
   };
 }
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Input, Button, Alert } from "antd";
 import api from "../axiosConfig";
 import { jwtDecode } from 'jwt-decode';
@@ -11,8 +10,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.classList.add("login-page");
@@ -58,7 +55,7 @@ const Login = () => {
           localStorage.setItem("refresh", refresh);
           localStorage.setItem("role", role);
           localStorage.setItem("name", name);
-          navigate("/home");
+          window.location.href = "/#/home";
         } else {
           setError("El token recibido es inválido o ha expirado.");
         }

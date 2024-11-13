@@ -84,15 +84,17 @@ class PedidoSerializer(serializers.ModelSerializer):
         instance.save()
 
         if opciones_data:
+            instance.pedidomenuoption_set.all().delete()
+            
             for opcion_data in opciones_data:
                 opcion_id = opcion_data.get('id')
                 if opcion_id is not None:
                     try:
                         menu_option = MenuOption.objects.get(id=opcion_id)
-                        PedidoMenuOption.objects.update_or_create(
+                        PedidoMenuOption.objects.create(
                             pedido=instance,
                             menu_option=menu_option,
-                            defaults={'selected': opcion_data.get('selected', False)}
+                            selected=opcion_data.get('selected', False)
                         )
                     except MenuOption.DoesNotExist:
                         continue

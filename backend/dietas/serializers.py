@@ -4,9 +4,9 @@ from .models import Dieta, Alergia
 class DietaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dieta
-        fields = ['id', 'nombre', 'descripcion']
+        fields = ['id', 'nombre', 'descripcion', 'activo']
 
 class AlergiaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alergia
-        fields = ['id', 'nombre', 'descripcion']
+        fields = ['id', 'nombre', 'descripcion', 'activo']

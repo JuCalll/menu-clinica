@@ -1,87 +1,231 @@
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$title-color: #174288;
+$font-size-base: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 28px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: $box-shadow;
+  }
+}
+
 .user-management {
-  font-family: "Syne", sans-serif;
+  font-family: $font-family;
   padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: $background-color;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  min-height: calc(100vh - 64px);
 
-  .custom-button {
-    background-color: #174288;
-    border-color: #174288;
-    font-weight: 700;
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  &__controls {
+    @include flex-center;
+    justify-content: space-between;
     margin-bottom: 20px;
+    gap: 16px;
 
-    &:hover,
-    &:focus {
-      background-color: #00a7e2;
-      border-color: #00a7e2;
-    }
-  }
+    .search-input {
+      width: 300px;
+      transition: all 0.3s ease;
 
-  .table-responsive {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-  }
-
-  .ant-table {
-    margin-top: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
-    .ant-table-thead > tr > th {
-      background-color: #e6f7ff;
-      font-weight: bold;
-      padding: 12px;
-    }
-
-    .ant-table-tbody > tr > td {
-      padding: 10px;
-    }
-  }
-
-  .pagination {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .ant-modal {
-    &-header {
-      font-family: "Syne", sans-serif;
-      background-color: #fafafa;
-      border-bottom: 1px solid #d9d9d9;
-    }
-
-    &-footer {
-      display: none;
-    }
-
-    .ant-form-item-label > label {
-      font-weight: bold;
-    }
-
-    .ant-input,
-    .ant-select-selector {
-      border-radius: 5px;
-      padding: 10px;
-    }
-
-    .custom-button {
-      width: 100%;
-      margin-top: 10px;
-      background-color: #174288;
-      border-color: #174288;
-      font-weight: 700;
-
-      &:hover,
       &:focus {
-        background-color: #00a7e2;
-        border-color: #00a7e2;
+        width: 350px;
+        box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
       }
     }
   }
+
+  &__button {
+    height: 40px;
+    padding: 0 24px;
+    font-size: $font-size-base;
+    font-weight: 600;
+    border-radius: $border-radius;
+    background: $button-gradient;
+    border: none;
+    color: white;
+    @include hover-effect;
+
+    &:hover {
+      background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+      color: white;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &__table {
+    background-color: #fff;
+    border-radius: $border-radius;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-table-thead > tr > th {
+      background-color: rgba($primary-color, 0.05);
+      font-weight: 600;
+      color: $primary-color;
+    }
+
+    .ant-table-tbody > tr {
+      @include hover-effect;
+    }
+  }
+
+  &__modal {
+    .ant-modal-content {
+      border-radius: $border-radius;
+      overflow: hidden;
+    }
+
+    .ant-modal-header {
+      background-color: $primary-color;
+      padding: 16px 24px;
+
+      .ant-modal-title {
+        color: #fff;
+        font-size: $font-size-large;
+      }
+    }
+
+    .modal-button-container {
+      margin-top: 24px;
+      width: 100%;
+
+      .custom-button {
+        width: 100%;
+        height: 40px;
+        font-size: $font-size-base;
+        font-weight: 600;
+        border-radius: $border-radius;
+        background: $button-gradient;
+        border: none;
+        color: white;
+        @include hover-effect;
+
+        &:hover {
+          background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+          color: white;
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+
+    .ant-form-item {
+      margin-bottom: 24px;
+
+      .ant-form-item-label > label {
+        font-size: $font-size-base;
+        font-weight: 600;
+      }
+    }
+
+    .ant-input,
+    .ant-select-selector,
+    .ant-input-password {
+      height: 40px;
+      border-radius: $border-radius;
+      font-size: $font-size-base;
+    }
+
+    .ant-select-selector {
+      display: flex;
+      align-items: center;
+    }
+
+    .ant-switch {
+      background-color: $secondary-color;
+
+      &-checked {
+        background-color: $primary-color;
+      }
+    }
+
+    .user-details {
+      .ant-btn {
+        width: 100%;
+        height: 40px;
+        margin-top: 24px;
+        font-size: $font-size-base;
+        font-weight: 600;
+        border-radius: $border-radius;
+        background: $button-gradient;
+        border: none;
+        color: white;
+        @include hover-effect;
+
+        &:hover {
+          background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+          color: white;
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  // Responsive styles
+  @media (max-width: 768px) {
+    padding: 10px;
+
+    &__controls {
+      flex-direction: column;
+      
+      .search-input,
+      .ant-btn {
+        width: 100%;
+      }
+    }
+
+    &__table {
+      padding: 10px;
+      font-size: $font-size-base;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-management {
+  animation: fadeIn 0.3s ease;
 }

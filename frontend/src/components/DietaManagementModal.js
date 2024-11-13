@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Table, Input, Form, Popconfirm, message } from 'antd';
+import { Modal, Button, Table, Input, Form, Popconfirm, message, Switch } from 'antd';
 import { getDietas, createDieta, updateDieta, deleteDieta } from '../services/api'; 
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
-const DietaManagementModal = ({ visible, onClose }) => {
+const DietaManagementModal = ({ visible, onClose, refreshData }) => {
   const [dietas, setDietas] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingDieta, setEditingDieta] = useState(null);
@@ -40,26 +40,72 @@ const DietaManagementModal = ({ visible, onClose }) => {
     try {
       await deleteDieta(id);
       message.success('Dieta eliminada');
-      fetchDietas();
+      await fetchDietas();
+      refreshData();
     } catch (error) {
-      message.error('Error al eliminar la dieta');
+      if (error.response?.data?.error) {
+        message.error(error.response.data.error);
+      } else {
+        message.error('Error al eliminar la dieta');
+      }
     }
   };
 
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      const nombreExiste = dietas.some(
+        d => d.nombre.toLowerCase() === values.nombre.toLowerCase() && 
+            (!editingDieta || d.id !== editingDieta.id)
+      );
+      
+      if (nombreExiste) {
+        message.error('Ya existe una dieta con ese nombre');
+        return;
+      }
       if (editingDieta) {
-        await updateDieta(editingDieta.id, values);
+        await updateDieta(editingDieta.id, {
+          ...values,
+          activo: editingDieta.activo
+        });
         message.success('Dieta actualizada');
       } else {
-        await createDieta(values);
+        await createDieta({
+          ...values,
+          activo: true
+        });
         message.success('Dieta creada');
       }
       setIsEditing(false);
-      fetchDietas();
+      form.resetFields();
+      await fetchDietas();
+      refreshData();
     } catch (error) {
-      message.error('Error al guardar la dieta');
+      if (error.response?.data?.error) {
+        message.error(error.response.data.error);
+      } else {
+        message.error('Error al guardar la dieta');
+      }
+    }
+  };
+
+  const toggleActivo = async (dieta) => {
+    try {
+      const payload = {
+        nombre: dieta.nombre,
+        descripcion: dieta.descripcion,
+        activo: !dieta.activo
+      };
+      await updateDieta(dieta.id, payload);
+      message.success(`Dieta ${dieta.activo ? 'desactivada' : 'activada'}`);
+      await fetchDietas();
+      refreshData();
+    } catch (error) {
+      if (error.response?.data?.error) {
+        message.error(error.response.data.error);
+      } else {
+        message.error('Error al cambiar el estado de la dieta');
+      }
     }
   };
 
@@ -68,11 +114,23 @@ const DietaManagementModal = ({ visible, onClose }) => {
       title: 'Nombre',
       dataIndex: 'nombre',
       key: 'nombre',
+      sorter: (a, b) => a.nombre.localeCompare(b.nombre),
     },
     {
       title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
+    },
+    {
+      title: 'Activo',
+      dataIndex: 'activo',
+      key: 'activo',
+      render: (text, record) => (
+        <Switch 
+          checked={record.activo} 
+          onChange={() => toggleActivo(record)}
+        />
+      ),
     },
     {
       title: 'Acciones',
@@ -109,33 +167,35 @@ const DietaManagementModal = ({ visible, onClose }) => {
   return (
     <Modal
       open={visible}
-      title="Gestión de Dietas"
-      onCancel={onClose}
-      footer={null}
+      title={isEditing ? (editingDieta ? 'Editar Dieta' : 'Crear Dieta') : 'Gestión de Dietas'}
+      onCancel={isEditing ? () => setIsEditing(false) : onClose}
+      onOk={isEditing ? handleSave : null}
+      footer={!isEditing ? null : undefined}
       width={600}
       className="gestion-panel__modal gestion-panel__fade-in"
     >
-      <div className="gestion-panel__actions-container">
-        <Button 
-          className="gestion-panel__button"
-          onClick={handleAdd} 
-          style={{ width: '100%' }}
-        >
-          Añadir Dieta
-        </Button>
-      </div>
-      <Table
-        columns={columns}
-        dataSource={dietas}
-        rowKey="id"
-        pagination={false}
-      />
-      <Modal
-        open={isEditing}
-        title={editingDieta ? 'Editar Dieta' : 'Crear Dieta'}
-        onCancel={() => setIsEditing(false)}
-        onOk={handleSave}
-      >
+      {!isEditing ? (
+        <>
+          <div className="gestion-panel__actions-container">
+            <Button 
+              className="gestion-panel__button"
+              onClick={handleAdd} 
+              style={{ width: '100%' }}
+            >
+              Añadir Dieta
+            </Button>
+          </div>
+          <Table
+            columns={columns}
+            dataSource={dietas}
+            rowKey="id"
+            pagination={false}
+            sortDirections={['ascend', 'descend']}
+            defaultSortOrder="ascend"
+            defaultSortField="nombre"
+          />
+        </>
+      ) : (
         <Form form={form} layout="vertical">
           <Form.Item
             name="nombre"
@@ -147,12 +207,12 @@ const DietaManagementModal = ({ visible, onClose }) => {
           <Form.Item
             name="descripcion"
             label="Descripción de la Dieta"
-            rules={[{ required: false, message: 'Por favor, introduce la descripción de la dieta' }]}
+            rules={[{ required: false }]}
           >
             <Input.TextArea />
           </Form.Item>
         </Form>
-      </Modal>
+      )}
     </Modal>
   );
 };

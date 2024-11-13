@@ -22,6 +22,8 @@ import AlergiaManagementModal from "./AlergiaManagementModal";
 import api from "../services/api";
 import "../styles/GestionPanel.scss";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { getAlergias } from '../services/api';
+import { message } from 'antd';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -156,6 +158,8 @@ const GestionPanel = ({
         habitaciones: "habitación",
         camas: "cama",
         pacientes: "paciente",
+        dietas: "dieta",
+        alergias: "alergia"
       };
       return types[type] || "elemento";
     };
@@ -175,19 +179,16 @@ const GestionPanel = ({
     const getContent = () => {
       if (isActivating) {
         const activationMessages = {
-          servicios:
-            "Esta acción activará el servicio y habilitará la posibilidad de activar las habitaciones y camas relacionadas.",
-          habitaciones:
-            "Esta acción activará la habitación y permitirá la activación de las camas asociadas a ella.",
-          camas:
-            "Esta acción habilitará la cama para poder ser asignada a pacientes.",
-          pacientes:
-            "Esta acción activará al paciente y asignará automáticamente su cama asociada.",
+          servicios: "Esta acción activará el servicio y habilitará la posibilidad de activar las habitaciones y camas relacionadas.",
+          habitaciones: "Esta acción activará la habitación y permitirá la activación de las camas asociadas a ella.",
+          camas: "Esta acción habilitará la cama para poder ser asignada a pacientes.",
+          pacientes: "Esta acción activará al paciente y asignará automáticamente su cama asociada.",
+          dietas: "Esta acción activará la dieta y permitirá asignarla a nuevos pacientes.",
+          alergias: "Esta acción activará la alergia y permitirá asignarla a nuevos pacientes."
         };
         return (
           <div style={{ fontSize: "14px", color: "#595959" }}>
-            {activationMessages[type] ||
-              "Esta acción cambiará el estado del elemento a activo."}
+            {activationMessages[type] || "Esta acción cambiará el estado del elemento a activo."}
           </div>
         );
       } else {
@@ -199,9 +200,7 @@ const GestionPanel = ({
                 <li>El servicio quedará desactivado</li>
                 <li>Todas las habitaciones asociadas serán desactivadas</li>
                 <li>Todas las camas del servicio quedarán desactivadas</li>
-                <li>
-                  El servicio permanecerá en la base de datos como inactivo
-                </li>
+                <li>El servicio permanecerá en la base de datos como inactivo</li>
               </ul>
             </div>
           ),
@@ -210,10 +209,8 @@ const GestionPanel = ({
               <p>Esta acción tendrá los siguientes efectos:</p>
               <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
                 <li>La habitación quedará desactivada</li>
-                <li>Todas las camas asociadas serán desactivadas</li>
-                <li>
-                  La habitación permanecerá en la base de datos como inactiva
-                </li>
+                <li>Todas las camas de la habitación serán desactivadas</li>
+                <li>La habitación permanecerá en la base de datos como inactiva</li>
               </ul>
             </div>
           ),
@@ -232,21 +229,35 @@ const GestionPanel = ({
               <p>Esta acción tendrá los siguientes efectos:</p>
               <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
                 <li>El paciente quedará desactivado</li>
-                <li>La cama asociada quedará disponible</li>
-                <li>
-                  El paciente permanecerá en la base de datos como inactivo
-                </li>
+                <li>La cama asignada quedará libre</li>
+                <li>El paciente permanecerá en la base de datos como inactivo</li>
               </ul>
             </div>
           ),
-        };
-        return (
-          deactivationMessages[type] || (
+          dietas: (
             <div style={{ fontSize: "14px", color: "#595959" }}>
-              Esta acción cambiará el estado del elemento a inactivo.
+              <p>Esta acción tendrá los siguientes efectos:</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
+                <li>La dieta quedará desactivada</li>
+                <li>No se podrá asignar a nuevos pacientes</li>
+                <li>Los pacientes que ya la tienen asignada mantendrán el registro</li>
+                <li>La dieta permanecerá en la base de datos como inactiva</li>
+              </ul>
+            </div>
+          ),
+          alergias: (
+            <div style={{ fontSize: "14px", color: "#595959" }}>
+              <p>Esta acción tendrá los siguientes efectos:</p>
+              <ul style={{ paddingLeft: "20px", marginTop: "8px" }}>
+                <li>La alergia quedará desactivada</li>
+                <li>No se podrá asignar a nuevos pacientes</li>
+                <li>Los pacientes que ya la tienen asignada mantendrán el registro</li>
+                <li>La alergia permanecerá en la base de datos como inactiva</li>
+              </ul>
             </div>
           )
-        );
+        };
+        return deactivationMessages[type];
       }
     };
 
@@ -718,12 +729,24 @@ const GestionPanel = ({
   };
   const handleEditPaciente = (paciente) => {
     setEditingPaciente(paciente);
+    
+    const dieta = paciente.recommended_diet;
+    const alergia = paciente.alergias;
+    
+    if (dieta && !dieta.activo) {
+      message.warning(`La dieta "${dieta.nombre}" está inactiva`);
+    }
+    
+    if (alergia && !alergia.activo) {
+      message.warning(`La alergia "${alergia.nombre}" está inactiva`);
+    }
+
     form.setFieldsValue({
       pacienteCedula: paciente.cedula,
       pacienteName: paciente.name,
       camaId: paciente.cama.id,
-      recommendedDietId: paciente.recommended_diet?.id,
-      alergiasId: paciente.alergias?.id,
+      recommendedDietId: dieta?.id,
+      alergiasId: alergia?.id,
     });
     setIsEditPacienteModalOpen(true);
   };
@@ -820,6 +843,19 @@ const GestionPanel = ({
       placement: "topRight",
       duration: 3,
     });
+  };
+
+  const handleModalClose = () => {
+    form.resetFields();
+  };
+
+  const updateAlergias = async () => {
+    try {
+      await getAlergias();
+      refreshData(); // Actualizar datos en el componente padre
+    } catch (error) {
+      message.error('Error al actualizar las alergias');
+    }
   };
 
   return (
@@ -1017,11 +1053,18 @@ const GestionPanel = ({
               title="Crear Nueva Habitación"
               open={isHabitacionModalOpen}
               onOk={handleCreateHabitacion}
-              onCancel={closeCreateHabitacionModal}
+              onCancel={() => {
+                closeCreateHabitacionModal();
+                handleModalClose();
+              }}
               okText="Crear"
               cancelText="Cancelar"
             >
-              <Form layout="vertical" className="gestion-panel__form">
+              <Form 
+                form={form} 
+                layout="vertical" 
+                className="gestion-panel__form"
+              >
                 <Form.Item label="Nombre de la Habitación">
                   <Input
                     value={newHabitacionName}
@@ -1052,11 +1095,18 @@ const GestionPanel = ({
               title="Crear Nueva Cama"
               open={isCamaModalOpen}
               onOk={handleCreateCama}
-              onCancel={closeCreateCamaModal}
+              onCancel={() => {
+                closeCreateCamaModal();
+                handleModalClose();
+              }}
               okText="Crear"
               cancelText="Cancelar"
             >
-              <Form layout="vertical" className="gestion-panel__form">
+              <Form 
+                form={form} 
+                layout="vertical" 
+                className="gestion-panel__form"
+              >
                 <Form.Item label="Nombre de la Cama">
                   <Input
                     value={newCamaName}
@@ -1227,13 +1277,16 @@ const GestionPanel = ({
               title="Editar Paciente"
               open={isEditPacienteModalOpen}
               onOk={handleUpdatePaciente}
-              onCancel={closeEditPacienteModal}
+              onCancel={() => {
+                closeEditPacienteModal();
+                handleModalClose();
+              }}
               okText="Guardar"
               cancelText="Cancelar"
             >
-              <Form
-                form={form}
-                layout="vertical"
+              <Form 
+                form={form} 
+                layout="vertical" 
                 className="gestion-panel__form"
               >
                 <Form.Item
@@ -1317,8 +1370,7 @@ const GestionPanel = ({
             <AlergiaManagementModal
               visible={isAlergiaModalOpen}
               onClose={closeAlergiaManagementModal}
-              alergias={alergias}
-              refreshData={refreshData}
+              refreshData={updateAlergias}
             />
 
             <Modal
@@ -1326,11 +1378,18 @@ const GestionPanel = ({
               title="Crear Nuevo Paciente"
               open={isPacienteModalOpen}
               onOk={handleCreatePaciente}
-              onCancel={closeCreatePacienteModal}
+              onCancel={() => {
+                closeCreatePacienteModal();
+                handleModalClose();
+              }}
               okText="Crear"
               cancelText="Cancelar"
             >
-              <Form layout="vertical" className="gestion-panel__form">
+              <Form 
+                form={form} 
+                layout="vertical" 
+                className="gestion-panel__form"
+              >
                 <Form.Item label="Cédula">
                   <Input
                     value={newPacienteID}
@@ -1373,11 +1432,13 @@ const GestionPanel = ({
                     placeholder="Seleccione una dieta"
                     allowClear
                   >
-                    {dietas.map((dieta) => (
-                      <Option key={`dieta-${dieta.id}`} value={dieta.id}>
-                        {dieta.nombre}
-                      </Option>
-                    ))}
+                    {dietas
+                      .filter(dieta => dieta.activo)
+                      .map((dieta) => (
+                        <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                          {dieta.nombre}
+                        </Option>
+                      ))}
                   </Select>
                 </Form.Item>
                 <Form.Item label="Alergias">
@@ -1387,11 +1448,13 @@ const GestionPanel = ({
                     placeholder="Seleccione una alergia"
                     allowClear
                   >
-                    {alergias.map((alergia) => (
-                      <Option key={`alergia-${alergia.id}`} value={alergia.id}>
-                        {alergia.nombre}
-                      </Option>
-                    ))}
+                    {alergias
+                      .filter(alergia => alergia.activo)
+                      .map((alergia) => (
+                        <Option key={`alergia-${alergia.id}`} value={alergia.id}>
+                          {alergia.nombre}
+                        </Option>
+                      ))}
                   </Select>
                 </Form.Item>
               </Form>
@@ -1405,11 +1468,18 @@ const GestionPanel = ({
         title="Crear Nuevo Servicio"
         open={isModalOpen}
         onOk={handleCreateServicio}
-        onCancel={closeCreateServicioModal}
+        onCancel={() => {
+          closeCreateServicioModal();
+          handleModalClose();
+        }}
         okText="Crear"
         cancelText="Cancelar"
       >
-        <Form form={form} layout="vertical" className="gestion-panel__form">
+        <Form 
+          form={form} 
+          layout="vertical" 
+          className="gestion-panel__form"
+        >
           <Form.Item
             name="servicioName"
             label="Nombre del Servicio"
@@ -1434,7 +1504,11 @@ const GestionPanel = ({
         okText="Guardar"
         cancelText="Cancelar"
       >
-        <Form form={form} layout="vertical" className="gestion-panel__form">
+        <Form 
+          form={form} 
+          layout="vertical" 
+          className="gestion-panel__form"
+        >
           <Form.Item
             name="servicioName"
             label="Nombre del Servicio"
@@ -1459,7 +1533,11 @@ const GestionPanel = ({
         okText="Guardar"
         cancelText="Cancelar"
       >
-        <Form form={form} layout="vertical" className="gestion-panel__form">
+        <Form 
+          form={form} 
+          layout="vertical" 
+          className="gestion-panel__form"
+        >
           <Form.Item
             name="habitacionName"
             label="Nombre de la Habitación"
@@ -1504,7 +1582,11 @@ const GestionPanel = ({
         okText="Guardar"
         cancelText="Cancelar"
       >
-        <Form form={form} layout="vertical" className="gestion-panel__form">
+        <Form 
+          form={form} 
+          layout="vertical" 
+          className="gestion-panel__form"
+        >
           <Form.Item
             name="camaName"
             label="Nombre de la Cama"

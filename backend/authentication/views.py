@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -7,6 +8,8 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from .models import CustomUser
 from .serializers import UserSerializer, LoginSerializer
 from logs.models import LogEntry
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework.views import APIView
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -125,24 +128,79 @@ class CustomTokenRefreshView(TokenRefreshView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        
         try:
             serializer.is_valid(raise_exception=True)
+            validated_data = serializer.validated_data
+
+            try:
+                refresh_token = request.data.get('refresh')
+                token = RefreshToken(refresh_token)
+                user_id = token.payload.get('user_id')
+                
+                if user_id and not token.blacklisted():
+                    LogEntry.objects.create(
+                        user_id=user_id,
+                        action='TOKEN_REFRESH',
+                        model_name='Token',
+                        details={
+                            'status': 'success',
+                            'timestamp': str(timezone.now()),
+                            'ip_address': request.META.get('REMOTE_ADDR'),
+                            'user_agent': request.META.get('HTTP_USER_AGENT')
+                        }
+                    )
+            except TokenError:
+                pass  # Token inválido o en blacklist, ignorar el logging
+            except Exception as log_error:
+                print(f"Error al registrar log de refresh token: {str(log_error)}")
+
+            return Response(validated_data, status=status.HTTP_200_OK)
+
         except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        data = serializer.validated_data
-        
-        # Registrar el refresh del token
-        LogEntry.objects.create(
-            user=request.user,
-            action='TOKEN_REFRESH',
-            model_name='Token',
-            details={'status': 'success'}
-        )
+class LogoutView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            if not refresh_token:
+                return Response(
+                    {"detail": "No se proporcionó token de refresco"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        response_data = {
-            "access": data.get("access"),
-            "refresh": data.get("refresh"),
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
+            token = RefreshToken(refresh_token)
+            user_id = token.payload.get('user_id')
+            
+            # Primero registramos el logout
+            if user_id:
+                LogEntry.objects.create(
+                    user_id=user_id,
+                    action='LOGOUT',
+                    model_name='User',
+                    details={
+                        'status': 'success',
+                        'timestamp': str(timezone.now()),
+                        'ip_address': request.META.get('REMOTE_ADDR'),
+                        'user_agent': request.META.get('HTTP_USER_AGENT')
+                    }
+                )
+            
+            # Luego blacklisteamos el token
+            token.blacklist()
+            return Response(status=status.HTTP_200_OK)
+            
+        except TokenError:
+            return Response(
+                {"detail": "Token inválido o expirado"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )

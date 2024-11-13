@@ -31,7 +31,16 @@ function App() {
 
   useEffect(() => {
     let cleanupInactivity;
-    let tokenRefreshTimeout;
+    let tokenCheckInterval;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const handleTokenExpired = () => {
+      handleWarningCancel();
+    };
+
+    window.addEventListener('tokenExpired', handleTokenExpired);
 
     const isTokenExpired = (token) => {
       if (!token) return true;
@@ -44,64 +53,41 @@ function App() {
       }
     };
 
-    const initializeApp = async (location) => {
-      const currentPath = location.hash ? location.hash.substring(1) : location.pathname; 
-
-      if (currentPath === "/login") {
-        return;
+    tokenCheckInterval = setInterval(() => {
+      const currentToken = localStorage.getItem("token");
+      if (currentToken && isTokenExpired(currentToken)) {
+        handleWarningCancel();
       }
+    }, 10000);
 
-      let token = localStorage.getItem("token");
-      let refresh = localStorage.getItem("refresh");
+    const handleActivity = async () => {
+      const currentToken = localStorage.getItem("token");
+      if (!currentToken || window.isRefreshing) return;
 
-      if (token && !isTokenExpired(token)) {
-        cleanupInactivity = inactivityTime(setIsWarningVisible);
-        scheduleTokenRefresh();
-      } else if (refresh && !isTokenExpired(refresh)) {
-        try {
+      try {
+        const decodedToken = jwtDecode(currentToken);
+        const currentTime = Date.now() / 1000;
+        const timeUntilExpiry = decodedToken.exp - currentTime;
+        
+        if (timeUntilExpiry < 1800) {
+          window.isRefreshing = true;
           await refreshToken();
-          cleanupInactivity = inactivityTime(setIsWarningVisible);
-          scheduleTokenRefresh();
-        } catch (error) {
+          window.isRefreshing = false;
+        }
+      } catch (error) {
+        console.error("Error checking/refreshing token:", error);
+        if (error.response?.status === 400 || error.response?.data?.detail?.includes('blacklisted')) {
           handleWarningCancel();
         }
-      } else {
-        handleWarningCancel();
       }
     };
 
-    const scheduleTokenRefresh = () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleWarningCancel();
-        return;
-      }
-      const decodedToken = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-      const timeUntilExpiry = decodedToken.exp - currentTime;
-
-      const refreshTime = (timeUntilExpiry - 300) * 1000;
-
-      if (refreshTime > 0) {
-        tokenRefreshTimeout = setTimeout(async () => {
-          try {
-            await refreshToken();
-            scheduleTokenRefresh();
-          } catch (error) {
-            handleWarningCancel();
-          }
-        }, refreshTime);
-      } else {
-        handleWarningCancel();
-      }
-    };
-
-    const location = window.location;
-    initializeApp(location);
+    cleanupInactivity = inactivityTime(setIsWarningVisible, handleActivity);
 
     return () => {
       if (cleanupInactivity) cleanupInactivity();
-      if (tokenRefreshTimeout) clearTimeout(tokenRefreshTimeout);
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+      clearInterval(tokenCheckInterval);
     };
   }, []);
 
@@ -136,12 +122,46 @@ function App() {
     }
   };
 
-  const handleWarningCancel = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    window.location.href = "/login";
+  const handleWarningCancel = async () => {
+    try {
+      const refresh = localStorage.getItem("refresh");
+      const token = localStorage.getItem("token");
+      
+      if (refresh && token) {
+        try {
+          // Intentar refrescar el token una última vez para el logout
+          const refreshResponse = await api.post("/auth/token/refresh/", { refresh });
+          
+          if (refreshResponse.data && refreshResponse.data.access) {
+            const newToken = refreshResponse.data.access;
+            const newRefresh = refreshResponse.data.refresh || refresh; // Usar el nuevo refresh si existe
+            
+            // Actualizar el token en localStorage y en los headers
+            localStorage.setItem("token", newToken);
+            
+            // Hacer el logout usando el nuevo token y el refresh token original
+            await api.post(
+              "/auth/logout/", 
+              { refresh: newRefresh },
+              { 
+                headers: { 
+                  'Authorization': `Bearer ${newToken}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+          }
+        } catch (refreshError) {
+          console.error("Error al refrescar token:", refreshError);
+        }
+      }
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    } finally {
+      // Limpiar localStorage y redirigir independientemente del resultado
+      localStorage.clear();
+      window.location.href = "/login";
+    }
   };
 
   return (
@@ -153,6 +173,7 @@ function App() {
         onCancel={handleWarningCancel}
         okText="Estoy aquí"
         cancelText="Cerrar sesión"
+        className="inactivity-warning-modal"
       >
         <p>Ha pasado un tiempo desde su última actividad. Por favor, confirme que sigue aquí.</p>
       </Modal>
