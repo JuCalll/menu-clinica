@@ -24,7 +24,6 @@ import UserManagement from "./pages/UserManagement";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 
-import "./styles/App.scss";
 
 function App() {
   const [isWarningVisible, setIsWarningVisible] = useState(false);

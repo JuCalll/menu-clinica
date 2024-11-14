@@ -223,10 +223,10 @@ class PedidoPrintView(views.APIView):
                 print_data += f"{pedido.observaciones}\n"
                 print_data += "-------------------------------\n\n"
 
-            # 5. FECHA
+            # 5. FECHA (Modificado para usar la hora actual con AM/PM)
             print_data += "=== FECHA Y HORA ===\n"
             print_data += "-------------------------------\n"
-            print_data += f"{pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M')}\n"
+            print_data += f"{datetime.now().strftime('%d/%m/%Y %I:%M %p')}\n"
             print_data += "===============================\n"
 
             # Reemplazar caracteres especiales

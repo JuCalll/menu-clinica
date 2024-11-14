@@ -1,69 +1,155 @@
+@import 'variables';
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
 .header {
   font-family: "Syne", sans-serif;
-  background-color: #174288;
-  padding: 10px 0;
+  background: linear-gradient(90deg, #174288 0%, #1a4b9d 100%);
+  padding: 12px 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $header-height;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
+  &.dark {
+    background: linear-gradient(90deg, #0d2548 0%, #0f2d5d 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+
+    .logo {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .collapse-button {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.1);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    .theme-switch {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
   }
 
   .header-content {
+    height: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 
   .logo {
-    height: 50px;
-    background-color: #ffffff;
-    padding: 5px;
+    height: 45px;
+    padding: 6px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  .collapse-button {
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 992px) {
+      display: none;
+    }
   }
 
   .header-right {
     display: flex;
     align-items: center;
+    gap: 20px;
+  }
+
+  .theme-switch {
+    margin: 0;
   }
 
   .username {
-    color: #ffffff;
-    margin-right: 20px;
-    font-weight: 700;
-    font-size: 1.1rem;
+    color: white;
+    font-weight: 600;
+    position: relative;
+    padding-right: 20px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      height: 24px;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-50%);
+    }
   }
 
   .logout-link {
-    background-color: #00a7e2;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: white;
     text-decoration: none;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
 
     &:hover {
-      background-color: #0086b3;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
     }
   }
 }
 
 @media (max-width: 768px) {
   .header {
+    padding: 12px 16px;
+
     .header-content {
-      flex-direction: column;
-      align-items: center;
+      gap: 12px;
     }
 
-    .header-right {
-      margin-top: 10px;
+    .collapse-button {
+      display: none;
     }
 
     .username {
-      margin-right: 10px;
+      display: none;
+    }
+
+    .header-right {
+      gap: 12px;
     }
   }
 }

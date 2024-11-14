@@ -1,81 +1,165 @@
+@import 'variables';
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
 .sidebar {
   font-family: "Syne", sans-serif;
-  background-color: #174288;
+  background: linear-gradient(180deg, #174288 0%, #1a4b9d 100%);
   color: #ffffff;
-  padding: 15px;
+  padding: 16px;
+  width: $sidebar-width;
+  height: calc(100vh - #{$header-height});
+  position: fixed;
+  top: $header-height;
+  left: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 900;
+  transition: all 0.3s ease;
 
-  .nav-link {
-    color: #ffffff;
-    padding: 10px 15px;
-    border-radius: 4px;
-    margin: 5px 0;
-    cursor: pointer;
+  &.collapsed {
+    width: $sidebar-collapsed-width;
+    padding: 16px 8px;
 
-    &:hover {
-      background-color: #00a7e2;
-      color: #dee2e6;
+    .nav-text, .arrow-icon {
+      opacity: 0;
+      width: 0;
     }
 
-    &.active {
-      background-color: #00a7e2;
-      color: #dee2e6;
+    .nav-link {
+      justify-content: center;
+      padding: 12px;
+      
+      svg {
+        margin: 0;
+        font-size: 22px;
+      }
+    }
+
+    .submenu {
+      display: none;
     }
   }
 
-  .pedidos-toggle,
-  .gestion-datos-toggle {
+  &.dark {
+    background: linear-gradient(180deg, #0d2548 0%, #0f2d5d 100%);
+    
+    .nav-link {
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &.active {
+        background: rgba(0, 167, 226, 0.2);
+      }
+    }
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 4px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
     position: relative;
+    font-size: 15px;
 
-    &::after {
-      content: "";
-      display: inline-block;
-      margin-left: 10px;
-      transition: transform 0.3s ease;
-      border: solid #ffffff;
-      border-width: 0 2px 2px 0;
-      padding: 3px;
-      transform: rotate(45deg);
+    svg {
+      margin-right: 16px;
+      font-size: 20px;
+      flex-shrink: 0;
     }
 
-    &.open::after {
-      transform: rotate(-135deg);
+    .nav-text {
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      font-weight: 500;
     }
+
+    .arrow-icon {
+      margin-left: auto;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    &:hover {
+      background: rgba(0, 167, 226, 0.1);
+    }
+
+    &.active {
+      background: #00a7e2;
+      font-weight: 500;
+    }
+
+    &.open .arrow-icon {
+      transform: rotate(90deg);
+    }
+  }
+
+  .nav-group {
+    position: relative;
   }
 
   .submenu {
-    margin-left: 20px;
-    padding-left: 10px;
-    border-left: 2px solid #00a7e2;
-    opacity: 0;
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 2px solid rgba(0, 167, 226, 0.3);
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.submenu-open {
+      max-height: 500px;
+    }
+
+    .submenu-item {
+      padding: 10px 16px;
+      margin: 4px 0;
+      border-radius: 6px;
+      font-size: 14px;
+      
+      &:hover {
+        background: rgba(0, 167, 226, 0.15);
+      }
+
+      &.active {
+        background: rgba(0, 167, 226, 0.2);
+      }
+    }
   }
 
-  .submenu-open {
-    opacity: 1;
-    max-height: 500px;
+  &::-webkit-scrollbar {
+    width: 4px;
   }
 
-  .submenu-item {
-    background-color: #0056a2;
-    border-radius: 4px;
-    margin: 3px 0;
-    padding: 8px 12px;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    
     &:hover {
-      background-color: #0074d9;
-    }
-
-    &.active {
-      background-color: #0074d9;
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.3);
     }
   }
 
-  @media (max-width: 767px) {
-    display: none;
+  @media (max-width: 992px) {
+    transform: translateX(-100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+
+    &.show {
+      transform: translateX(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 280px;
+    &.collapsed {
+      transform: translateX(-100%);
+    }
   }
 }

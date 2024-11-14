@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import { Switch } from 'antd';
+import { 
+  MenuFoldOutlined, 
+  MenuUnfoldOutlined,
+  BulbOutlined,
+  BulbFilled
+} from '@ant-design/icons';
 import "../styles/Header.scss";
 import logo from "../assets/logo.png";
 import api from "../services/api";
 
-const Header = () => {
-  const [name, setName] = useState("");
-
-  useEffect(() => {
-    const storedName = localStorage.getItem("name");
-    if (storedName) {
-      setName(storedName);
-    }
-  }, []);
+const Header = ({ 
+  toggleSidebar, 
+  toggleTheme, 
+  isDarkMode, 
+  isCollapsed 
+}) => {
+  const name = localStorage.getItem("name");
 
   const handleLogout = async () => {
     try {
@@ -21,29 +26,39 @@ const Header = () => {
         await api.post("/auth/logout/", { refresh });
       }
     } catch (error) {
-      console.error("Error al registrar logout:", error);
+      console.error("Error al cerrar sesión:", error);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refresh");
-      localStorage.removeItem("role");
-      localStorage.removeItem("name");
+      localStorage.clear();
       window.location.href = "/login";
     }
   };
 
   return (
-    <header className="header">
-      <div className="container">
-        <div className="header-content">
-          <div className="header-left">
-            <img src={logo} alt="Logo" className="logo" />
-          </div>
-          <div className="header-right">
-            {name && <span className="username">Bienvenido, {name}</span>}
-            <Link to="/login" className="logout-link" onClick={handleLogout}>
-              Cerrar sesión
-            </Link>
-          </div>
+    <header className={`header ${isDarkMode ? 'dark' : ''}`}>
+      <div className="header-content">
+        <div className="header-left">
+          <img src={logo} alt="Logo" className="logo" />
+          <button 
+            className="collapse-button" 
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+          >
+            {isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          </button>
+        </div>
+
+        <div className="header-right">
+          <Switch
+            className="theme-switch"
+            checked={isDarkMode}
+            onChange={toggleTheme}
+            checkedChildren={<BulbFilled />}
+            unCheckedChildren={<BulbOutlined />}
+          />
+          {name && <span className="username">Bienvenido, {name}</span>}
+          <Link to="/login" className="logout-link" onClick={handleLogout}>
+            Cerrar sesión
+          </Link>
         </div>
       </div>
     </header>

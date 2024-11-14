@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Button, Spin, Collapse, Card, Modal, Tag, message, Popover } from "antd";
-import { PrinterOutlined, CheckCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Button, Spin, Collapse, Card, Modal, Tag, message, Popover, Input, Select } from "antd";
+import { PrinterOutlined, CheckCircleOutlined, InfoCircleOutlined, ReloadOutlined, UpOutlined } from "@ant-design/icons";
 import { getPedidos, updatePedido } from "../services/api";
 import "../styles/PedidosPendientes.scss";
 import api from "../axiosConfig";
@@ -10,22 +10,62 @@ const { Panel } = Collapse;
 const PedidosPendientes = () => {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedServicio, setSelectedServicio] = useState(null);
+  const [servicios, setServicios] = useState([]);
+  const [filteredPedidos, setFilteredPedidos] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeKey, setActiveKey] = useState([]);
+
+  const fetchData = async (showMessage = false) => {
+    try {
+      setRefreshing(true);
+      const [pedidosResponse, serviciosResponse] = await Promise.all([
+        getPedidos(),
+        api.get("/servicios/"),
+      ]);
+      setPedidos(pedidosResponse.filter((pedido) => pedido.status !== "completado"));
+      setServicios(serviciosResponse.data.filter(s => s.activo));
+      if (showMessage) {
+        message.success("Datos actualizados correctamente");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      message.error("Error al cargar los datos");
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
+    }
+  };
+
+  // Auto-refresco sin mensaje
+  useEffect(() => {
+    fetchData(false);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
-    const fetchPedidos = async () => {
-      try {
-        const response = await getPedidos();
-        setPedidos(response.filter((pedido) => pedido.status !== "completado"));
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching pedidos", error);
-        message.error("Error al cargar los pedidos");
-        setLoading(false);
-      }
-    };
+    const filtered = pedidos
+      .filter((pedido) => {
+        const matchesSearch = searchTerm === "" || [
+          pedido.paciente.name,
+          pedido.paciente.cedula,
+          pedido.paciente.cama.habitacion.servicio.nombre,
+          pedido.paciente.cama.habitacion.nombre,
+          pedido.paciente.cama.nombre
+        ].some(field => normalizeText(field || "").includes(normalizeText(searchTerm)));
 
-    fetchPedidos();
-  }, []);
+        const matchesServicio = !selectedServicio || 
+          pedido.paciente.cama.habitacion.servicio.id === selectedServicio;
+
+        return matchesSearch && matchesServicio;
+      })
+      .sort((a, b) => {
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+    setFilteredPedidos(filtered);
+  }, [pedidos, searchTerm, selectedServicio]);
 
   const handlePrint = async (pedido, section) => {
     try {
@@ -181,6 +221,13 @@ const PedidosPendientes = () => {
     });
   };
 
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -191,12 +238,45 @@ const PedidosPendientes = () => {
 
   return (
     <div className="pedidos-pendientes">
-      <h2>Pedidos Pendientes</h2>
-      {pedidos.length === 0 ? (
+      <h2>
+        Pedidos Pendientes
+        <span className="pedidos-count">({filteredPedidos.length})</span>
+      </h2>
+      <div className="controls-container">
+        <div className="filters-container">
+          <Input
+            placeholder="Buscar por paciente, cédula, habitación o cama"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+            allowClear
+          />
+          <Select
+            placeholder="Filtrar por servicio"
+            value={selectedServicio}
+            onChange={setSelectedServicio}
+            className="service-select"
+            allowClear
+          >
+            {servicios.map((servicio) => (
+              <Select.Option key={servicio.id} value={servicio.id}>
+                {servicio.nombre}
+              </Select.Option>
+            ))}
+          </Select>
+          <Button 
+            icon={<ReloadOutlined spin={refreshing} />} 
+            onClick={() => fetchData(true)}
+            className="refresh-button"
+            loading={refreshing}
+          />
+        </div>
+      </div>
+      {filteredPedidos.length === 0 ? (
         <div className="no-pedidos">No hay pedidos pendientes</div>
       ) : (
-        <Collapse>
-          {pedidos.map((pedido) => (
+        <Collapse activeKey={activeKey} onChange={setActiveKey}>
+          {filteredPedidos.map((pedido) => (
             <Panel
               key={pedido.id}
               header={
@@ -207,6 +287,12 @@ const PedidosPendientes = () => {
                         {Object.values(pedido.sectionStatus || {}).filter(status => status === "completado").length}
                         /{pedido.menu.sections.length} secciones completadas
                       </span>
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{ width: `${(Object.values(pedido.sectionStatus || {}).filter(status => status === "completado").length/pedido.menu.sections.length) * 100}%` }}
+                        />
+                      </div>
                       <Popover
                         content={
                           <div className="sections-status-detail">
@@ -243,7 +329,7 @@ const PedidosPendientes = () => {
                         <span className="ubicacion-info">
                           <span className="info-item">Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}</span>
                           <span className="separator">•</span>
-                          <span className="info-item">Hab: {pedido.paciente.cama.habitacion.nombre}</span>
+                          <span className="info-item">Habitación: {pedido.paciente.cama.habitacion.nombre}</span>
                           <span className="separator">•</span>
                           <span className="info-item">Cama: {pedido.paciente.cama.nombre}</span>
                         </span>
@@ -307,6 +393,15 @@ const PedidosPendientes = () => {
                     <p>{pedido.observaciones}</p>
                   </div>
                 )}
+                
+                <div className="collapse-button-container">
+                  <Button
+                    onClick={() => setActiveKey([])}
+                    icon={<UpOutlined />}
+                  >
+                    Cerrar
+                  </Button>
+                </div>
               </Card>
             </Panel>
           ))}

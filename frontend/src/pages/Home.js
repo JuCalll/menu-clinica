@@ -6,7 +6,7 @@ const Home = () => {
   return (
     <div className="home text-center">
       <h1>Menú Preferencial - Clínica San Juan de Dios</h1>
-      <img src={sanjuan} alt="San Juan de Dio" className="home-logo" />  
+      <img src={sanjuan} alt="San Juan de Dios" className="home-logo" />  
     </div>
   );
 };
