@@ -7,10 +7,10 @@ $font-family: 'Syne', sans-serif;
 $border-radius: 12px;
 $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 $title-color: #174288;
-$font-size-base: 16px;
-$font-size-large: 18px;
-$font-size-xlarge: 20px;
-$font-size-xxlarge: 28px;
+$font-size-base: 18px;
+$font-size-large: 20px;
+$font-size-xlarge: 24px;
+$font-size-xxlarge: 32px;
 
 // Mixins
 @mixin flex-center {
@@ -63,21 +63,20 @@ $font-size-xxlarge: 28px;
 }
 
 .dm-card {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   border-radius: $border-radius;
-  box-shadow: $box-shadow;
-  @include hover-effect;
-
-  .ant-card-head-title {
-    font-size: $font-size-xlarge;
-    color: $primary-color;
-    font-family: $font-family;
-  }
-
-  // Asegurar que todo el texto dentro de las tarjetas use Syne
-  .ant-card-body {
-    font-family: $font-family;
-    font-size: $font-size-large;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(145deg, #ffffff, #fafbfc);
+  
+  .ant-card-head {
+    border-bottom: 2px solid rgba($primary-color, 0.1);
+    padding: 20px 24px;
+    
+    .ant-card-head-title {
+      font-size: $font-size-xlarge;
+      color: $title-color;
+      font-weight: 600;
+    }
   }
 }
 
@@ -98,53 +97,166 @@ $font-size-xxlarge: 28px;
 }
 
 .dm-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
 
-  .ant-typography {
-    font-size: $font-size-large;
-    font-family: $font-family;
+  .summary-item {
+    padding: 16px;
+    background: white;
+    border-radius: $border-radius;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    
+    @media (max-width: 576px) {
+      flex-direction: column;
+      text-align: center;
+      padding: 12px;
+    }
+
+    .summary-icon {
+      font-size: 28px;
+      color: $primary-color;
+      margin-right: 16px;
+      padding: 12px;
+      background: rgba($primary-color, 0.05);
+      border-radius: 50%;
+    }
+
+    .summary-content {
+      display: flex;
+      flex-direction: column;
+
+      .summary-label {
+        font-size: $font-size-base;
+        color: rgba($title-color, 0.85);
+        margin-bottom: 4px;
+      }
+
+      .summary-value {
+        font-size: $font-size-xlarge;
+        font-weight: 600;
+        color: $title-color;
+      }
+    }
   }
 }
 
 .dm-filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
 
   .dm-search-input,
   .dm-filter-select {
-    flex: 1;
-    font-family: $font-family;
-    font-size: $font-size-large;
-
-    // Asegurar que el texto dentro del input y select use Syne
-    input, .ant-select-selection-item, .ant-select-item-option-content {
-      font-family: $font-family;
-      font-size: $font-size-large;
+    .ant-input,
+    .ant-select-selector {
+      height: 45px;
+      padding: 0 16px;
+      font-size: $font-size-base;
+      border-radius: $border-radius;
+      border: 2px solid rgba($primary-color, 0.1);
+      
+      &:hover, &:focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+      }
     }
   }
 }
 
 .dm-pacientes-collapse {
-  .ant-collapse-header {
-    font-weight: bold;
-    color: $primary-color;
-    font-family: $font-family;
-    font-size: $font-size-base;
-  }
-
-  .dm-paciente-panel {
-    margin-bottom: 10px;
-    border-radius: $border-radius;
+  .ant-collapse-item {
+    margin-bottom: 16px;
+    border: 1px solid rgba($primary-color, 0.1) !important;
+    border-radius: $border-radius !important;
     overflow: hidden;
+    transition: all 0.3s ease;
 
-    // Asegurar que todo el texto dentro del panel use Syne
-    .ant-collapse-content {
-      font-family: $font-family;
-      font-size: $font-size-base;
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .panel-icon {
+        font-size: 20px;
+        color: $primary-color;
+        background: rgba($primary-color, 0.05);
+        padding: 8px;
+        border-radius: 50%;
+      }
+
+      span:not(.panel-subinfo) {
+        font-weight: 500;
+        color: $title-color;
+      }
+
+      .panel-subinfo {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: rgba($title-color, 0.65);
+
+        .anticon {
+          margin-right: 4px;
+          color: $primary-color;
+        }
+      }
+    }
+
+    .paciente-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      padding: 20px;
+
+      .info-item {
+        background: white;
+        padding: 16px;
+        border-radius: $border-radius;
+        border: 1px solid rgba($primary-color, 0.1);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+
+        &:hover {
+          transform: translateX(4px);
+          border-color: $primary-color;
+          background: rgba($primary-color, 0.02);
+        }
+
+        .info-icon {
+          font-size: 24px;
+          color: $primary-color;
+          background: rgba($primary-color, 0.05);
+          padding: 8px;
+          border-radius: 8px;
+        }
+
+        .info-content {
+          flex: 1;
+
+          .info-label {
+            font-size: $font-size-base;
+            color: rgba($title-color, 0.75);
+            margin-bottom: 4px;
+            display: block;
+          }
+
+          .info-value {
+            font-size: $font-size-large;
+            color: $title-color;
+            font-weight: 500;
+            display: block;
+          }
+        }
+      }
     }
   }
 }
@@ -167,8 +279,24 @@ $font-size-xxlarge: 28px;
   }
 
   .dm-summary {
-    flex-direction: column;
-    gap: 10px;
+    grid-template-columns: 1fr;
+  }
+
+  .paciente-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dm-pacientes-collapse {
+    .panel-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+
+      .panel-subinfo {
+        margin-left: 0;
+        flex-wrap: wrap;
+      }
+    }
   }
 }
 
@@ -213,4 +341,22 @@ h2.dm-title {
 .ant-select-dropdown {
   font-family: $font-family;
   font-size: $font-size-base;
+}
+
+.dm-header {
+  text-align: center;
+  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .dm-title {
+    color: $title-color !important;
+    font-size: $font-size-xxlarge !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+    width: 100%;
+    text-align: center;
+  }
 }

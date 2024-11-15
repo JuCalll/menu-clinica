@@ -21,7 +21,7 @@ import DietaManagementModal from "./DietaManagementModal";
 import AlergiaManagementModal from "./AlergiaManagementModal";
 import api from "../services/api";
 import "../styles/GestionPanel.scss";
-import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, UserAddOutlined, CoffeeOutlined, AlertOutlined, SearchOutlined, SettingOutlined } from "@ant-design/icons";
 import { getAlergias } from '../services/api';
 import { message } from 'antd';
 
@@ -730,24 +730,30 @@ const GestionPanel = ({
   const handleEditPaciente = (paciente) => {
     setEditingPaciente(paciente);
     
-    const dieta = paciente.recommended_diet;
-    const alergia = paciente.alergias;
-    
-    if (dieta && !dieta.activo) {
-      message.warning(`La dieta "${dieta.nombre}" está inactiva`);
+    // Verificar si la dieta existe y está inactiva
+    if (paciente.recommended_diet?.id) {
+      const dietaActual = dietas.find(d => d.id === paciente.recommended_diet.id);
+      if (dietaActual && !dietaActual.activo) {
+        message.warning(`La dieta "${dietaActual.nombre}" está inactiva`);
+      }
     }
     
-    if (alergia && !alergia.activo) {
-      message.warning(`La alergia "${alergia.nombre}" está inactiva`);
+    // Verificar si la alergia existe y está inactiva
+    if (paciente.alergias?.id) {
+      const alergiaActual = alergias.find(a => a.id === paciente.alergias.id);
+      if (alergiaActual && !alergiaActual.activo) {
+        message.warning(`La alergia "${alergiaActual.nombre}" está inactiva`);
+      }
     }
 
     form.setFieldsValue({
       pacienteCedula: paciente.cedula,
       pacienteName: paciente.name,
       camaId: paciente.cama.id,
-      recommendedDietId: dieta?.id,
-      alergiasId: alergia?.id,
+      recommendedDietId: paciente.recommended_diet?.id,
+      alergiasId: paciente.alergias?.id,
     });
+    
     setIsEditPacienteModalOpen(true);
   };
 
@@ -813,12 +819,12 @@ const GestionPanel = ({
   useEffect(() => {
     const filtered = pacientes.filter((p) => {
       const matchesSearch = localSearchTerm
-        ? p.name.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-          p.cedula.toLowerCase().includes(localSearchTerm.toLowerCase())
+        ? p.name?.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
+          p.cedula?.toLowerCase().includes(localSearchTerm.toLowerCase())
         : true;
 
       const matchesService = localSelectedService
-        ? p.cama.habitacion.servicio.id === localSelectedService.id
+        ? p.cama?.habitacion?.servicio?.id === localSelectedService.id
         : true;
 
       return matchesSearch && matchesService;
@@ -832,8 +838,12 @@ const GestionPanel = ({
   };
 
   const handleLocalServiceSelect = (value) => {
-    const servicio = servicios.find((s) => s.nombre === value);
-    setLocalSelectedService(servicio);
+    if (value) {
+      const servicioSeleccionado = servicios.find(s => s.id === value);
+      setLocalSelectedService(servicioSeleccionado);
+    } else {
+      setLocalSelectedService(null);
+    }
   };
 
   const showNotification = (type, message, description) => {
@@ -861,8 +871,9 @@ const GestionPanel = ({
   return (
     <div className="gestion-panel__container">
       <Button
-        className="gestion-panel__button gestion-panel__fade-in"
+        className="gestion-panel__main-button"
         onClick={() => setIsDrawerOpen(true)}
+        icon={<SettingOutlined />}
       >
         Panel de Gestión
       </Button>
@@ -1135,46 +1146,55 @@ const GestionPanel = ({
 
           <TabPane tab="Pacientes" key="3">
             <div className="gestion-panel__actions-container">
-              <Button
-                className="gestion-panel__button"
-                onClick={openCreatePacienteModal}
-              >
-                Crear Paciente
-              </Button>
-              <Button
-                className="gestion-panel__button"
-                onClick={openDietaManagementModal}
-              >
-                Gestionar Dietas
-              </Button>
-              <Button
-                className="gestion-panel__button"
-                onClick={openAlergiaManagementModal}
-              >
-                Gestionar Alergias
-              </Button>
-              <Input
-                className="gestion-panel__search"
-                placeholder="Buscar por nombre o cédula"
-                value={localSearchTerm}
-                onChange={handleLocalSearch}
-                allowClear
-              />
-              <Select
-                className="gestion-panel__select"
-                placeholder="Filtrar por servicio"
-                onChange={handleLocalServiceSelect}
-                value={
-                  localSelectedService ? localSelectedService.nombre : undefined
-                }
-                allowClear
-              >
-                {servicios.map((servicio) => (
-                  <Option key={servicio.id} value={servicio.nombre}>
-                    {servicio.nombre}
-                  </Option>
-                ))}
-              </Select>
+              <div className="buttons-group">
+                <Button
+                  className="gestion-panel__button"
+                  onClick={openCreatePacienteModal}
+                  icon={<UserAddOutlined />}
+                >
+                  Crear Paciente
+                </Button>
+                <Button
+                  className="gestion-panel__button"
+                  onClick={openDietaManagementModal}
+                  icon={<CoffeeOutlined />}
+                >
+                  Gestionar Dietas
+                </Button>
+                <Button
+                  className="gestion-panel__button"
+                  onClick={openAlergiaManagementModal}
+                  icon={<AlertOutlined />}
+                >
+                  Gestionar Alergias
+                </Button>
+              </div>
+              
+              <div className="filters-group">
+                <Input
+                  className="gestion-panel__search"
+                  placeholder="Buscar por nombre o cédula"
+                  value={localSearchTerm}
+                  onChange={handleLocalSearch}
+                  allowClear
+                  prefix={<SearchOutlined />}
+                />
+                <Select
+                  className="gestion-panel__select"
+                  placeholder="Filtrar por servicio"
+                  onChange={handleLocalServiceSelect}
+                  value={localSelectedService?.id}
+                  allowClear
+                >
+                  {servicios
+                    .filter(servicio => servicio.activo)
+                    .map((servicio) => (
+                      <Option key={servicio.id} value={servicio.id}>
+                        {servicio.nombre}
+                      </Option>
+                    ))}
+                </Select>
+              </div>
             </div>
 
             <Table

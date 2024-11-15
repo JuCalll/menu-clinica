@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Input, Select, Collapse, Typography, Card, Row, Col, Tabs } from "antd";
+import { Input, Select, Collapse, Typography, Card, Tabs } from "antd";
 import api from "../services/api";
 import "../styles/DataManagement.scss";
 import GestionPanel from "../components/GestionPanel";
+import { 
+  UserOutlined, 
+  HomeOutlined, 
+  MedicineBoxOutlined,
+  IdcardOutlined,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
+  WarningOutlined,
+  RestOutlined,
+  TeamOutlined,
+  BuildOutlined,
+  KeyOutlined
+} from '@ant-design/icons';
 
 const { Option } = Select;
 const { Panel } = Collapse;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TabPane } = Tabs;
 
 const DataManagement = () => {
@@ -188,23 +201,44 @@ const DataManagement = () => {
   return (
     <div className="dm-container">
       <div className="dm-content">
-        <Title level={2} className="dm-title">Gestión de Pacientes, Servicios y Habitaciones</Title>
-
-        <GestionPanel
-          pacientes={pacientes}
-          servicios={servicios}
-          habitaciones={habitaciones}
-          dietas={dietas}
-          alergias={alergias}
-          refreshData={refreshData}
-        />
+        <div className="dm-header">
+          <Title level={2} className="dm-title">
+            Gestión de Pacientes, Servicios y Habitaciones
+          </Title>
+          <GestionPanel
+            pacientes={pacientes}
+            servicios={servicios}
+            habitaciones={habitaciones}
+            dietas={dietas}
+            alergias={alergias}
+            refreshData={refreshData}
+          />
+        </div>
 
         <div className="dm-active-data">
           <Card title="Pacientes Activos" className="dm-card">
             <div className="dm-summary">
-              <Text>Total de Pacientes Activos: {summary.totalPacientesActivos}</Text>
-              <Text>Habitaciones Ocupadas: {summary.habitacionesOcupadas}</Text>
-              <Text>Camas Disponibles: {summary.camasDisponibles}</Text>
+              <div className="summary-item">
+                <TeamOutlined className="summary-icon" />
+                <div className="summary-content">
+                  <span className="summary-label">Total Pacientes Activos</span>
+                  <span className="summary-value">{summary.totalPacientesActivos}</span>
+                </div>
+              </div>
+              <div className="summary-item">
+                <BuildOutlined className="summary-icon" />
+                <div className="summary-content">
+                  <span className="summary-label">Habitaciones Ocupadas</span>
+                  <span className="summary-value">{summary.habitacionesOcupadas}</span>
+                </div>
+              </div>
+              <div className="summary-item">
+                <KeyOutlined className="summary-icon" />
+                <div className="summary-content">
+                  <span className="summary-label">Camas Disponibles</span>
+                  <span className="summary-value">{summary.camasDisponibles}</span>
+                </div>
+              </div>
             </div>
 
             <div className="dm-filters">
@@ -271,33 +305,65 @@ const DataManagement = () => {
             <Collapse className="dm-pacientes-collapse">
               {filteredPacientes.map((paciente) => (
                 <Panel
-                  header={`${paciente.name} - Habitación: ${paciente.cama.habitacion.nombre} - Servicio: ${paciente.cama.habitacion.servicio.nombre}`}
+                  header={
+                    <div className="panel-header">
+                      <UserOutlined className="panel-icon" />
+                      <span>{paciente.name}</span>
+                      <span className="panel-subinfo">
+                        <HomeOutlined /> {paciente.cama.habitacion.nombre}
+                        <MedicineBoxOutlined /> {paciente.cama.habitacion.servicio.nombre}
+                      </span>
+                    </div>
+                  }
                   key={`paciente-${paciente.id}`}
                   className="dm-paciente-panel"
                 >
-                  <Row gutter={[16, 16]}>
-                    <Col span={12}>
-                      <Text strong>Cédula:</Text> {paciente.cedula}
-                    </Col>
-                    <Col span={12}>
-                      <Text strong>Cama:</Text> {paciente.cama.nombre}
-                    </Col>
-                    <Col span={12}>
-                      <Text strong>Habitación:</Text> {paciente.cama.habitacion.nombre}
-                    </Col>
-                    <Col span={12}>
-                      <Text strong>Servicio:</Text> {paciente.cama.habitacion.servicio.nombre}
-                    </Col>
-                    <Col span={12}>
-                      <Text strong>Dieta Recomendada:</Text> {paciente.recommended_diet}
-                    </Col>
-                    <Col span={12}>
-                      <Text strong>Alergias:</Text> {paciente.alergias}
-                    </Col>
-                    <Col span={24}>
-                      <Text strong>Registrado en:</Text> {paciente.created_at}
-                    </Col>
-                  </Row>
+                  <div className="paciente-info-grid">
+                    <div className="info-item">
+                      <IdcardOutlined className="info-icon" />
+                      <div className="info-content">
+                        <span className="info-label">Cédula</span>
+                        <span className="info-value">{paciente.cedula}</span>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <RestOutlined className="info-icon" />
+                      <div className="info-content">
+                        <span className="info-label">Cama</span>
+                        <span className="info-value">{paciente.cama.nombre}</span>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <EnvironmentOutlined className="info-icon" />
+                      <div className="info-content">
+                        <span className="info-label">Ubicación</span>
+                        <span className="info-value">
+                          {paciente.cama.habitacion.nombre} - {paciente.cama.habitacion.servicio.nombre}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <MedicineBoxOutlined className="info-icon" />
+                      <div className="info-content">
+                        <span className="info-label">Dieta Recomendada</span>
+                        <span className="info-value">{paciente.recommended_diet}</span>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <WarningOutlined className="info-icon" />
+                      <div className="info-content">
+                        <span className="info-label">Alergias</span>
+                        <span className="info-value">{paciente.alergias || 'Sin alergias'}</span>
+                      </div>
+                    </div>
+                    <div className="info-item">
+                      <ClockCircleOutlined className="info-icon" />
+                      <div className="info-content">
+                        <span className="info-label">Registrado en</span>
+                        <span className="info-value">{paciente.created_at}</span>
+                      </div>
+                    </div>
+                  </div>
                 </Panel>
               ))}
             </Collapse>

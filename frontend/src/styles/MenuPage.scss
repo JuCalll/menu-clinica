@@ -52,6 +52,7 @@ $menu-title-color: #174288;
   margin: 0;
 }
 
+// Estilo base para todos los botones
 .custom-button {
   background: $button-gradient;
   border: none;
@@ -59,12 +60,52 @@ $menu-title-color: #174288;
   border-radius: $border-radius;
   padding: 12px 20px;
   font-weight: bold;
-  cursor: pointer;
   font-family: $font-family;
-  @include hover-effect;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba($primary-color, 0.2);
+    background: linear-gradient(to right, darken($primary-color, 5%), darken(#40a9ff, 5%));
+  }
+
+  .anticon {
+    font-size: 1.2rem;
+  }
+
+  // Variantes de botones
+  &.view-button {
+    background: linear-gradient(to right, $primary-color, lighten($primary-color, 10%));
+  }
+
+  &.edit-button {
+    background: linear-gradient(to right, #faad14, lighten(#faad14, 10%));
+  }
+
+  &.delete-button {
+    background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+  }
+
+  &.cancel-button {
+    background: #fff;
+    border: 1px solid $primary-color;
+    color: $primary-color;
+    
+    &:hover {
+      background: rgba($primary-color, 0.05);
+      color: darken($primary-color, 10%);
+      border-color: darken($primary-color, 10%);
+    }
+  }
 }
 
+// Botón Crear Menú
 .create-menu-button {
+  @extend .custom-button;
   min-width: 170px;
   font-size: 1.1rem;
   padding: 14px 24px;
@@ -175,14 +216,89 @@ $menu-title-color: #174288;
     border-radius: $border-radius;
     padding: 25px;
     font-family: $font-family;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  // Estilos para el header del modal
+  .ant-modal-header {
+    border-bottom: none;
+    padding: 0 0 20px 0;
+    
+    .ant-modal-title {
+      color: $menu-title-color;
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-align: center;
+      font-family: $font-family;
+      padding: 15px 0;
+      border-bottom: 2px solid $primary-color;
+      margin-bottom: 10px;
+    }
+  }
+
+  .ant-modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #f0f0f0;
+    
+    .ant-btn {
+      @extend .custom-button;
+      width: 100%;
+      height: 40px;
+    }
   }
 
   .menu-header {
-    color: $primary-color;
-    margin-bottom: 15px;
-    font-size: 1.8rem;
+    color: $menu-title-color;
+    margin: 35px 0 20px;
+    padding-bottom: 10px;
+    font-size: 1.6rem;
     font-weight: bold;
     font-family: $font-family;
+    border-bottom: 2px solid $primary-color;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      margin-bottom: 15px;
+
+      // Estilos para los títulos de las categorías
+      .ant-typography-strong {
+        display: block;
+        color: $primary-color;
+        font-size: 1.2rem;
+        margin: 25px 0 15px;
+        padding-left: 12px;
+        border-left: 3px solid $primary-color;
+      }
+
+      // Estilos para las opciones individuales
+      ul {
+        margin-left: 20px;
+        
+        li {
+          padding: 10px 18px;
+          margin: 8px 0;
+          background-color: #f8f9fa;
+          border-radius: 6px;
+          font-size: 1.05rem;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: #eef2f7;
+            transform: translateX(5px);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -197,10 +313,25 @@ $menu-title-color: #174288;
     box-shadow: $box-shadow;
   }
 
-  .ant-card-head-title {
-    font-size: 1.2rem;
-    color: $primary-color;
-    font-weight: bold;
+  // Mejoramos el estilo del título
+  .ant-card-head {
+    padding: 0 16px;
+    min-height: 48px;
+    border-bottom: 2px solid rgba($primary-color, 0.1);
+
+    .ant-card-head-title {
+      padding: 12px 0;
+      font-size: 1.1rem;
+      color: $menu-title-color;
+      font-weight: 600;
+      white-space: normal; // Permitimos que el texto se ajuste
+      line-height: 1.4;
+      overflow: visible; // Aseguramos que el texto sea visible
+      display: -webkit-box;
+      line-clamp: 2; // Máximo 2 líneas
+      -webkit-line-clamp: 2; // Máximo 2 líneas
+      -webkit-box-orient: vertical;
+    }
   }
 
   .ant-card-body {
@@ -208,52 +339,42 @@ $menu-title-color: #174288;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding: 16px;
   }
 
   .menu-item-actions {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-top: auto;
-    padding-top: 5px;
+    gap: 8px;
+    margin-top: 12px;
 
     .action-button {
       width: 100%;
-      min-width: 0;
-      font-size: 0.9rem;
       height: 36px;
       border: none;
-      background: rgba(0, 0, 0, 0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      padding: 0 5px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      &.view-button:hover { 
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      
+      &.view-button {
+        background: rgba($primary-color, 0.05);
         color: $primary-color;
-        background: rgba(24, 144, 255, 0.1); 
+        &:hover { background: rgba($primary-color, 0.1); }
       }
-      &.edit-button:hover { 
+      
+      &.edit-button {
+        background: rgba(#faad14, 0.05);
         color: #faad14;
-        background: rgba(250, 173, 20, 0.1);
+        &:hover { background: rgba(#faad14, 0.1); }
       }
-      &.delete-button:hover { 
+      
+      &.delete-button {
+        background: rgba($secondary-color, 0.05);
         color: $secondary-color;
-        background: rgba(255, 77, 79, 0.1);
+        &:hover { background: rgba($secondary-color, 0.1); }
       }
 
       .anticon {
-        margin-right: 3px;
-        flex-shrink: 0;
-      }
-
-      span {
-        overflow: hidden;
-        text-overflow: ellipsis;
+        margin-right: 8px;
       }
     }
   }
@@ -340,8 +461,263 @@ $menu-title-color: #174288;
   }
 }
 
+// Estilos para el modal de creación/edición
+.ant-modal {
+  .ant-modal-content {
+    background: linear-gradient(145deg, #ffffff, #f5f7fa);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: $border-radius;
+    animation: modalFadeIn 0.3s ease-out;
 
+    .ant-modal-header {
+      background: transparent;
+      border-bottom: none;
+      padding: 24px 24px 0;
 
+      .ant-modal-title {
+        font-size: 1.8rem;
+        color: $menu-title-color;
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 20px;
+        position: relative;
+        
+        &:after {
+          content: '';
+          position: absolute;
+          bottom: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60px;
+          height: 3px;
+          background: $primary-color;
+          border-radius: 2px;
+        }
+      }
+    }
 
+    .ant-modal-body {
+      padding: 24px;
 
+      .ant-form-item-label {
+        label {
+          color: $menu-title-color;
+          font-weight: 500;
+          font-size: 1.1rem;
+        }
+      }
 
+      .ant-input {
+        border-radius: 8px;
+        border: 2px solid #e8e8e8;
+        padding: 12px;
+        transition: all 0.3s ease;
+        
+        &:hover, &:focus {
+          border-color: $primary-color;
+          box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+        }
+      }
+
+      .ant-collapse {
+        background: transparent;
+        border: none;
+
+        .ant-collapse-item {
+          background: #fff;
+          border-radius: 12px;
+          margin-bottom: 16px;
+          border: 1px solid #e8e8e8;
+          overflow: hidden;
+          transition: all 0.3s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          }
+
+          .ant-collapse-header {
+            padding: 16px 20px;
+            font-size: 1.2rem;
+            color: $menu-title-color;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: #f0f2f5;
+            }
+          }
+
+          .ant-collapse-content {
+            border-top: 1px solid #f0f0f0;
+
+            .ant-collapse-content-box {
+              padding: 25px;
+              background: linear-gradient(145deg, #ffffff, #fafbfc);
+
+              // Contenedor principal para las opciones
+              .section-content {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+
+                // Contenedor para cada subsección
+                .subsection-container {
+                  position: relative;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+
+                  // Botón de la subsección
+                  .option-button {
+                    position: relative;
+                    background: #fff;
+                    border: 1px solid rgba($primary-color, 0.2);
+                    border-radius: 12px;
+                    padding: 12px 16px;
+                    min-height: 50px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    transition: all 0.3s ease;
+                    margin-bottom: 8px;
+                    z-index: 2;
+
+                    &:hover {
+                      transform: translateY(-2px);
+                      border-color: $primary-color;
+                      box-shadow: 0 4px 12px rgba($primary-color, 0.1);
+                    }
+
+                    .button-text {
+                      font-size: 1rem;
+                      font-weight: 500;
+                      color: $menu-title-color;
+                      flex: 1;
+                    }
+
+                    .anticon {
+                      font-size: 1.1rem;
+                      color: $primary-color;
+                      margin-right: 10px;
+                    }
+                  }
+
+                  // Lista de opciones
+                  .menu-option-list {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-top: -4px;
+                    border: 1px solid rgba($primary-color, 0.1);
+                    
+                    ul {
+                      list-style: none;
+                      padding: 0;
+                      margin: 0;
+
+                      li {
+                        padding: 8px 12px;
+                        background: white;
+                        border-radius: 6px;
+                        margin-bottom: 8px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                        
+                        &:hover {
+                          transform: translateX(8px);
+                          background-color: #f0f7ff;
+                          box-shadow: 0 2px 8px rgba($primary-color, 0.1);
+                          
+                          .anticon {
+                            transform: scale(1.1);
+                            color: darken($primary-color, 10%);
+                          }
+                        }
+
+                        .anticon {
+                          transition: all 0.3s ease;
+                        }
+                        
+                        &:last-child {
+                          margin-bottom: 0;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animaciones
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Ajustes responsivos
+@media (max-width: 768px) {
+  .ant-modal {
+    .ant-modal-content {
+      .ant-modal-body {
+        .option-buttons {
+          grid-template-columns: 1fr; // Una columna en móviles
+          
+          .option-button {
+            padding: 10px 14px;
+            
+            .button-text {
+              font-size: 0.95rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Modal de confirmación de eliminación
+.ant-modal-confirm {
+  .ant-modal-confirm-btns {
+    display: flex;
+    gap: 8px;
+    
+    button {
+      @extend .custom-button;
+      
+      &.ant-btn-default {
+        @extend .cancel-button;
+      }
+      
+      &.ant-btn-primary {
+        background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+      }
+    }
+  }
+}

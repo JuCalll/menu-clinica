@@ -7,7 +7,6 @@ import {
   notification,
   Spin,
   Alert,
-  List,
   Typography,
   Collapse,
   Row,
@@ -20,6 +19,8 @@ import {
   EyeOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
+  CoffeeOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { createMenu, getMenus, deleteMenu, updateMenu } from "../services/api";
 import "../styles/MenuPage.scss";
@@ -27,7 +28,7 @@ import "../styles/MenuPage.scss";
 const { Panel } = Collapse;
 const { confirm } = Modal;
 
-const MenuPage = () => {
+function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [menuName, setMenuName] = useState("");
   const [currentMenu, setCurrentMenu] = useState(null);
@@ -205,6 +206,14 @@ const MenuPage = () => {
     setIsOptionModalOpen(false);
   };
 
+  const handleDeleteOption = (section, type, index) => {
+    setOptions((prev) => {
+      const newOptions = { ...prev };
+      newOptions[section][type] = newOptions[section][type].filter((_, i) => i !== index);
+      return newOptions;
+    });
+  };
+
   const handleCreateOrUpdateMenu = async () => {
     if (!menuName) {
       notification.error({
@@ -304,6 +313,8 @@ const MenuPage = () => {
   const formatName = (name) => {
     if (!name) return ''; 
     
+    const normalizedName = name.toLowerCase().replace(/_/g, ' ');
+    
     const formattedNames = {
       "desayuno": "Desayuno",
       "entrada": "Entrada",
@@ -311,32 +322,30 @@ const MenuPage = () => {
       "acompanante": "Acompañante",
       "toppings": "Toppings",
       "bebidas": "Bebidas",
-      "media_manana": "Media Mañana",
-      "media_manana_fit": "Media Mañana Fit",
-      "media_manana_tradicional": "Media Mañana Tradicional",
-      "bebidas_calientes": "Bebidas Calientes",
-      "bebidas_frias": "Bebidas Frías",
+      "media manana": "Media Mañana",
+      "media manana fit": "Media Mañana Fit",
+      "media manana tradicional": "Media Mañana Tradicional",
+      "bebidas calientes": "Bebidas Calientes",
+      "bebidas frias": "Bebidas Frías",
       "almuerzo": "Almuerzo",
-      "sopa_del_dia": "Sopa del Día",
-      "plato_principal": "Plato Principal",
+      "sopa del dia": "Sopa del Día",
+      "plato principal": "Plato Principal",
       "vegetariano": "Vegetariano",
       "vegetales": "Vegetales",
       "postre": "Postre",
       "refrigerio": "Refrigerio",
-      "refrigerio_fit": "Refrigerio Fit",
-      "refrigerio_tradicional": "Refrigerio Tradicional",
+      "refrigerio fit": "Refrigerio Fit",
+      "refrigerio tradicional": "Refrigerio Tradicional",
       "cena": "Cena",
-      "adicional_dia": "Adicional Día",
+      "adicional dia": "Adicional Día",
       "adicionales": "Adicionales"
     };
 
-    // Si el nombre está en el objeto formattedNames, úsalo
-    if (formattedNames.hasOwnProperty(name)) {
-      return formattedNames[name];
+    if (formattedNames.hasOwnProperty(normalizedName)) {
+      return formattedNames[normalizedName];
     }
 
-    // Si no, aplica la transformación por defecto
-    return name.toString().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return normalizedName.replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -348,7 +357,7 @@ const MenuPage = () => {
           onClick={showModal}
           className="custom-button create-menu-button"
         >
-          <PlusOutlined /> Crear Menú
+          <CoffeeOutlined /> Crear Menú
         </Button>
       </div>
       <Modal
@@ -392,53 +401,35 @@ const MenuPage = () => {
               "cena",
               "adicional_dia",
             ].map((section) => (
-              <Panel
-                header={formatName(section)}
-                key={section}
-                className="menu-section"
-              >
-                <div className="option-buttons">
+              <Panel header={formatName(section)} key={section}>
+                <div className="section-content">
                   {Object.keys(options[section]).map((type) => (
-                    <Button
-                      key={type}
-                      className="option-button"
-                      onClick={() => openOptionModal(section, type)}
-                      icon={<PlusOutlined />}
-                    >
-                      <span className="button-text">
-                        {formatName(type)}
-                      </span>
-                    </Button>
+                    <div className="subsection-container" key={type}>
+                      <Button
+                        className="option-button"
+                        onClick={() => openOptionModal(section, type)}
+                      >
+                        <PlusOutlined />
+                        <span className="button-text">{formatName(type)}</span>
+                      </Button>
+                      {options[section][type].length > 0 && (
+                        <div className="menu-option-list">
+                          <ul>
+                            {options[section][type].map((option, index) => (
+                              <li key={index}>
+                                {option.texto}
+                                <DeleteOutlined
+                                  onClick={() => handleDeleteOption(section, type, index)}
+                                  style={{ color: '#1890ff', cursor: 'pointer' }}
+                                />
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
-                {Object.keys(options[section]).map((type) => (
-                  <List
-                    key={type}
-                    className="menu-option-list"
-                    header={<div>{formatName(type)}</div>}
-                    bordered
-                    dataSource={options[section][type]}
-                    renderItem={(opt, index) => (
-                      <List.Item
-                        actions={[
-                          <Button
-                            type="link"
-                            icon={<DeleteOutlined />}
-                            onClick={() => {
-                              setOptions((prev) => {
-                                const newOptions = { ...prev };
-                                newOptions[section][type].splice(index, 1);
-                                return newOptions;
-                              });
-                            }}
-                          />,
-                        ]}
-                      >
-                        {opt.texto}
-                      </List.Item>
-                    )}
-                  />
-                ))}
               </Panel>
             ))}
           </Collapse>
@@ -556,13 +547,13 @@ const MenuPage = () => {
       </div>
 
       <Modal
-        title={viewMenu ? `Ver Menú: ${viewMenu.nombre}` : ""}
+        title={viewMenu ? `${viewMenu.nombre}` : ""}
         open={isViewModalOpen}
         className="view-menu-modal"
         onCancel={handleCloseViewModal}
         footer={
           <Button onClick={handleCloseViewModal} type="primary">
-            Cerrar
+            <CloseOutlined /> Cerrar
           </Button>
         }
       >
@@ -594,6 +585,6 @@ const MenuPage = () => {
       </Modal>
     </div>
   );
-};
+}
 
 export default MenuPage;

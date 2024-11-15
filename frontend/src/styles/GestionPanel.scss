@@ -1,6 +1,8 @@
 // Variables
 $primary-color: #1890ff;
 $secondary-color: #ff4d4f;
+$success-color: #52c41a;
+$warning-color: #faad14;
 $background-color: #f0f2f5;
 $button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
 $font-family: 'Syne', sans-serif;
@@ -8,7 +10,7 @@ $border-radius: 12px;
 $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 $title-color: #174288;
 $font-size-base: 16px;
-$font-size-large: 18px;
+$font-size-large: 16px;
 $font-size-xlarge: 20px;
 $font-size-xxlarge: 28px;
 
@@ -29,9 +31,34 @@ $font-size-xxlarge: 28px;
 
 .gestion-panel {
   &__container {
-    font-family: $font-family;
-    max-width: 1200px; // Añadir un ancho máximo
-    margin: 0 auto; // Centrar el contenedor
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 40px 0 30px 0;
+  }
+
+  &__main-button {
+    background: $button-gradient;
+    color: white;
+    border: none;
+    height: 45px;
+    padding: 0 30px;
+    border-radius: 22px;
+    box-shadow: 0 2px 8px rgba($primary-color, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    white-space: nowrap;
+    
+    .anticon {
+      font-size: 18px;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+    }
   }
 
   &__button {
@@ -46,8 +73,27 @@ $font-size-xxlarge: 28px;
   }
 
   &__drawer {
+    .ant-drawer-content-wrapper {
+      width: 90vw !important;  // Aumentar el ancho del drawer
+      max-width: 1400px !important;  // Establecer un ancho máximo
+    }
+
     .ant-drawer-content {
       background-color: $background-color;
+    }
+
+    .ant-table {
+      // Hacer la tabla más compacta
+      .ant-table-thead > tr > th,
+      .ant-table-tbody > tr > td {
+        padding: 8px 12px;  // Reducir el padding vertical
+        font-size: $font-size-base;
+      }
+
+      // Ajustar alturas de fila
+      .ant-table-tbody > tr {
+        height: 48px;  // Reducir altura de las filas
+      }
     }
   }
 
@@ -62,101 +108,52 @@ $font-size-xxlarge: 28px;
   }
 
   &__table {
+    background: white;
+    border-radius: $border-radius;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    
+    overflow-x: auto;
+    scrollbar-width: thin;
+
     .ant-table-thead > tr > th {
-      background-color: $primary-color;
-      color: #fff;
-      text-align: center;
+      white-space: nowrap;
     }
 
-    .ant-table-tbody > tr:hover > td {
-      background-color: lighten($primary-color, 35%);
+    &::-webkit-scrollbar {
+      height: 6px;
     }
 
-    // Estilos para la paginación
-    .ant-pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 16px 0;
-
-      &-item {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 32px;
-        height: 32px;
-        margin: 0 4px;
-        border-radius: 6px;
-        border: 1px solid #d9d9d9;
-        background: #fff;
-        
-        &:hover {
-          border-color: #1890ff;
-          color: #1890ff;
-        }
-
-        &-active {
-          border-color: #1890ff;
-          background: #1890ff;
-          color: #fff;
-
-          &:hover {
-            color: #fff;
-          }
-        }
-      }
-
-      &-prev, &-next {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        min-width: 32px;
-        height: 32px;
-        padding: 0;
-        margin: 0 4px;
-        border-radius: 6px;
-        border: 1px solid #d9d9d9;
-        background: #fff;
-        vertical-align: middle;
-
-        .anticon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          font-size: 12px;
-        }
-
-        &:hover {
-          border-color: #1890ff;
-          color: #1890ff;
-        }
-
-        &.ant-pagination-disabled {
-          color: rgba(0, 0, 0, 0.25);
-          border-color: #d9d9d9;
-          cursor: not-allowed;
-        }
-      }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba($primary-color, 0.2);
+      border-radius: 3px;
     }
 
-    .ant-table-tbody > tr > td {
-      text-align: center;
-    }
-
-    .ant-table {
-      .ant-table-container {
-        overflow-x: auto;
-      }
+    .ant-table-thead > tr > th {
+      background: linear-gradient(145deg, $primary-color, darken($primary-color, 10%));
+      color: white;
+      font-weight: 600;
+      padding: 16px;
+      font-size: $font-size-base;
       
-      .ant-table-cell {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        
-        &.ant-table-cell-ellipsis {
-          max-width: 200px;
-        }
+      &::before {
+        display: none;
+      }
+    }
+
+    .ant-table-tbody > tr {
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        z-index: 1;
+        position: relative;
+      }
+
+      > td {
+        padding: 16px;
+        font-size: $font-size-base;
       }
     }
   }
@@ -164,75 +161,129 @@ $font-size-xxlarge: 28px;
   &__modal {
     .ant-modal-content {
       border-radius: $border-radius;
-      padding: 24px;
+      overflow: hidden;
     }
 
     .ant-modal-header {
-      background-color: $primary-color;
-      border-top-left-radius: $border-radius;
-      border-top-right-radius: $border-radius;
-      padding: 16px 24px;
-      margin: -24px -24px 24px;
+      background: linear-gradient(145deg, $primary-color, darken($primary-color, 10%));
+      padding: 20px 24px;
+      border-bottom: none;
 
       .ant-modal-title {
-        color: #fff;
+        color: white;
         font-size: $font-size-large;
         font-weight: 600;
       }
     }
 
+    .ant-modal-body {
+      padding: 24px;
+    }
+
     .ant-modal-footer {
-      margin: 24px -24px -24px;
+      border-top: 1px solid rgba($primary-color, 0.1);
       padding: 16px 24px;
-      border-top: 1px solid #f0f0f0;
       display: flex;
       justify-content: space-between;
       gap: 16px;
 
-      button {
-        flex: 1;
-        height: 40px;
-        font-size: $font-size-base;
-        border-radius: $border-radius;
-        
-        &.ant-btn-primary {
-          background: $button-gradient;
-          border: none;
-          
-          &:hover {
-            background: linear-gradient(to right, darken(#1890ff, 10%), darken(#40a9ff, 10%));
-          }
+      // Contenedor para los botones
+      .ant-btn-group {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+
+        button {
+          flex: 1;
+          height: 45px;
+          font-size: $font-size-base;
+          border-radius: $border-radius;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
         }
+      }
+
+      // Botón Cancelar
+      .ant-btn-default {
+        border: 2px solid rgba($primary-color, 0.1);
+        color: $title-color;
+        background: white;
         
-        &.ant-btn-default {
-          border: 1px solid $primary-color;
+        &:hover {
+          border-color: $primary-color;
           color: $primary-color;
-          
-          &:hover {
-            background-color: rgba($primary-color, 0.1);
-          }
+          background: rgba($primary-color, 0.02);
+          transform: translateY(-2px);
+        }
+      }
+
+      // Botón Crear/Guardar
+      .ant-btn-primary {
+        background: $button-gradient;
+        border: none;
+        color: white;
+        font-weight: 500;
+        
+        &:hover {
+          background: linear-gradient(to right, darken($primary-color, 5%), darken($primary-color, 15%));
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        .anticon {
+          font-size: 18px;
         }
       }
     }
 
-    .ant-form-item-label > label {
-      font-weight: 600;
-      color: rgba(0, 0, 0, 0.85);
-    }
+    // Estilos para el formulario dentro del modal
+    .gestion-panel__form {
+      .ant-form-item {
+        margin-bottom: 24px;
 
-    .ant-input, .ant-select-selector {
-      border-radius: 8px;
-      height: 40px;
-      padding: 8px 12px;
-      
-      &:hover, &:focus {
-        border-color: $primary-color;
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .ant-form-item-label {
+          padding-bottom: 8px;
+
+          label {
+            font-size: $font-size-base;
+            font-weight: 500;
+            color: $title-color;
+          }
+        }
+
+        .ant-input,
+        .ant-select-selector {
+          height: 45px;
+          border-radius: $border-radius;
+          border: 2px solid rgba($primary-color, 0.1);
+          transition: all 0.3s ease;
+
+          &:hover, &:focus {
+            border-color: $primary-color;
+            box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+          }
+        }
+
+        .ant-select-selector {
+          display: flex;
+          align-items: center;
+
+          .ant-select-selection-item {
+            line-height: 41px;
+          }
+        }
       }
-    }
-
-    .ant-select-selector {
-      display: flex;
-      align-items: center;
     }
   }
 
@@ -243,68 +294,168 @@ $font-size-xxlarge: 28px;
   }
 
   &__camas-list {
-    list-style: none;
-    padding: 16px 20px; // Aumentar padding
-    margin: 8px 0; // Añadir margen vertical
-    // background-color: #fff; // Eliminar o comentar esta línea
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 16px;
+    background: rgba($primary-color, 0.02);
     border-radius: $border-radius;
-    min-width: 200px; // Asegurar un ancho mínimo
   }
 
   &__cama-item {
+    background: white;
+    border-radius: $border-radius;
+    padding: 16px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 16px; // Aumentado el padding horizontal
-    min-height: 48px;
-    border-bottom: 1px solid #f0f0f0;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 
-    &.gestion-panel__cama-empty {
-      color: #999;
-      justify-content: center;
-      font-style: italic;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
     .cama-nombre {
-      margin-right: 24px;
-      flex: 1;
-      font-size: 15px;
-      color: rgba(0, 0, 0, 0.85);
-      padding-left: 8px; // Añadido padding izquierdo
-    }
+      font-weight: 500;
+      color: $title-color;
+      font-size: $font-size-base;
+      display: flex;
+      align-items: center;
+      gap: 8px;
 
-    .ant-switch {
-      flex-shrink: 0;
-      min-width: 44px;
-      margin-left: auto;
-      margin-right: 0;
+      .anticon {
+        color: $primary-color;
+        font-size: 20px;
+      }
     }
   }
 
   &__actions-container {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
-    flex-wrap: wrap;
+    background: white;
+    padding: 20px;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-    .gestion-panel__button {
-      margin: 0;
-      min-width: 120px; // Asegurar un ancho mínimo para los botones
+    // Grupo de botones principales
+    .buttons-group {
+      display: flex;
+      gap: 12px;
+      grid-column: 1 / -1;
+
+      .gestion-panel__button {
+        flex: 1;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 500;
+        min-width: 160px;
+        background: $button-gradient;
+        transition: all 0.3s ease;
+        
+        .anticon {
+          font-size: 18px;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
     }
 
-    .gestion-panel__select,
-    .gestion-panel__search {
-      min-width: 200px;
-      flex: 1;
-      max-width: 300px; // Limitar el ancho máximo
+    // Contenedor de filtros
+    .filters-group {
+      display: flex;
+      gap: 16px;
+      grid-column: 1 / -1;
+
+      .gestion-panel__search,
+      .gestion-panel__select {
+        flex: 1;
+        min-width: 200px;
+
+        .ant-input,
+        .ant-select-selector {
+          height: 45px;
+          border-radius: $border-radius;
+          border: 2px solid rgba($primary-color, 0.1);
+          padding: 0 16px;
+          font-size: $font-size-base;
+          transition: all 0.3s ease;
+
+          &:hover, &:focus {
+            border-color: $primary-color;
+            box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+          }
+        }
+
+        .ant-select-selection-item,
+        .ant-select-selection-placeholder {
+          line-height: 41px;
+        }
+
+        .ant-input-affix-wrapper {
+          padding: 0 11px;
+          
+          .ant-input {
+            height: 41px;
+          }
+        }
+      }
     }
   }
 
   &__actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 12px;
+    justify-content: flex-end;
+
+    button {
+      padding: 8px 16px;
+      height: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: $border-radius;
+      transition: all 0.3s ease;
+
+      .anticon {
+        font-size: 16px;
+      }
+
+      &.ant-btn-primary {
+        background: $button-gradient;
+        border: none;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        }
+      }
+
+      &.ant-btn-danger {
+        background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+        border: none;
+        color: white;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($secondary-color, 0.3);
+        }
+      }
+    }
   }
 
   &__edit-button {
@@ -397,13 +548,19 @@ $font-size-xxlarge: 28px;
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .gestion-panel__fade-in {
-  animation: fadeIn 0.3s ease-in;
+  animation: slideIn 0.3s ease-out forwards;
 }
 
 // Estilos responsivos
@@ -431,6 +588,21 @@ $font-size-xxlarge: 28px;
       .gestion-panel__search {
         width: 100%;
         max-width: none;
+      }
+    }
+
+    &__container {
+      top: 40px;
+      right: 80px;
+    }
+
+    &__main-button {
+      height: 38px;
+      padding: 0 16px;
+      font-size: 14px;
+      
+      .anticon {
+        font-size: 16px;
       }
     }
   }
@@ -476,6 +648,78 @@ $font-size-xxlarge: 28px;
           background-color: rgba($primary-color, 0.1);
         }
       }
+    }
+  }
+}
+
+// Ajustes responsivos para modales
+@media (max-width: 768px) {
+  .gestion-panel__modal {
+    .ant-modal-footer {
+      flex-direction: column-reverse;
+
+      .ant-btn-group {
+        flex-direction: column;
+        
+        button {
+          width: 100%;
+        }
+
+        .ant-btn-default {
+          order: 1;
+        }
+
+        .ant-btn-primary {
+          order: 0;
+        }
+      }
+    }
+  }
+}
+
+// Ajustes responsivos
+@media (max-width: 1024px) {
+  .gestion-panel {
+    &__actions-container {
+      .buttons-group {
+        flex-wrap: wrap;
+        
+        .gestion-panel__button {
+          min-width: calc(50% - 8px);
+        }
+      }
+
+      .filters-group {
+        flex-direction: column;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .gestion-panel {
+    &__actions-container {
+      padding: 16px;
+      
+      .buttons-group {
+        .gestion-panel__button {
+          min-width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Ajustes responsivos
+@media (max-width: 768px) {
+  .gestion-panel {
+    &__container {
+      margin: 50px 0 40px 0;
+    }
+
+    &__main-button {
+      width: auto;
+      min-width: 250px;
     }
   }
 }
