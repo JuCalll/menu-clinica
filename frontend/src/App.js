@@ -11,6 +11,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 import inactivityTime from "./utils/inactivityHandler";
 import { jwtDecode } from "jwt-decode";
 import api from "./axiosConfig";
+import { App as AntApp } from 'antd';
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -164,88 +165,90 @@ function App() {
   };
 
   return (
-    <Router>
-      <Modal
-        title="Advertencia de Inactividad"
-        open={isWarningVisible}
-        onOk={handleWarningOk}
-        onCancel={handleWarningCancel}
-        okText="Estoy aquí"
-        cancelText="Cerrar sesión"
-        className="inactivity-warning-modal"
-      >
-        <p>Ha pasado un tiempo desde su última actividad. Por favor, confirme que sigue aquí.</p>
-      </Modal>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Layout />
-            </PrivateRoute>
-          }
+    <AntApp>
+      <Router>
+        <Modal
+          title="Advertencia de Inactividad"
+          open={isWarningVisible}
+          onOk={handleWarningOk}
+          onCancel={handleWarningCancel}
+          okText="Estoy aquí"
+          cancelText="Cerrar sesión"
+          className="inactivity-warning-modal"
         >
+          <p>Ha pasado un tiempo desde su última actividad. Por favor, confirme que sigue aquí.</p>
+        </Modal>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<Login />} />
           <Route
-            path="/home"
+            path="/"
             element={
               <PrivateRoute>
-                <Home />
+                <Layout />
               </PrivateRoute>
             }
-          />
-          <Route
-            path="/menus"
-            element={
-              <PrivateRoute requiredRoles={["admin", "coordinador"]}>
-                <MenuPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/realizar-pedido"
-            element={
-              <PrivateRoute requiredRoles={["admin", "jefe_enfermeria", "coordinador"]}>
-                <RealizarPedido />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/pedidos/pendientes"
-            element={
-              <PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}>
-                <PedidosPendientes />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/pedidos/historial"
-            element={
-              <PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}>
-                <HistorialPedidos />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/gestion-datos"
-            element={
-              <PrivateRoute requiredRoles={["admin", "jefe_enfermeria"]}>
-                <DataManagement />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/gestion-usuarios"
-            element={
-              <PrivateRoute requiredRoles={["admin"]}>
-                <UserManagement />
-              </PrivateRoute>
-            }
-          />
-        </Route>
-      </Routes>
-    </Router>
+          >
+            <Route
+              path="/home"
+              element={
+                <PrivateRoute>
+                  <Home />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/menus"
+              element={
+                <PrivateRoute requiredRoles={["admin", "coordinador"]}>
+                  <MenuPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/realizar-pedido"
+              element={
+                <PrivateRoute requiredRoles={["admin", "jefe_enfermeria", "coordinador"]}>
+                  <RealizarPedido />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/pedidos/pendientes"
+              element={
+                <PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}>
+                  <PedidosPendientes />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/pedidos/historial"
+              element={
+                <PrivateRoute requiredRoles={["admin", "coordinador", "auxiliar"]}>
+                  <HistorialPedidos />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/gestion-datos"
+              element={
+                <PrivateRoute requiredRoles={["admin", "jefe_enfermeria"]}>
+                  <DataManagement />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/gestion-usuarios"
+              element={
+                <PrivateRoute requiredRoles={["admin"]}>
+                  <UserManagement />
+                </PrivateRoute>
+              }
+            />
+          </Route>
+        </Routes>
+      </Router>
+    </AntApp>
   );
 }
 

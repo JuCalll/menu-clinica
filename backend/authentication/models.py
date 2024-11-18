@@ -25,12 +25,12 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(username, email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     name = models.CharField(max_length=255)
-    cedula = models.CharField(max_length=20, unique=True)
+    cedula = models.CharField(max_length=20)
     activo = models.BooleanField(default=True)
-    ingreso_count = models.IntegerField(default=1) 
-
+    ingreso_count = models.IntegerField(default=1)
+    
     ROLE_CHOICES = [
         ('admin', 'Administrador'),
         ('coordinador', 'Coordinadora de Alimentos'),

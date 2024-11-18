@@ -10,6 +10,7 @@ import {
   notification,
   Switch,
   Tooltip,
+  App
 } from "antd";
 import { 
   InfoCircleOutlined, 
@@ -22,7 +23,101 @@ import "../styles/UserManagament.scss";
 
 const { Option } = Select;
 
+// Componentes modales separados
+const CreateUserModal = ({ visible, onCancel, onFinish, form, buttonLoading }) => (
+  <Modal
+    title="Crear Usuario"
+    open={visible}
+    onCancel={onCancel}
+    footer={null}
+    className="user-management__modal"
+  >
+    <Form form={form} onFinish={onFinish} layout="vertical">
+      <Form.Item
+        name="name"
+        label="Nombre"
+        rules={[{ required: true, message: "Por favor ingrese el nombre del usuario" }]}
+      >
+        <Input id="name-create" />
+      </Form.Item>
+      <Form.Item
+        name="cedula"
+        label="Cédula"
+        rules={[
+          { required: true, message: "Por favor ingrese la cédula" },
+          { pattern: /^[0-9]+$/, message: "La cédula solo debe contener números" }
+        ]}
+      >
+        <Input id="cedula-create" />
+      </Form.Item>
+      <Form.Item
+        name="username"
+        label="Usuario"
+        rules={[
+          { required: true, message: "Por favor ingrese el nombre de usuario" },
+          { min: 4, message: "El nombre de usuario debe tener al menos 4 caracteres" }
+        ]}
+      >
+        <Input id="username-create" />
+      </Form.Item>
+      <Form.Item
+        name="email"
+        label="Email"
+        rules={[
+          { required: true, message: "Por favor ingrese el email" },
+          { type: 'email', message: "Por favor ingrese un email válido" }
+        ]}
+      >
+        <Input id="email-create" />
+      </Form.Item>
+      <Form.Item
+        name="password"
+        label="Contraseña"
+        rules={[
+          { required: true, message: "Por favor ingrese la contraseña" },
+          { min: 8, message: "La contraseña debe tener al menos 8 caracteres" },
+          {
+            pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+            message: "La contraseña debe contener al menos una letra y un número"
+          }
+        ]}
+        extra="La contraseña debe tener al menos 8 caracteres, una letra y un número"
+      >
+        <Input.Password 
+          id="password-create"
+          placeholder="Ingrese su contraseña"
+          className="password-input"
+          style={{ width: '100%' }}
+        />
+      </Form.Item>
+      <Form.Item
+        name="role"
+        label="Rol"
+        rules={[{ required: true, message: "Por favor seleccione un rol" }]}
+      >
+        <Select id="role-create" placeholder="Selecciona un rol">
+          <Option value="admin">Administrador</Option>
+          <Option value="coordinador">Coordinadora de Alimentos</Option>
+          <Option value="auxiliar">Auxiliar de Cocina</Option>
+          <Option value="jefe_enfermeria">Jefe de Enfermería</Option>
+        </Select>
+      </Form.Item>
+      <div className="modal-button-container">
+        <Button
+          className="custom-button"
+          type="primary"
+          htmlType="submit"
+          loading={buttonLoading}
+        >
+          Crear
+        </Button>
+      </div>
+    </Form>
+  </Modal>
+);
+
 const UserManagement = () => {
+  const { modal } = App.useApp();
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [buttonLoading, setButtonLoading] = useState(false);
@@ -59,33 +154,33 @@ const UserManagement = () => {
   const handleCreateUser = async (values) => {
     setButtonLoading(true);
     try {
-      const existingUsers = await getUsuarios();
-      const emailExists = existingUsers.some((user) => user.email === values.email);
-      const usernameExists = existingUsers.some((user) => user.username === values.username);
-      const cedulaExists = existingUsers.some((user) => user.cedula === values.cedula);
+      console.log('Payload a enviar:', values);
+      
+      const response = await registerUser(values);
+      console.log('Respuesta del servidor:', response);
 
-      if (emailExists || usernameExists || cedulaExists) {
-        notification.error({
-          message: "Error al crear usuario",
-          description: "El email, nombre de usuario o cédula ya está en uso",
-          placement: 'topRight',
-        });
-        return;
-      }
-
-      await registerUser(values);
       setVisible(false);
       form.resetFields();
       await fetchUsuarios();
+      
+      let description = "El usuario ha sido creado correctamente";
+      if (response.is_reentry) {
+        description = `El usuario ha sido registrado nuevamente como reingreso. 
+                      Nombre de usuario asignado: ${response.username}`;
+      }
+      
       notification.success({
         message: "Usuario creado",
-        description: "El usuario ha sido creado correctamente",
+        description: description,
         placement: 'topRight',
       });
     } catch (error) {
+      console.error('Error completo:', error);
+      console.error('Detalles del error:', error.response?.data);
+      
       notification.error({
         message: "Error al crear usuario",
-        description: error.response?.data?.message || "Hubo un problema al intentar crear el usuario",
+        description: error.response?.data?.detail || "Hubo un problema al intentar crear el usuario",
         placement: 'topRight',
       });
     } finally {
@@ -95,7 +190,7 @@ const UserManagement = () => {
 
   const handleUpdateUser = async (values) => {
     if (editingUser.activo && !values.activo) {
-      Modal.confirm({
+      modal.confirm({
         title: '¿Estás seguro de desactivar este usuario?',
         content: 'Esta acción puede afectar el acceso del usuario al sistema.',
         okText: 'Sí, desactivar',
@@ -115,8 +210,13 @@ const UserManagement = () => {
   const processUpdate = async (values) => {
     setButtonLoading(true);
     try {
+      console.log('Payload de actualización:', values);
+      console.log('Usuario siendo editado:', editingUser);
+      
       await updateUser(editingUser.id, values);
-      await fetchUsuarios();
+      const response = await fetchUsuarios();
+      console.log('Respuesta después de actualizar:', response);
+      
       setIsEditModalVisible(false);
       notification.success({
         message: "Usuario actualizado",
@@ -124,6 +224,9 @@ const UserManagement = () => {
         placement: 'topRight',
       });
     } catch (error) {
+      console.error('Error completo:', error);
+      console.error('Detalles del error:', error.response?.data);
+      
       notification.error({
         message: "Error al actualizar usuario",
         description: error.response?.data?.message || "Hubo un problema al actualizar el usuario",
@@ -249,107 +352,16 @@ const UserManagement = () => {
           hideOnSinglePage
         />
 
-        <Modal
-          title="Crear Usuario"
-          open={visible}
+        <CreateUserModal
+          visible={visible}
           onCancel={() => {
             form.resetFields();
             setVisible(false);
           }}
-          footer={null}
-          className="user-management__modal"
-        >
-          <Form form={form} onFinish={handleCreateUser} layout="vertical">
-            <Form.Item
-              name="name"
-              label="Nombre"
-              rules={[
-                {
-                  required: true,
-                  message: "Por favor ingrese el nombre del usuario",
-                },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="cedula"
-              label="Cédula"
-              rules={[
-                { required: true, message: "Por favor ingrese la cédula" },
-                {
-                  pattern: /^[0-9]+$/,
-                  message: "La cédula solo debe contener números",
-                },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="username"
-              label="Usuario"
-              rules={[
-                {
-                  required: true,
-                  message: "Por favor ingrese el nombre de usuario",
-                },
-                {
-                  min: 4,
-                  message: "El nombre de usuario debe tener al menos 4 caracteres",
-                },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: "Por favor ingrese el email" },
-                { type: 'email', message: "Por favor ingrese un email válido" },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="password"
-              label="Contraseña"
-              rules={[
-                { required: true, message: "Por favor ingrese la contraseña" },
-                { min: 8, message: "La contraseña debe tener al menos 8 caracteres" },
-                {
-                  pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-                  message: "La contraseña debe contener al menos una letra y un número",
-                },
-              ]}
-              extra="La contraseña debe tener al menos 8 caracteres, una letra y un número"
-            >
-              <Input.Password />
-            </Form.Item>
-            <Form.Item
-              name="role"
-              label="Rol"
-              rules={[{ required: true, message: "Por favor seleccione un rol" }]}
-            >
-              <Select placeholder="Selecciona un rol">
-                <Option value="admin">Administrador</Option>
-                <Option value="coordinador">Coordinadora de Alimentos</Option>
-                <Option value="auxiliar">Auxiliar de Cocina</Option>
-                <Option value="jefe_enfermeria">Jefe de Enfermería</Option>
-              </Select>
-            </Form.Item>
-            <div className="modal-button-container">
-              <Button
-                className="custom-button"
-                type="primary"
-                htmlType="submit"
-                loading={buttonLoading}
-              >
-                Crear
-              </Button>
-            </div>
-          </Form>
-        </Modal>
+          onFinish={handleCreateUser}
+          form={form}
+          buttonLoading={buttonLoading}
+        />
 
         <Modal
           title="Detalles del Usuario"
@@ -373,7 +385,11 @@ const UserManagement = () => {
             </p>
             <p>
               <strong>Ingresos:</strong>{" "}
-              {editingUser?.ingreso_count > 1 ? "Nuevo ingreso" : "Primera vez"}
+              {editingUser?.ingreso_count 
+                ? (editingUser.ingreso_count === 1 
+                    ? "Primera vez" 
+                    : `${editingUser.ingreso_count}° ingreso`)
+                : "No disponible"}
             </p>
             <p>
               <strong>Rol:</strong> {editingUser?.role}

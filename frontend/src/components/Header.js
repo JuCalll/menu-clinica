@@ -8,7 +8,7 @@ import {
   BulbFilled
 } from '@ant-design/icons';
 import "../styles/Header.scss";
-import logo from "../assets/logo.png";
+import logo from "../assets/logoblanco.png";
 import api from "../services/api";
 
 const Header = ({ 

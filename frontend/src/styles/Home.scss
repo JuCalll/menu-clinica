@@ -2,38 +2,130 @@
 
 .home {
   font-family: "Syne", sans-serif;
-  background-color: #dee2e6;
-  color: #174288;
-  padding: 50px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 800px;
-  margin: 50px auto;
-  text-align: center;  
-
-  h1 {
-    font-size: 2.5rem;
-    color: #174288;
-    position: relative;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-  }
-
-  .home-logo {
-    width: 400px;  
-    height: auto;
-    margin-top: 20px;
-  }
-
-  @media (max-width: 767px) {
-    padding: 30px 10px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  .home-header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeIn 0.5s ease-out;
 
     h1 {
-      font-size: 2rem;
+      font-size: 2.5rem;
+      color: #174288;
+      margin-bottom: 24px;
+      font-weight: 700;
     }
 
     .home-logo {
-      width: 400px;  
+      width: 300px;
+      height: auto;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .stats-section {
+    margin-bottom: 48px;
+    animation: slideUp 0.5s ease-out;
+
+    .stat-card {
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+      }
+
+      .ant-statistic {
+        .ant-statistic-title {
+          color: #174288;
+          font-size: 1rem;
+          margin-bottom: 16px;
+        }
+
+        .ant-statistic-content {
+          font-size: 2rem;
+        }
+      }
+    }
+  }
+
+  .quick-access-section {
+    animation: slideUp 0.7s ease-out;
+
+    h2 {
+      color: #174288;
+      font-size: 1.8rem;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .quick-access-card {
+      height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border-width: 2px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: linear-gradient(145deg, #ffffff, #f0f2f5);
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      .anticon {
+        font-size: 2.5rem;
+        margin-bottom: 16px;
+      }
+
+      h3 {
+        margin: 0;
+        color: #174288;
+        font-size: 1.2rem;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .home {
+    padding: 20px;
+
+    .home-header {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .home-logo {
+        width: 250px;
+      }
     }
   }
 }

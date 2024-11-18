@@ -110,6 +110,7 @@ class PedidoPrintView(views.APIView):
     CUT_PAPER = b'\x1d\x56\x00'
     PRINTER_IP = '172.168.11.177'
     PRINTER_PORT = 9100
+    SOCKET_TIMEOUT = 5
 
     def format_title(self, title):
         formatted_names = {
@@ -137,34 +138,17 @@ class PedidoPrintView(views.APIView):
         }
         return formatted_names.get(title.lower(), title.replace('_', ' ').title())
 
-    def post(self, request, pk):
-        try:
-            pedido = Pedido.objects.get(id=pk)
-            section_title = request.data.get('section_title')
-            
-            if not section_title:
-                return Response(
-                    {'error': 'Título de sección no proporcionado'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-                
-            self.print_pedido(pedido, section_title)
-            return Response({'status': 'success'})
-        except Pedido.DoesNotExist:
-            return Response(
-                {'error': 'Pedido no encontrado'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
     def print_pedido(self, pedido, section_title):
+        sock = None
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.PRINTER_IP, self.PRINTER_PORT))
+            sock.settimeout(self.SOCKET_TIMEOUT)
+
+            try:
+                sock.connect((self.PRINTER_IP, self.PRINTER_PORT))
+            except socket.error as e:
+                raise Exception(f"Error de conexión con la impresora: {str(e)}\n"
+                              f"IP: {self.PRINTER_IP}, Puerto: {self.PRINTER_PORT}")
 
             print_data = ""
             
@@ -238,16 +222,53 @@ class PedidoPrintView(views.APIView):
             for original, replacement in char_map.items():
                 print_data = print_data.replace(original, replacement)
 
-            message = (
-                self.INITIALIZE_PRINTER +
-                self.CODEPAGE_LATINO +
-                print_data.encode('cp850', errors='replace') +
-                b'\n\n\n\n\n' +
-                self.CUT_PAPER
-            )
-            
-            sock.sendall(message)
-            
+            try:
+                message = (
+                    self.INITIALIZE_PRINTER +
+                    self.CODEPAGE_LATINO +
+                    print_data.encode('cp850', errors='replace') +
+                    b'\n\n\n\n\n' +
+                    self.CUT_PAPER
+                )
+                sock.sendall(message)
+            except socket.error as e:
+                raise Exception(f"Error al enviar datos a la impresora: {str(e)}")
+
+        except Exception as e:
+            print(f"Error de impresión: {str(e)}")
+            raise
+
         finally:
-            sock.close()
+            if sock:
+                try:
+                    sock.close()
+                except:
+                    pass
+
+    def post(self, request, pk):
+        try:
+            pedido = Pedido.objects.get(id=pk)
+            section_title = request.data.get('section_title')
+            
+            if not section_title:
+                return Response(
+                    {'error': 'Título de sección no proporcionado'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            self.print_pedido(pedido, section_title)
+            return Response({'status': 'success'})
+
+        except Pedido.DoesNotExist:
+            return Response(
+                {'error': 'Pedido no encontrado'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            error_message = f"Error al imprimir: {str(e)}"
+            print(error_message)
+            return Response(
+                {'error': error_message}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 

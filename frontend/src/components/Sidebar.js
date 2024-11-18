@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FaHome, FaUtensils, FaShoppingCart, FaDatabase, FaChevronRight } from "react-icons/fa";
+import logo from "../assets/logoblanco.png";
 import "../styles/Sidebar.scss";
 
 const Sidebar = ({ isCollapsed, isDarkMode }) => {
@@ -110,6 +111,9 @@ const Sidebar = ({ isCollapsed, isDarkMode }) => {
           </div>
         )}
       </nav>
+      <div className="sidebar-footer">
+        <img src={logo} alt="Logo" className="footer-logo" />
+      </div>
     </div>
   );
 };

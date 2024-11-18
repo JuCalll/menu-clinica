@@ -154,6 +154,30 @@ $font-size-xxlarge: 28px;
       height: 40px;
       border-radius: $border-radius;
       font-size: $font-size-base;
+
+      &.ant-input-affix-wrapper {
+        padding: 0 11px;
+        
+        .ant-input {
+          height: 38px;
+        }
+        
+        .ant-input-suffix {
+          margin: 0;
+          height: 100%;
+          display: flex;
+          align-items: center;
+        }
+      }
+    }
+
+    .ant-form-item-control-input {
+      .ant-input-password {
+        height: 40px;
+        padding: 4px 11px;
+        display: flex;
+        align-items: center;
+      }
     }
 
     .ant-select-selector {
