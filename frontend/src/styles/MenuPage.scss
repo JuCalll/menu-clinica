@@ -209,6 +209,14 @@ $menu-title-color: #174288;
     @include flex-center;
     height: 300px;
   }
+
+  .ant-row {
+    margin: -8px !important; // Ajusta el espaciado negativo del Row
+  }
+
+  .ant-col {
+    padding: 8px !important; // Ajusta el padding de las columnas
+  }
 }
 
 .view-menu-modal {
@@ -287,14 +295,15 @@ $menu-title-color: #174288;
         li {
           padding: 10px 18px;
           margin: 8px 0;
-          background-color: #f8f9fa;
+          background-color: #f5f5f5;
           border-radius: 6px;
           font-size: 1.05rem;
-          transition: all 0.2s ease;
+          transition: all 0.3s ease;
 
           &:hover {
-            background-color: #eef2f7;
+            background-color: #e6e9ec;
             transform: translateX(5px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
           }
         }
       }
@@ -316,21 +325,18 @@ $menu-title-color: #174288;
   // Mejoramos el estilo del título
   .ant-card-head {
     padding: 0 16px;
-    min-height: 48px;
-    border-bottom: 2px solid rgba($primary-color, 0.1);
+    min-height: auto; // Permite que el header se ajuste al contenido
 
     .ant-card-head-title {
-      padding: 12px 0;
-      font-size: 1.1rem;
-      color: $menu-title-color;
-      font-weight: 600;
-      white-space: normal; // Permitimos que el texto se ajuste
+      padding: 16px 0;
+      font-size: 1rem;
       line-height: 1.4;
-      overflow: visible; // Aseguramos que el texto sea visible
+      white-space: normal;
       display: -webkit-box;
-      line-clamp: 2; // Máximo 2 líneas
-      -webkit-line-clamp: 2; // Máximo 2 líneas
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
@@ -339,7 +345,7 @@ $menu-title-color: #174288;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 16px;
+    padding: 12px;
   }
 
   .menu-item-actions {
@@ -350,10 +356,12 @@ $menu-title-color: #174288;
 
     .action-button {
       width: 100%;
-      height: 36px;
+      height: 32px;
       border: none;
       border-radius: 6px;
       transition: all 0.3s ease;
+      font-size: 0.9rem;
+      padding: 4px 8px;
       
       &.view-button {
         background: rgba($primary-color, 0.05);
@@ -374,7 +382,7 @@ $menu-title-color: #174288;
       }
 
       .anticon {
-        margin-right: 8px;
+        font-size: 0.9rem;
       }
     }
   }
@@ -717,6 +725,202 @@ $menu-title-color: #174288;
       
       &.ant-btn-primary {
         background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+      }
+    }
+  }
+}
+
+// Ajustes para las tarjetas de menú
+.menu-list {
+  .ant-row {
+    margin: -8px !important; // Ajusta el espaciado negativo del Row
+  }
+
+  .ant-col {
+    padding: 8px !important; // Ajusta el padding de las columnas
+  }
+}
+
+.menu-item {
+  height: 100%;
+  
+  .ant-card-head {
+    min-height: auto; // Permite que el header se ajuste al contenido
+    
+    .ant-card-head-title {
+      padding: 16px 0;
+      font-size: 1rem;
+      line-height: 1.4;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .ant-card-body {
+    padding: 12px;
+  }
+
+  .menu-item-actions {
+    .action-button {
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      height: 32px;
+
+      .anticon {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Ajustes responsivos mejorados
+@media (max-width: 1200px) {
+  .menu-list {
+    .ant-col {
+      flex: 0 0 33.33%;
+      max-width: 33.33%;
+    }
+  }
+}
+
+@media (max-width: 992px) {
+  .menu-list {
+    .ant-col {
+      flex: 0 0 50%;
+      max-width: 50%;
+    }
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-page {
+    padding: 15px;
+  }
+
+  .menu-page-header {
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    
+    .page-title {
+      font-size: 1.8rem;
+      text-align: center;
+    }
+    
+    .create-menu-button {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
+  .menu-item {
+    .ant-card-head-title {
+      font-size: 0.95rem;
+      padding: 12px 0;
+    }
+
+    .menu-item-actions {
+      gap: 6px;
+
+      .action-button {
+        padding: 4px;
+        font-size: 0.85rem;
+        height: 30px;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .menu-list {
+    .ant-col {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+
+  .menu-item {
+    margin-bottom: 0;
+    
+    .ant-card-head-title {
+      padding: 10px 0;
+    }
+    
+    .ant-card-body {
+      padding: 10px;
+    }
+  }
+
+  // Ajustes para el modal
+  .ant-modal {
+    .ant-modal-content {
+      margin: 0 10px;
+      
+      .ant-modal-header {
+        padding: 16px 16px 0;
+        
+        .ant-modal-title {
+          font-size: 1.4rem;
+        }
+      }
+      
+      .ant-modal-body {
+        padding: 16px;
+        
+        .ant-collapse {
+          .ant-collapse-item {
+            .ant-collapse-header {
+              padding: 12px 16px;
+              font-size: 1rem;
+            }
+            
+            .ant-collapse-content-box {
+              padding: 16px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Ajustes para los botones de acción en móvil
+  .menu-item-actions {
+    .action-button {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      
+      .anticon {
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Ajustes para pantallas muy pequeñas
+@media (max-width: 360px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .menu-item {
+    .ant-card-head-title {
+      font-size: 0.9rem;
+    }
+
+    .menu-item-actions {
+      .action-button {
+        font-size: 0.8rem;
+        height: 28px;
       }
     }
   }

@@ -5,7 +5,7 @@ import {
   CheckCircleOutlined, 
   ClockCircleOutlined,
   UserOutlined,
-  MenuOutlined,
+  RestOutlined,
   HistoryOutlined,
   DatabaseOutlined,
   TeamOutlined
@@ -88,7 +88,7 @@ const Home = () => {
       },
       {
         title: "Gestionar Menús",
-        icon: <MenuOutlined />,
+        icon: <RestOutlined />,
         path: "/menus",
         color: "#52c41a"
       },
@@ -140,7 +140,7 @@ const Home = () => {
       },
       {
         title: "Gestionar Menús",
-        icon: <MenuOutlined />,
+        icon: <RestOutlined />,
         path: "/menus",
         color: "#52c41a"
       },

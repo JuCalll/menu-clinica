@@ -1,0 +1,208 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
+
+// Variables
+$primary-color: #1890ff;
+$secondary-color: #ff4d4f;
+$background-color: #f0f2f5;
+$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
+$font-family: 'Syne', sans-serif;
+$border-radius: 12px;
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$title-color: #174288;
+$font-size-base: 16px;
+$font-size-large: 18px;
+$font-size-xlarge: 20px;
+$font-size-xxlarge: 28px;
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin hover-effect {
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow;
+  }
+}
+
+.login-page {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(
+    135deg,
+    #174288 0%,
+    #1a4b9b 25%,
+    #0076a3 75%,
+    #00a7e2 100%
+  );
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 2px,
+      transparent 2px,
+      transparent 8px
+    );
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 25%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
+}
+
+.login-container {
+  @include flex-center;
+  min-height: 100vh;
+  padding: 20px;
+  animation: fadeIn 0.5s ease-out;
+  position: relative;
+  z-index: 1;
+}
+
+.login-form {
+  background: white;
+  padding: 40px;
+  border-radius: $border-radius;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  animation: slideUp 0.5s ease-out;
+
+  .login-logo {
+    width: 200px;
+    height: auto;
+    margin-bottom: 24px;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  h2 {
+    color: $title-color;
+    font-size: $font-size-xxlarge;
+    margin-bottom: 32px;
+    font-weight: 700;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .input-field {
+      height: 45px;
+      border-radius: $border-radius;
+      font-size: $font-size-base;
+      border: 1px solid rgba($title-color, 0.2);
+      transition: all 0.3s ease;
+      
+      &:hover, &:focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+      }
+
+      input {
+        height: 100%;
+        font-family: $font-family;
+      }
+    }
+
+    .login-button {
+      height: 45px;
+      font-size: $font-size-large;
+      font-weight: 600;
+      border-radius: $border-radius;
+      background: $button-gradient;
+      border: none;
+      margin-top: 12px;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        background: linear-gradient(to right, darken($primary-color, 5%), darken(#40a9ff, 5%));
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .error-message {
+      margin-top: 16px;
+      border-radius: $border-radius;
+      border: none;
+      background: rgba($secondary-color, 0.1);
+      
+      .ant-alert-message {
+        color: $secondary-color;
+        font-family: $font-family;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    padding: 16px;
+  }
+
+  .login-form {
+    padding: 24px;
+    
+    .login-logo {
+      width: 160px;
+    }
+
+    h2 {
+      font-size: $font-size-xlarge;
+      margin-bottom: 24px;
+    }
+  }
+}

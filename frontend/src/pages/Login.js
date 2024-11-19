@@ -95,7 +95,7 @@ const Login = () => {
           alt="Clínica San Juan de Dios"
           className="login-logo"
         />
-        <h2>Login</h2>
+        <h2>Menú Preferencial - CSJDD</h2>
         <form onSubmit={handleLogin}>
           <Input
             id="username-input"
