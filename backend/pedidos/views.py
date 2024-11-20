@@ -7,6 +7,7 @@ from .models import Pedido
 from .serializers import PedidoSerializer
 from logs.models import LogEntry
 import socket
+import time
 
 class PedidoListCreateView(generics.ListCreateAPIView):
     serializer_class = PedidoSerializer
@@ -18,7 +19,13 @@ class PedidoListCreateView(generics.ListCreateAPIView):
         fecha_inicio = self.request.query_params.get('fecha_inicio', None)
         fecha_fin = self.request.query_params.get('fecha_fin', None)
 
-        if status:
+        if status == 'pendiente':
+            # Filtra pedidos que no estén completamente terminados
+            queryset = queryset.filter(
+                Q(sectionStatus={}) |  # Sin secciones completadas
+                ~Q(status='completado')  # O no marcado como completado
+            )
+        elif status:
             queryset = queryset.filter(status=status)
         if paciente_id:
             queryset = queryset.filter(paciente_id=paciente_id)
@@ -106,11 +113,47 @@ class PedidoStatusUpdateView(generics.UpdateAPIView):
 
 class PedidoPrintView(views.APIView):
     INITIALIZE_PRINTER = b'\x1b\x40'
-    CODEPAGE_LATINO = b'\x1b\x74\x10'
-    CUT_PAPER = b'\x1d\x56\x00'
+    CODEPAGE_LATINO = b'\x1b\x74\x12'
+    LINE_SPACING = b'\x1b\x33\x30'
+    ALIGN_CENTER = b'\x1b\x61\x01'
+    ALIGN_LEFT = b'\x1b\x61\x00'
+    DOUBLE_WIDTH = b'\x1b\x21\x20'
+    NORMAL_TEXT = b'\x1b\x21\x00'
+    CUT_PAPER = b'\x1d\x56\x41\x10'
     PRINTER_IP = '172.168.11.177'
     PRINTER_PORT = 9100
-    SOCKET_TIMEOUT = 5
+    SOCKET_TIMEOUT = 10
+    MAX_RETRIES = 5
+    RETRY_DELAY = 3
+
+    def test_printer_connection(self):
+        """Prueba la conexión específicamente para la DIG-K200L y verifica posibles bloqueos"""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(self.SOCKET_TIMEOUT)
+        
+        try:
+            # Intenta resolver el nombre de host
+            try:
+                socket.gethostbyname(self.PRINTER_IP)
+            except socket.gaierror as e:
+                return False, "Error de DNS: No se puede resolver la IP de la impresora"
+            
+            # Intenta conectar específicamente al puerto 9100
+            result = sock.connect_ex((self.PRINTER_IP, self.PRINTER_PORT))
+            
+            if result == 0:
+                return True, "Conexión exitosa"
+            elif result in [10061, 111]:  # Códigos comunes de conexión rechazada
+                return False, "Conexión rechazada: Posible bloqueo por firewall"
+            else:
+                return False, f"Error de conexión (código {result}): Posible puerto cerrado o bloqueado por firewall"
+            
+        except socket.timeout:
+            return False, "Timeout: La conexión fue bloqueada o la impresora no responde"
+        except Exception as e:
+            return False, f"Error de conexión: {str(e)}"
+        finally:
+            sock.close()
 
     def format_title(self, title):
         formatted_names = {
@@ -139,111 +182,134 @@ class PedidoPrintView(views.APIView):
         return formatted_names.get(title.lower(), title.replace('_', ' ').title())
 
     def print_pedido(self, pedido, section_title):
-        sock = None
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(self.SOCKET_TIMEOUT)
-
+        attempts = 0
+        last_error = None
+        
+        while attempts < self.MAX_RETRIES:
+            sock = None
             try:
-                sock.connect((self.PRINTER_IP, self.PRINTER_PORT))
-            except socket.error as e:
-                raise Exception(f"Error de conexión con la impresora: {str(e)}\n"
-                              f"IP: {self.PRINTER_IP}, Puerto: {self.PRINTER_PORT}")
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(self.SOCKET_TIMEOUT)
+                
+                try:
+                    sock.connect((self.PRINTER_IP, self.PRINTER_PORT))
+                except socket.error as e:
+                    attempts += 1
+                    if attempts < self.MAX_RETRIES:
+                        time.sleep(self.RETRY_DELAY)
+                        continue
+                    raise Exception(f"Error de conexión: {str(e)}")
 
-            print_data = ""
-            
-            # 1. DATOS DEL PACIENTE
-            print_data += "=== DATOS DEL PACIENTE ===\n"
-            print_data += "-------------------------------\n"
-            print_data += f"Pedido: {pedido.id}\n"
-            print_data += f"Paciente: {pedido.paciente.name}\n"
-            print_data += f"Dieta: {pedido.paciente.recommended_diet or 'No especificada'}\n"
-            if pedido.paciente.alergias:
-                print_data += f"Alergias: {pedido.paciente.alergias}\n"
-            print_data += "-------------------------------\n\n"
-
-            # 2. UBICACION
-            print_data += "=== UBICACION ===\n"
-            print_data += "-------------------------------\n"
-            print_data += f"Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}\n"
-            print_data += f"Habitacion: {pedido.paciente.cama.habitacion.nombre}\n"
-            print_data += f"Cama: {pedido.paciente.cama.nombre}\n"
-            print_data += "-------------------------------\n\n"
-
-            # 3. DETALLES DEL PEDIDO
-            print_data += f"=== {self.format_title(section_title)} ===\n"
-            print_data += "-------------------------------\n"
-
-            selected_options = pedido.pedidomenuoption_set.filter(
-                menu_option__section__titulo=section_title,
-                selected=True
-            ).select_related('menu_option')
-
-            options_by_type = {}
-            for pmo in selected_options:
-                option = pmo.menu_option
-                tipo = option.tipo
-                if tipo not in options_by_type:
-                    options_by_type[tipo] = []
-                options_by_type[tipo].append(option)
-
-            for tipo, opciones in options_by_type.items():
-                if opciones:
-                    print_data += f"{self.format_title(tipo)}:\n"
-                    for opcion in opciones:
-                        print_data += f"- {opcion.texto}\n"
-                        if section_title in ["bebidas_calientes", "bebidas_frias"] and \
-                           pedido.adicionales and \
-                           'bebidasPreparacion' in pedido.adicionales and \
-                           str(opcion.id) in pedido.adicionales['bebidasPreparacion']:
-                            prep = pedido.adicionales['bebidasPreparacion'][str(opcion.id)]
-                            print_data += f"  Preparacion: {self.format_title(prep)}\n"
-            print_data += "-------------------------------\n\n"
-
-            # 4. OBSERVACIONES (si existen)
-            if pedido.observaciones:
-                print_data += "=== OBSERVACIONES ===\n"
-                print_data += "-------------------------------\n"
-                print_data += f"{pedido.observaciones}\n"
-                print_data += "-------------------------------\n\n"
-
-            # 5. FECHA (Modificado para usar la hora actual con AM/PM)
-            print_data += "=== FECHA Y HORA ===\n"
-            print_data += "-------------------------------\n"
-            print_data += f"{datetime.now().strftime('%d/%m/%Y %I:%M %p')}\n"
-            print_data += "===============================\n"
-
-            # Reemplazar caracteres especiales
-            char_map = {
-                'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
-                'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
-                'ñ': 'n', 'Ñ': 'N', 'ü': 'u', 'Ü': 'U'
-            }
-            for original, replacement in char_map.items():
-                print_data = print_data.replace(original, replacement)
-
-            try:
-                message = (
+                # Secuencia de inicialización específica para DIG-K200L
+                init_sequence = (
                     self.INITIALIZE_PRINTER +
                     self.CODEPAGE_LATINO +
-                    print_data.encode('cp850', errors='replace') +
-                    b'\n\n\n\n\n' +
-                    self.CUT_PAPER
+                    self.LINE_SPACING
                 )
-                sock.sendall(message)
-            except socket.error as e:
-                raise Exception(f"Error al enviar datos a la impresora: {str(e)}")
+                sock.sendall(init_sequence)
+                
+                print_data = ""
+                
+                # 1. DATOS DEL PACIENTE
+                print_data += "=== DATOS DEL PACIENTE ===\n"
+                print_data += "-------------------------------\n"
+                print_data += f"Pedido: {pedido.id}\n"
+                print_data += f"Paciente: {pedido.paciente.name}\n"
+                print_data += f"Dieta: {pedido.paciente.recommended_diet or 'No especificada'}\n"
+                if pedido.paciente.alergias:
+                    print_data += f"Alergias: {pedido.paciente.alergias}\n"
+                print_data += "-------------------------------\n\n"
 
-        except Exception as e:
-            print(f"Error de impresión: {str(e)}")
-            raise
+                # 2. UBICACION
+                print_data += "=== UBICACION ===\n"
+                print_data += "-------------------------------\n"
+                print_data += f"Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}\n"
+                print_data += f"Habitacion: {pedido.paciente.cama.habitacion.nombre}\n"
+                print_data += f"Cama: {pedido.paciente.cama.nombre}\n"
+                print_data += "-------------------------------\n\n"
 
-        finally:
-            if sock:
+                # 3. DETALLES DEL PEDIDO
+                print_data += f"=== {self.format_title(section_title)} ===\n"
+                print_data += "-------------------------------\n"
+
+                selected_options = pedido.pedidomenuoption_set.filter(
+                    menu_option__section__titulo=section_title,
+                    selected=True
+                ).select_related('menu_option')
+
+                options_by_type = {}
+                for pmo in selected_options:
+                    option = pmo.menu_option
+                    tipo = option.tipo
+                    if tipo not in options_by_type:
+                        options_by_type[tipo] = []
+                    options_by_type[tipo].append(option)
+
+                for tipo, opciones in options_by_type.items():
+                    if opciones:
+                        print_data += f"{self.format_title(tipo)}:\n"
+                        for opcion in opciones:
+                            print_data += f"- {opcion.texto}\n"
+                            if section_title in ["bebidas_calientes", "bebidas_frias"] and \
+                               pedido.adicionales and \
+                               'bebidasPreparacion' in pedido.adicionales and \
+                               str(opcion.id) in pedido.adicionales['bebidasPreparacion']:
+                                prep = pedido.adicionales['bebidasPreparacion'][str(opcion.id)]
+                                print_data += f"  Preparacion: {self.format_title(prep)}\n"
+                print_data += "-------------------------------\n\n"
+
+                # 4. OBSERVACIONES (si existen)
+                if pedido.observaciones:
+                    print_data += "=== OBSERVACIONES ===\n"
+                    print_data += "-------------------------------\n"
+                    print_data += f"{pedido.observaciones}\n"
+                    print_data += "-------------------------------\n\n"
+
+                # 5. FECHA (Modificado para usar la hora actual con AM/PM)
+                print_data += "=== FECHA Y HORA ===\n"
+                print_data += "-------------------------------\n"
+                print_data += f"{datetime.now().strftime('%d/%m/%Y %I:%M %p')}\n"
+                print_data += "===============================\n"
+
+                # Reemplazar caracteres especiales
+                char_map = {
+                    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+                    'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
+                    'ñ': 'n', 'Ñ': 'N', 'ü': 'u', 'Ü': 'U'
+                }
+                for original, replacement in char_map.items():
+                    print_data = print_data.replace(original, replacement)
+
                 try:
-                    sock.close()
-                except:
-                    pass
+                    message = (
+                        self.INITIALIZE_PRINTER +
+                        self.CODEPAGE_LATINO +
+                        print_data.encode('cp850', errors='replace') +
+                        b'\n\n\n\n\n' +
+                        self.CUT_PAPER
+                    )
+                    sock.sendall(message)
+                except socket.error as e:
+                    raise Exception(f"Error al enviar datos a la impresora: {str(e)}")
+
+                # Si llegamos aquí y la impresión es exitosa, salimos del bucle
+                break
+
+            except Exception as e:
+                attempts += 1
+                last_error = str(e)
+                
+                if attempts < self.MAX_RETRIES:
+                    time.sleep(self.RETRY_DELAY)
+                    continue
+                raise
+
+            finally:
+                if sock:
+                    try:
+                        sock.close()
+                    except:
+                        pass
 
     def post(self, request, pk):
         try:
@@ -255,6 +321,52 @@ class PedidoPrintView(views.APIView):
                     {'error': 'Título de sección no proporcionado'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            # Información de diagnóstico detallada
+            diagnostic_info = {
+                'printer_ip': self.PRINTER_IP,
+                'attempted_ports': [self.PRINTER_PORT],
+                'network_info': {}
+            }
+            
+            # Intenta hacer ping a la impresora
+            try:
+                import subprocess
+                ping_result = subprocess.run(['ping', '-c', '1', self.PRINTER_IP], 
+                                          capture_output=True, text=True)
+                diagnostic_info['network_info']['ping'] = ping_result.returncode == 0
+            except:
+                diagnostic_info['network_info']['ping'] = 'Error al ejecutar ping'
+            
+            # Prueba la conexión
+            connection_ok, diagnostic = self.test_printer_connection()
+            diagnostic_info['connection_test'] = diagnostic
+            
+            if not connection_ok:
+                return Response(
+                    {
+                        'error': 'Error de conexión con la impresora',
+                        'type': 'printer_connection_error',
+                        'message': diagnostic,
+                        'details': {
+                            'diagnostic_info': diagnostic_info,
+                            'possible_solutions': [
+                                'Verificar reglas del firewall para el puerto 9100',
+                                'Comprobar el firewall de Windows/Linux',
+                                'Revisar si hay antivirus bloqueando la conexión',
+                                'Verificar que la impresora esté encendida',
+                                'Comprobar que la IP sea correcta'
+                            ],
+                            'firewall_check': [
+                                'Windows: Revisar Windows Defender Firewall',
+                                'Linux: Verificar iptables o ufw',
+                                'Agregar excepción para el puerto 9100 TCP',
+                                'Permitir conexiones a la IP de la impresora'
+                            ]
+                        }
+                    }, 
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
                 
             self.print_pedido(pedido, section_title)
             return Response({'status': 'success'})
@@ -265,10 +377,22 @@ class PedidoPrintView(views.APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            error_message = f"Error al imprimir: {str(e)}"
-            print(error_message)
+            error_message = str(e)
             return Response(
-                {'error': error_message}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    'error': error_message,
+                    'type': 'printer_connection_error',
+                    'message': 'Error al conectar con la impresora. Por favor, verifique:',
+                    'details': {
+                        'checks': [
+                            'La impresora está encendida',
+                            'La dirección IP es correcta',
+                            'El puerto 9100 está abierto',
+                            'No hay un firewall bloqueando la conexión'
+                        ],
+                        'technical_details': error_message
+                    }
+                }, 
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 

@@ -26,6 +26,7 @@ class PedidoSerializer(serializers.ModelSerializer):
         write_only=True
     )
     opciones = PedidoMenuOptionSerializer(source='pedidomenuoption_set', many=True, read_only=True)
+    is_fully_completed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Pedido
@@ -34,7 +35,7 @@ class PedidoSerializer(serializers.ModelSerializer):
             'menu', 'menu_id',
             'opciones', 'status', 'fecha_pedido', 
             'adicionales', 'sectionStatus',
-            'observaciones'
+            'observaciones', 'is_fully_completed'
         ]
 
     def validate(self, data):

@@ -68,16 +68,52 @@ const PedidosPendientes = () => {
   }, [pedidos, searchTerm, selectedServicio]);
 
   const handlePrint = async (pedido, section) => {
+    const key = `print-${pedido.id}-${section.titulo}`;
+    
     try {
-      const response = await api.post(`/pedidos/${pedido.id}/print/`, {
-        section_title: section.titulo
-      });
-      if (response.status === 200) {
-        message.success(`Imprimiendo ${formatTitle(section.titulo)}`);
-      }
+        message.loading({
+            content: 'Conectando con la impresora...',
+            key,
+            duration: 0
+        });
+
+        const response = await api.post(`/pedidos/${pedido.id}/print/`, {
+            section_title: section.titulo
+        });
+        
+        if (response.status === 200) {
+            message.success({
+                content: `Imprimiendo ${formatTitle(section.titulo)}`,
+                key,
+                duration: 3
+            });
+        }
     } catch (error) {
-      console.error("Error al imprimir la sección:", error);
-      message.error(`Error al imprimir ${formatTitle(section.titulo)}`);
+        console.error("Error al imprimir la sección:", error);
+        
+        if (error.response?.data?.type === 'printer_connection_error') {
+            message.warning({
+                content: (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div>
+                            <InfoCircleOutlined style={{ color: '#faad14', marginRight: '8px' }} />
+                            Impresora no disponible
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.45)' }}>
+                            {error.response.data.message}
+                        </div>
+                    </div>
+                ),
+                key,
+                duration: 5
+            });
+        } else {
+            message.error({
+                content: `Error al imprimir ${formatTitle(section.titulo)}`,
+                key,
+                duration: 3
+            });
+        }
     }
   };
 
@@ -121,6 +157,9 @@ const PedidosPendientes = () => {
             await updatePedido(pedidoId, updatedData);
             setPedidos((prev) => prev.filter((p) => p.id !== pedidoId));
             message.success("Pedido marcado como completado exitosamente");
+            
+            console.log('Disparando evento pedidoCompletado');
+            window.dispatchEvent(new CustomEvent('pedidoCompletado'));
           },
         });
       } else {

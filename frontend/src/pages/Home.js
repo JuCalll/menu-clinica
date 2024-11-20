@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Statistic, Empty, message } from "antd";
+import { Card, Row, Col, Statistic, Empty} from "antd";
 import { 
   ShoppingCartOutlined, 
   CheckCircleOutlined, 
@@ -17,65 +17,54 @@ import api from "../services/api";
 
 const Home = () => {
   const [stats, setStats] = useState({
-    pendingOrders: 0,
-    completedToday: 0,
-    activePatients: 0
+    pedidosPendientes: 0,
+    completadosHoy: 0,
+    pacientesActivos: 0
   });
   const userRole = localStorage.getItem("role");
 
+  const fetchStats = async () => {
+    try {
+      const [pedidosResponse, pacientesResponse] = await Promise.all([
+        api.get('/pedidos/'),
+        api.get('/pacientes/')
+      ]);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Cuenta pedidos pendientes
+      const pendientes = pedidosResponse.data.filter(pedido => 
+        pedido.status !== 'completado'
+      ).length;
+      
+      // Cuenta pedidos completados hoy
+      const completadosHoy = pedidosResponse.data.filter(pedido => {
+        const pedidoDate = new Date(pedido.fecha_pedido);
+        pedidoDate.setHours(0, 0, 0, 0);
+        return pedido.status === 'completado' && 
+               pedidoDate.getTime() === today.getTime();
+      }).length;
+
+      // Cuenta pacientes activos
+      const pacientesActivos = pacientesResponse.data.filter(paciente => 
+        paciente.activo
+      ).length;
+
+      setStats({
+        pedidosPendientes: pendientes,
+        completadosHoy: completadosHoy,
+        pacientesActivos: pacientesActivos
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchStats = async () => {
-      try {
-        const today = new Date();
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-        const [pendingOrders, completedOrders, patients] = await Promise.all([
-          api.get("/pedidos/", {
-            params: {
-              status: "pendiente"
-            }
-          }),
-          api.get("/pedidos/", {
-            params: {
-              status: "completado",
-              fecha_inicio: startOfDay.toISOString().split('T')[0],
-              fecha_fin: endOfDay.toISOString().split('T')[0]
-            }
-          }),
-          api.get("/pacientes/", {
-            params: {
-              activo: true
-            }
-          })
-        ]);
-
-        if (isMounted) {
-          const pendingCount = pendingOrders.data
-            .filter(pedido => pedido.status !== "completado")
-            .length;
-
-          setStats({
-            pendingOrders: pendingCount,
-            completedToday: completedOrders.data.length,
-            activePatients: patients.data.length
-          });
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error("Error al cargar estadísticas:", error);
-          message.error("Error al cargar las estadísticas");
-        }
-      }
-    };
-
     fetchStats();
-
-    return () => {
-      isMounted = false;
-    };
+    const interval = setInterval(fetchStats, 30000); // Actualiza cada 30 segundos
+    return () => clearInterval(interval);
   }, []);
 
   const defaultCards = {
@@ -191,7 +180,7 @@ const Home = () => {
               <Card className="stat-card">
                 <Statistic 
                   title="Pedidos Pendientes"
-                  value={stats.pendingOrders}
+                  value={stats.pedidosPendientes}
                   prefix={<ClockCircleOutlined />}
                   valueStyle={{ color: '#faad14' }}
                 />
@@ -201,7 +190,7 @@ const Home = () => {
               <Card className="stat-card">
                 <Statistic 
                   title="Completados Hoy"
-                  value={stats.completedToday}
+                  value={stats.completadosHoy}
                   prefix={<CheckCircleOutlined />}
                   valueStyle={{ color: '#52c41a' }}
                 />
@@ -211,7 +200,7 @@ const Home = () => {
               <Card className="stat-card">
                 <Statistic 
                   title="Pacientes Activos"
-                  value={stats.activePatients}
+                  value={stats.pacientesActivos}
                   prefix={<UserOutlined />}
                   valueStyle={{ color: '#1890ff' }}
                 />

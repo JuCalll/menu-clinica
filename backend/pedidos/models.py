@@ -29,6 +29,29 @@ class Pedido(models.Model):
         if not self.paciente.activo:
             raise ValidationError('No se puede crear un pedido para un paciente inactivo.')
 
+    @property
+    def is_fully_completed(self):
+        """Verifica si todas las secciones del pedido están completadas"""
+        if not self.sectionStatus:
+            return False
+            
+        # Lista de todas las secciones posibles
+        required_sections = [
+            'desayuno',
+            'almuerzo',
+            'cena',
+            'bebidas_calientes',
+            'bebidas_frias',
+            'snacks'
+        ]
+        
+        # Verifica que todas las secciones requeridas estén marcadas como completadas
+        for section in required_sections:
+            if self.sectionStatus.get(section) != 'completado':
+                return False
+                
+        return True
+
 class PedidoMenuOption(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     menu_option = models.ForeignKey(MenuOption, on_delete=models.CASCADE)
