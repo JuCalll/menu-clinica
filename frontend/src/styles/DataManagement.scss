@@ -1,18 +1,22 @@
-// Variables
-$primary-color: #1890ff;
-$secondary-color: #ff4d4f;
-$background-color: #f0f2f5;
-$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
-$border-radius: 12px;
-$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-$title-color: #174288;
-$font-size-base: 18px;
-$font-size-large: 20px;
-$font-size-xlarge: 24px;
-$font-size-xxlarge: 32px;
+// Variables globales del módulo
+$primary-color: #1890ff; // Color principal para elementos interactivos
+$secondary-color: #ff4d4f; // Color secundario para alertas y errores
+$background-color: #f0f2f5; // Color de fondo general
+$button-gradient: linear-gradient(
+  to right,
+  #1890ff,
+  #40a9ff
+); // Gradiente para botones
+$font-family: "Syne", sans-serif; // Fuente principal
+$border-radius: 12px; // Radio de borde estándar
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); // Sombra estándar
+$title-color: #174288; // Color para títulos
+$font-size-base: 18px; // Tamaño base de fuente
+$font-size-large: 20px; // Tamaño grande de fuente
+$font-size-xlarge: 24px; // Tamaño extra grande de fuente
+$font-size-xxlarge: 32px; // Tamaño doble extra grande de fuente
 
-// Mixins
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -27,7 +31,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
-// Aplicar la fuente Syne a todo el contenedor
+// Contenedor principal
 .dm-container {
   padding: 30px;
   background-color: $background-color;
@@ -36,20 +40,21 @@ $font-size-xxlarge: 32px;
   font-size: $font-size-base;
 
   @media (max-width: 768px) {
-    padding: 15px;
+    padding: 15px; // Reducir padding en móviles
   }
 
-  // Asegurar que todos los elementos de texto dentro del contenedor usen Syne
   * {
-    font-family: $font-family;
+    font-family: $font-family; // Asegurar consistencia tipográfica
   }
 }
 
+// Contenido principal
 .dm-content {
   max-width: 1200px;
   margin: 0 auto;
 }
 
+// Estilos del título principal
 .dm-title {
   color: $title-color;
   font-size: $font-size-xxlarge;
@@ -58,20 +63,22 @@ $font-size-xxlarge: 32px;
   text-align: center;
 }
 
+// Sección de datos activos
 .dm-active-data {
   margin-top: 30px;
 }
 
+// Tarjetas de información
 .dm-card {
   margin-bottom: 30px;
   border-radius: $border-radius;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   background: linear-gradient(145deg, #ffffff, #fafbfc);
-  
+
   .ant-card-head {
     border-bottom: 2px solid rgba($primary-color, 0.1);
     padding: 20px 24px;
-    
+
     .ant-card-head-title {
       font-size: $font-size-xlarge;
       color: $title-color;
@@ -80,6 +87,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
+// Lista de elementos
 .dm-list {
   list-style-type: none;
   padding: 0;
@@ -96,6 +104,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
+// Resumen estadístico
 .dm-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -110,7 +119,7 @@ $font-size-xxlarge: 32px;
     align-items: center;
     gap: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    
+
     @media (max-width: 576px) {
       flex-direction: column;
       text-align: center;
@@ -145,6 +154,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
+// Filtros de búsqueda
 .dm-filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -160,8 +170,9 @@ $font-size-xxlarge: 32px;
       font-size: $font-size-base;
       border-radius: $border-radius;
       border: 2px solid rgba($primary-color, 0.1);
-      
-      &:hover, &:focus {
+
+      &:hover,
+      &:focus {
         border-color: $primary-color;
         box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
       }
@@ -169,6 +180,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
+// Collapse de pacientes
 .dm-pacientes-collapse {
   .ant-collapse-item {
     margin-bottom: 16px;
@@ -181,7 +193,7 @@ $font-size-xxlarge: 32px;
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       .panel-icon {
         font-size: 20px;
         color: $primary-color;
@@ -209,6 +221,7 @@ $font-size-xxlarge: 32px;
       }
     }
 
+    // Grid de información del paciente
     .paciente-info-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -263,8 +276,12 @@ $font-size-xxlarge: 32px;
 
 // Animaciones
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .dm-card,
@@ -272,7 +289,7 @@ $font-size-xxlarge: 32px;
   animation: fadeIn 0.3s ease-in;
 }
 
-// Responsive
+// Estilos responsivos
 @media (max-width: 768px) {
   .dm-filters {
     flex-direction: column;
@@ -300,7 +317,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
-// Asegurar que los componentes de Ant Design usen la fuente Syne y tamaños adecuados
+// Sobreescritura de estilos de Ant Design
 .ant-input,
 .ant-select-selector,
 .ant-select-item-option-content,
@@ -320,29 +337,7 @@ $font-size-xxlarge: 32px;
   font-size: $font-size-base !important;
 }
 
-// Nuevo estilo para el título principal
-h2.dm-title {
-  color: $title-color !important;
-  font-size: $font-size-xxlarge !important;
-  font-weight: bold !important;
-  margin-bottom: 30px !important;
-  text-align: center !important;
-}
-
-.ant-tabs-nav {
-  margin-bottom: 16px;
-}
-
-.ant-tabs-tab {
-  font-family: $font-family;
-  font-size: $font-size-base;
-}
-
-.ant-select-dropdown {
-  font-family: $font-family;
-  font-size: $font-size-base;
-}
-
+// Estilos del encabezado
 .dm-header {
   text-align: center;
   margin-bottom: 20px;

@@ -1,3 +1,21 @@
+/**
+ * Componente Header
+ * 
+ * Barra de navegación superior que contiene:
+ * - Logo de la aplicación
+ * - Botón para colapsar/expandir el sidebar
+ * - Switch para cambiar el tema (claro/oscuro)
+ * - Nombre del usuario
+ * - Botón de cierre de sesión
+ * 
+ * @component
+ * @param {Object} props - Propiedades del componente
+ * @param {Function} props.toggleSidebar - Función para alternar la visibilidad del sidebar
+ * @param {Function} props.toggleTheme - Función para cambiar entre tema claro y oscuro
+ * @param {boolean} props.isDarkMode - Estado actual del tema (true = oscuro)
+ * @param {boolean} props.isCollapsed - Estado actual del sidebar (true = colapsado)
+ */
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Switch } from 'antd';
@@ -17,8 +35,15 @@ const Header = ({
   isDarkMode, 
   isCollapsed 
 }) => {
+  // Obtiene el nombre del usuario del almacenamiento local
   const name = localStorage.getItem("name");
 
+  /**
+   * Maneja el proceso de cierre de sesión
+   * - Invalida el token de refresco en el backend
+   * - Limpia el almacenamiento local
+   * - Redirige al usuario a la página de login
+   */
   const handleLogout = async () => {
     try {
       const refresh = localStorage.getItem("refresh");
@@ -26,7 +51,7 @@ const Header = ({
         await api.post("/auth/logout/", { refresh });
       }
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      // Manejo silencioso del error, continúa con el logout
     } finally {
       localStorage.clear();
       window.location.href = "/login";
@@ -36,6 +61,7 @@ const Header = ({
   return (
     <header className={`header ${isDarkMode ? 'dark' : ''}`}>
       <div className="header-content">
+        {/* Sección izquierda: logo y botón de colapso */}
         <div className="header-left">
           <img src={logo} alt="Logo" className="logo" />
           <button 
@@ -47,6 +73,7 @@ const Header = ({
           </button>
         </div>
 
+        {/* Sección derecha: switch de tema, nombre de usuario y botón de logout */}
         <div className="header-right">
           <Switch
             className="theme-switch"

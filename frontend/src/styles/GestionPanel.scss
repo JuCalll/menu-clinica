@@ -1,20 +1,24 @@
-// Variables
-$primary-color: #1890ff;
-$secondary-color: #ff4d4f;
-$success-color: #52c41a;
-$warning-color: #faad14;
-$background-color: #f0f2f5;
-$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
-$border-radius: 12px;
-$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-$title-color: #174288;
-$font-size-base: 16px;
-$font-size-large: 16px;
-$font-size-xlarge: 20px;
-$font-size-xxlarge: 28px;
+// Variables globales del panel de gestión
+$primary-color: #1890ff; // Color principal para elementos interactivos y botones
+$secondary-color: #ff4d4f; // Color secundario para alertas y acciones destructivas
+$success-color: #52c41a; // Color para estados exitosos y confirmaciones
+$warning-color: #faad14; // Color para advertencias y estados de precaución
+$background-color: #f0f2f5; // Color de fondo general del panel
+$button-gradient: linear-gradient(
+  to right,
+  #1890ff,
+  #40a9ff
+); // Gradiente para botones principales
+$font-family: "Syne", sans-serif; // Fuente principal consistente con el diseño
+$border-radius: 12px; // Radio de borde estándar para elementos
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); // Sombra estándar para elementos elevados
+$title-color: #174288; // Color para títulos y encabezados
+$font-size-base: 16px; // Tamaño base de fuente para texto general
+$font-size-large: 16px; // Tamaño de fuente para elementos destacados
+$font-size-xlarge: 20px; // Tamaño de fuente para subtítulos
+$font-size-xxlarge: 28px; // Tamaño de fuente para títulos principales
 
-// Mixins
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -24,12 +28,14 @@ $font-size-xxlarge: 28px;
 @mixin hover-effect {
   transition: all 0.3s ease;
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: $box-shadow;
+    transform: translateY(-3px); // Efecto de elevación al pasar el mouse
+    box-shadow: $box-shadow; // Sombra aumentada en hover
   }
 }
 
+// Estilos principales del panel de gestión
 .gestion-panel {
+  // Contenedor principal
   &__container {
     display: flex;
     justify-content: center;
@@ -37,30 +43,34 @@ $font-size-xxlarge: 28px;
     margin: 40px 0 30px 0;
   }
 
+  // Botón principal con gradiente
   &__main-button {
     background: $button-gradient;
     color: white;
     border: none;
     height: 45px;
     padding: 0 30px;
-    border-radius: 22px;
-    box-shadow: 0 2px 8px rgba($primary-color, 0.2);
+    border-radius: 22px; // Borde redondeado para aspecto suave
+    box-shadow: 0 2px 8px rgba($primary-color, 0.2); // Sombra sutil
     display: flex;
     align-items: center;
     gap: 12px;
     font-size: 16px;
-    white-space: nowrap;
-    
+    white-space: nowrap; // Evita saltos de línea en el texto
+
+    // Icono del botón
     .anticon {
       font-size: 18px;
     }
 
+    // Efecto hover del botón principal
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+      transform: translateY(-1px); // Elevación sutil
+      box-shadow: 0 4px 12px rgba($primary-color, 0.3); // Sombra más pronunciada
     }
   }
 
+  // Botón secundario
   &__button {
     background: $button-gradient;
     border: none;
@@ -69,34 +79,37 @@ $font-size-xxlarge: 28px;
     padding: 12px 20px;
     font-weight: bold;
     cursor: pointer;
-    @include hover-effect;
+    @include hover-effect; // Aplica el mixin de hover
   }
 
+  // Estilos del drawer (panel lateral)
   &__drawer {
     .ant-drawer-content-wrapper {
-      width: 90vw !important;  // Aumentar el ancho del drawer
-      max-width: 1400px !important;  // Establecer un ancho máximo
+      width: 90vw !important; // Ancho responsivo
+      max-width: 1400px !important; // Límite máximo de ancho
     }
 
     .ant-drawer-content {
       background-color: $background-color;
     }
 
+    // Ajustes de la tabla dentro del drawer
     .ant-table {
-      // Hacer la tabla más compacta
+      // Estilos compactos para celdas
       .ant-table-thead > tr > th,
       .ant-table-tbody > tr > td {
-        padding: 8px 12px;  // Reducir el padding vertical
+        padding: 8px 12px; // Padding reducido
         font-size: $font-size-base;
       }
 
-      // Ajustar alturas de fila
+      // Altura de filas
       .ant-table-tbody > tr {
-        height: 48px;  // Reducir altura de las filas
+        height: 48px; // Altura optimizada
       }
     }
   }
 
+  // Estilos de las pestañas
   &__tabs {
     .ant-tabs-nav {
       margin-bottom: 20px;
@@ -107,19 +120,21 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Estilos de la tabla principal
   &__table {
     background: white;
     border-radius: $border-radius;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    
     overflow-x: auto;
-    scrollbar-width: thin;
+    scrollbar-width: thin; // Scrollbar delgado para Firefox
 
+    // Encabezados de tabla no envueltos
     .ant-table-thead > tr > th {
       white-space: nowrap;
     }
 
+    // Personalización del scrollbar
     &::-webkit-scrollbar {
       height: 6px;
     }
@@ -129,23 +144,29 @@ $font-size-xxlarge: 28px;
       border-radius: 3px;
     }
 
+    // Estilos del encabezado de la tabla
     .ant-table-thead > tr > th {
-      background: linear-gradient(145deg, $primary-color, darken($primary-color, 10%));
+      background: linear-gradient(
+        145deg,
+        $primary-color,
+        darken($primary-color, 10%)
+      );
       color: white;
       font-weight: 600;
       padding: 16px;
       font-size: $font-size-base;
-      
+
       &::before {
-        display: none;
+        display: none; // Elimina borde predeterminado
       }
     }
 
+    // Estilos de las filas de la tabla
     .ant-table-tbody > tr {
       transition: all 0.3s ease;
 
       &:hover {
-        transform: translateY(-2px);
+        transform: translateY(-2px); // Efecto de elevación
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         z-index: 1;
         position: relative;
@@ -158,6 +179,7 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Estilos del modal
   &__modal {
     .ant-modal-content {
       border-radius: $border-radius;
@@ -165,7 +187,11 @@ $font-size-xxlarge: 28px;
     }
 
     .ant-modal-header {
-      background: linear-gradient(145deg, $primary-color, darken($primary-color, 10%));
+      background: linear-gradient(
+        145deg,
+        $primary-color,
+        darken($primary-color, 10%)
+      );
       padding: 20px 24px;
       border-bottom: none;
 
@@ -180,6 +206,7 @@ $font-size-xxlarge: 28px;
       padding: 24px;
     }
 
+    // Pie del modal
     .ant-modal-footer {
       border-top: 1px solid rgba($primary-color, 0.1);
       padding: 16px 24px;
@@ -187,14 +214,15 @@ $font-size-xxlarge: 28px;
       justify-content: space-between;
       gap: 16px;
 
-      // Contenedor para los botones
+      // Contenedor para los botones de acción
       .ant-btn-group {
         display: flex;
         gap: 12px;
         width: 100%;
 
+        // Estilos base para todos los botones
         button {
-          flex: 1;
+          flex: 1; // Distribución equitativa del espacio
           height: 45px;
           font-size: $font-size-base;
           border-radius: $border-radius;
@@ -206,35 +234,39 @@ $font-size-xxlarge: 28px;
         }
       }
 
-      // Botón Cancelar
+      // Botón de cancelación
       .ant-btn-default {
         border: 2px solid rgba($primary-color, 0.1);
         color: $title-color;
         background: white;
-        
+
         &:hover {
           border-color: $primary-color;
           color: $primary-color;
           background: rgba($primary-color, 0.02);
-          transform: translateY(-2px);
+          transform: translateY(-2px); // Efecto de elevación
         }
       }
 
-      // Botón Crear/Guardar
+      // Botón de acción principal
       .ant-btn-primary {
         background: $button-gradient;
         border: none;
         color: white;
         font-weight: 500;
-        
+
         &:hover {
-          background: linear-gradient(to right, darken($primary-color, 5%), darken($primary-color, 15%));
+          background: linear-gradient(
+            to right,
+            darken($primary-color, 5%),
+            darken($primary-color, 15%)
+          );
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba($primary-color, 0.3);
         }
 
         &:active {
-          transform: translateY(0);
+          transform: translateY(0); // Reset de elevación al hacer clic
         }
 
         .anticon {
@@ -243,7 +275,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
-    // Estilos para el formulario dentro del modal
+    // Estilos del formulario dentro del modal
     .gestion-panel__form {
       .ant-form-item {
         margin-bottom: 24px;
@@ -252,6 +284,7 @@ $font-size-xxlarge: 28px;
           margin-bottom: 0;
         }
 
+        // Etiquetas del formulario
         .ant-form-item-label {
           padding-bottom: 8px;
 
@@ -262,6 +295,7 @@ $font-size-xxlarge: 28px;
           }
         }
 
+        // Campos de entrada y selección
         .ant-input,
         .ant-select-selector {
           height: 45px;
@@ -269,30 +303,34 @@ $font-size-xxlarge: 28px;
           border: 2px solid rgba($primary-color, 0.1);
           transition: all 0.3s ease;
 
-          &:hover, &:focus {
+          &:hover,
+          &:focus {
             border-color: $primary-color;
             box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
           }
         }
 
+        // Ajustes específicos para selectores
         .ant-select-selector {
           display: flex;
           align-items: center;
 
           .ant-select-selection-item {
-            line-height: 41px;
+            line-height: 41px; // Alineación vertical del texto
           }
         }
       }
     }
   }
 
+  // Estilos generales del formulario
   &__form {
     .ant-form-item-label > label {
       font-weight: bold;
     }
   }
 
+  // Lista de camas
   &__camas-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -302,6 +340,7 @@ $font-size-xxlarge: 28px;
     border-radius: $border-radius;
   }
 
+  // Elemento individual de cama
   &__cama-item {
     background: white;
     border-radius: $border-radius;
@@ -317,6 +356,7 @@ $font-size-xxlarge: 28px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
+    // Nombre de la cama
     .cama-nombre {
       font-weight: 500;
       color: $title-color;
@@ -332,6 +372,7 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Contenedor de acciones
   &__actions-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -342,12 +383,13 @@ $font-size-xxlarge: 28px;
     border-radius: $border-radius;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
-    // Grupo de botones principales
+    // Grupo de botones de acción
     .buttons-group {
       display: flex;
       gap: 12px;
-      grid-column: 1 / -1;
+      grid-column: 1 / -1; // Ocupar todo el ancho
 
+      // Botones de acción
       .gestion-panel__button {
         flex: 1;
         height: 45px;
@@ -359,7 +401,7 @@ $font-size-xxlarge: 28px;
         min-width: 160px;
         background: $button-gradient;
         transition: all 0.3s ease;
-        
+
         .anticon {
           font-size: 18px;
         }
@@ -375,17 +417,19 @@ $font-size-xxlarge: 28px;
       }
     }
 
-    // Contenedor de filtros
+    // Grupo de filtros y búsqueda
     .filters-group {
       display: flex;
       gap: 16px;
-      grid-column: 1 / -1;
+      grid-column: 1 / -1; // Ocupar todo el ancho disponible
 
+      // Estilos compartidos para búsqueda y selectores
       .gestion-panel__search,
       .gestion-panel__select {
         flex: 1;
-        min-width: 200px;
+        min-width: 200px; // Ancho mínimo para usabilidad
 
+        // Estilos base para inputs y selectores
         .ant-input,
         .ant-select-selector {
           height: 45px;
@@ -395,20 +439,23 @@ $font-size-xxlarge: 28px;
           font-size: $font-size-base;
           transition: all 0.3s ease;
 
-          &:hover, &:focus {
+          &:hover,
+          &:focus {
             border-color: $primary-color;
             box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
           }
         }
 
+        // Alineación vertical del texto en selectores
         .ant-select-selection-item,
         .ant-select-selection-placeholder {
           line-height: 41px;
         }
 
+        // Ajustes para inputs con prefijos/sufijos
         .ant-input-affix-wrapper {
           padding: 0 11px;
-          
+
           .ant-input {
             height: 41px;
           }
@@ -417,11 +464,13 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Contenedor de acciones
   &__actions {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
 
+    // Estilos base para botones
     button {
       padding: 8px 16px;
       height: auto;
@@ -435,21 +484,27 @@ $font-size-xxlarge: 28px;
         font-size: 16px;
       }
 
+      // Botón primario
       &.ant-btn-primary {
         background: $button-gradient;
         border: none;
-        
+
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba($primary-color, 0.3);
         }
       }
 
+      // Botón de peligro/eliminación
       &.ant-btn-danger {
-        background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+        background: linear-gradient(
+          to right,
+          $secondary-color,
+          lighten($secondary-color, 10%)
+        );
         border: none;
         color: white;
-        
+
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba($secondary-color, 0.3);
@@ -458,16 +513,17 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Botón de edición
   &__edit-button {
     padding: 4px 8px;
     color: $primary-color;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0 auto; // Centrar el botón horizontalmente
-    width: 32px; // Ancho fijo para el botón
-    height: 32px; // Alto fijo para el botón
-    
+    margin: 0 auto; // Centrado horizontal
+    width: 32px; // Dimensiones fijas para consistencia
+    height: 32px;
+
     &:hover {
       color: darken($primary-color, 10%);
       background-color: rgba($primary-color, 0.1);
@@ -475,26 +531,29 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Acciones para camas
   &__cama-actions {
     display: flex;
     align-items: center;
     gap: 8px;
 
+    // Botones de edición y eliminación
     .gestion-panel__edit-button,
     .gestion-panel__delete-button {
       padding: 4px;
       width: 28px;
       height: 28px;
-      
+
       &:hover {
         background-color: rgba($primary-color, 0.1);
         border-radius: $border-radius;
       }
     }
 
+    // Botón de eliminación específico
     .gestion-panel__delete-button {
       color: $secondary-color;
-      
+
       &:hover {
         color: darken($secondary-color, 10%);
         background-color: rgba($secondary-color, 0.1);
@@ -502,7 +561,9 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Estilos para diálogos de confirmación
   &__confirmation {
+    // Título de confirmación
     &-title {
       font-size: $font-size-large;
       font-weight: 600;
@@ -511,6 +572,7 @@ $font-size-xxlarge: 28px;
       margin-bottom: 16px;
     }
 
+    // Contenido de confirmación
     &-content {
       font-size: 14px;
       color: #595959;
@@ -521,6 +583,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Efectos de la confirmación
     &-effects {
       display: flex;
       flex-direction: column;
@@ -532,13 +595,14 @@ $font-size-xxlarge: 28px;
       max-width: 400px;
     }
 
+    // Efecto individual
     &-effect {
       background: white;
       padding: 12px 16px;
       border-radius: 8px;
       text-align: left;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      
+
       &:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -548,41 +612,48 @@ $font-size-xxlarge: 28px;
   }
 }
 
+// Animación de entrada deslizante
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(20px); // Inicio desde 20px abajo
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0); // Finaliza en posición original
   }
 }
 
+// Clase para aplicar la animación de entrada
 .gestion-panel__fade-in {
   animation: slideIn 0.3s ease-out forwards;
 }
 
-// Estilos responsivos
+// Estilos responsivos para tablets y móviles
 @media (max-width: 768px) {
   .gestion-panel {
+    // Ajustes del drawer para pantallas pequeñas
     &__drawer {
-      width: 100% !important;
+      width: 100% !important; // Drawer a ancho completo
     }
 
+    // Ajustes de botones
     &__button {
-      width: 100%;
+      width: 100%; // Botones a ancho completo
       margin-bottom: 10px;
     }
 
+    // Ajustes de tabla
     &__table {
-      overflow-x: auto;
+      overflow-x: auto; // Scroll horizontal para tablas
     }
 
+    // Contenedor de acciones responsivo
     &__actions-container {
       flex-direction: column;
       align-items: stretch;
-      
+
+      // Elementos a ancho completo
       .gestion-panel__button,
       .gestion-panel__select,
       .gestion-panel__search {
@@ -591,24 +662,26 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Ajustes de posición del contenedor
     &__container {
       top: 40px;
       right: 80px;
     }
 
+    // Ajustes del botón principal
     &__main-button {
-      height: 38px;
-      padding: 0 16px;
-      font-size: 14px;
-      
+      height: 38px; // Altura reducida
+      padding: 0 16px; // Padding reducido
+      font-size: 14px; // Texto más pequeño
+
       .anticon {
-        font-size: 16px;
+        font-size: 16px; // Iconos más pequeños
       }
     }
   }
 }
 
-// Sobrescribir estilos del Modal de confirmación de Ant Design
+// Personalización del modal de confirmación de Ant Design
 .ant-modal-confirm {
   .ant-modal-content {
     padding: 24px !important;
@@ -619,6 +692,7 @@ $font-size-xxlarge: 28px;
     padding: 24px 0;
   }
 
+  // Botones del modal de confirmación
   .ant-modal-confirm-btns {
     display: flex;
     gap: 12px;
@@ -631,19 +705,25 @@ $font-size-xxlarge: 28px;
       font-size: $font-size-base;
       border-radius: $border-radius;
 
+      // Botón primario
       &.ant-btn-primary {
         background: $button-gradient;
         border: none;
-        
+
         &:hover {
-          background: linear-gradient(to right, darken(#1890ff, 10%), darken(#40a9ff, 10%));
+          background: linear-gradient(
+            to right,
+            darken(#1890ff, 10%),
+            darken(#40a9ff, 10%)
+          );
         }
       }
-      
+
+      // Botón por defecto
       &.ant-btn-default {
         border: 1px solid $primary-color;
         color: $primary-color;
-        
+
         &:hover {
           background-color: rgba($primary-color, 0.1);
         }
@@ -652,74 +732,76 @@ $font-size-xxlarge: 28px;
   }
 }
 
-// Ajustes responsivos para modales
+// Ajustes responsivos específicos para modales
 @media (max-width: 768px) {
   .gestion-panel__modal {
     .ant-modal-footer {
-      flex-direction: column-reverse;
+      flex-direction: column-reverse; // Invertir orden de botones
 
       .ant-btn-group {
         flex-direction: column;
-        
+
         button {
           width: 100%;
         }
 
+        // Reordenar botones en móvil
         .ant-btn-default {
-          order: 1;
+          order: 1; // Cancelar abajo
         }
 
         .ant-btn-primary {
-          order: 0;
+          order: 0; // Confirmar arriba
         }
       }
     }
   }
 }
 
-// Ajustes responsivos
+// Ajustes responsivos para tablets
 @media (max-width: 1024px) {
   .gestion-panel {
     &__actions-container {
       .buttons-group {
         flex-wrap: wrap;
-        
+
         .gestion-panel__button {
-          min-width: calc(50% - 8px);
+          min-width: calc(50% - 8px); // Dos botones por fila
         }
       }
 
       .filters-group {
-        flex-direction: column;
+        flex-direction: column; // Filtros en columna
       }
     }
   }
 }
 
+// Ajustes adicionales para móviles
 @media (max-width: 768px) {
   .gestion-panel {
     &__actions-container {
       padding: 16px;
-      
+
       .buttons-group {
         .gestion-panel__button {
-          min-width: 100%;
+          min-width: 100%; // Un botón por fila
         }
       }
     }
   }
 }
 
-// Ajustes responsivos
+// Ajustes finales para móviles
 @media (max-width: 768px) {
   .gestion-panel {
     &__container {
-      margin: 50px 0 40px 0;
+      margin: 50px 0 40px 0; // Márgenes ajustados
     }
 
     &__main-button {
       width: auto;
-      min-width: 250px;
+      min-width: 250px; // Ancho mínimo para legibilidad
     }
   }
 }

@@ -1,20 +1,28 @@
+// Importación de fuente personalizada
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-// Variables
-$primary-color: #1890ff;
-$secondary-color: #ff4d4f;
-$background-color: #f0f2f5;
-$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
-$border-radius: 12px;
-$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-$title-color: #174288;
-$font-size-base: 18px;
-$font-size-large: 20px;
-$font-size-xlarge: 22px;
-$font-size-xxlarge: 32px;
+// Variables globales para realizar pedido
+$primary-color: #1890ff; // Color principal (azul)
+$secondary-color: #ff4d4f; // Color secundario (rojo)
+$background-color: #f0f2f5; // Color de fondo
+$button-gradient: linear-gradient(
+  // Gradiente para botones
+  to right,
+  #1890ff,
+  #40a9ff
+);
+$font-family: "Syne", sans-serif; // Fuente principal
+$border-radius: 12px; // Radio de bordes
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); // Sombra estándar
 
-// Mixins
+// Colores y tamaños de texto
+$title-color: #174288; // Color de títulos
+$font-size-base: 18px; // Tamaño base de texto
+$font-size-large: 20px; // Tamaño grande
+$font-size-xlarge: 22px; // Tamaño extra grande
+$font-size-xxlarge: 32px; // Tamaño doble extra grande
+
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -24,12 +32,12 @@ $font-size-xxlarge: 32px;
 @mixin hover-effect {
   transition: all 0.3s ease;
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: $box-shadow;
+    transform: translateY(-2px); // Efecto de elevación
+    box-shadow: $box-shadow; // Sombra al hover
   }
 }
 
-// Estilos principales
+// Contenedor principal
 .realizar-pedido-container {
   padding: 30px;
   background-color: $background-color;
@@ -39,11 +47,13 @@ $font-size-xxlarge: 32px;
   width: 100%;
 }
 
+// Contenido del formulario
 .realizar-pedido-content {
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 20px;
 
+  // Título principal
   h2 {
     color: $title-color;
     font-size: $font-size-xxlarge;
@@ -52,11 +62,12 @@ $font-size-xxlarge: 32px;
     margin-bottom: 30px;
   }
 
+  // Elementos del formulario
   .form-item {
     width: 100%;
     max-width: 1000px;
     margin: 0 auto 20px;
-    
+
     label {
       display: block;
       color: $title-color;
@@ -65,19 +76,21 @@ $font-size-xxlarge: 32px;
       font-weight: 500;
     }
 
+    // Campo de selección
     .select-field {
       width: 100%;
-      
+
       .ant-select-selector {
         border-radius: $border-radius;
         height: 40px;
-        
+
         .ant-select-selection-search-input {
           height: 38px;
         }
       }
     }
 
+    // Mensaje de error
     .error {
       color: $secondary-color;
       margin-top: 5px;
@@ -85,7 +98,7 @@ $font-size-xxlarge: 32px;
     }
   }
 
-  // Estilos para el Collapse y opciones
+  // Componente Collapse de Ant Design
   .ant-collapse {
     width: 100%;
     max-width: 1000px;
@@ -93,41 +106,54 @@ $font-size-xxlarge: 32px;
     background: transparent;
     border: none;
     animation: slideDown 0.4s ease-out;
-    
+
     .ant-collapse-item {
       margin-bottom: 20px;
       border-radius: $border-radius;
       background: white;
-      
+
+      // Encabezado del collapse
       .ant-collapse-header {
         font-size: $font-size-large;
         color: $title-color;
         padding: 20px 24px;
-        background: linear-gradient(to right, rgba($primary-color, 0.05), transparent);
+        background: linear-gradient(
+          to right,
+          rgba($primary-color, 0.05),
+          transparent
+        );
         border-radius: $border-radius $border-radius 0 0;
-        
+
         &:hover {
-          background: linear-gradient(to right, rgba($primary-color, 0.1), transparent);
+          background: linear-gradient(
+            to right,
+            rgba($primary-color, 0.1),
+            transparent
+          );
         }
       }
 
+      // Contenido del collapse
       .ant-collapse-content {
         border-top: 1px solid rgba($title-color, 0.1);
       }
     }
   }
 
+  // Grupo de opciones
   .option-group {
     padding: 20px;
     animation: fadeIn 0.5s ease-out;
     animation-fill-mode: both;
 
+    // Animación secuencial para grupos
     @for $i from 1 through 10 {
       &:nth-child(#{$i}) {
         animation-delay: #{$i * 0.1}s;
       }
     }
 
+    // Título del grupo
     h4 {
       color: $title-color;
       font-size: $font-size-large;
@@ -137,12 +163,14 @@ $font-size-xxlarge: 32px;
       font-weight: 500;
     }
 
+    // Contenedor de opciones en grid
     .options-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 16px;
       max-width: 100%;
 
+      // Item individual de opción
       .option-item {
         min-height: 60px;
         padding: 12px 16px;
@@ -154,30 +182,32 @@ $font-size-xxlarge: 32px;
         align-items: center;
         opacity: 0;
         animation: fadeIn 0.3s ease-out forwards;
-        
+
+        // Animación secuencial para items
         @for $i from 1 through 20 {
           &:nth-child(#{$i}) {
             animation-delay: #{0.3 + ($i * 0.05)}s;
           }
         }
-        
+
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
           border-color: rgba($primary-color, 0.3);
         }
 
+        // Checkbox personalizado
         .ant-checkbox-wrapper {
           font-size: $font-size-base;
           width: 100%;
           min-height: 36px;
           display: flex;
           align-items: center;
-          
+
           .ant-checkbox {
             flex-shrink: 0;
           }
-          
+
           span:last-child {
             padding: 0 12px;
             line-height: 1.4;
@@ -188,6 +218,7 @@ $font-size-xxlarge: 32px;
       }
     }
 
+    // Estilos específicos por tipo
     &[data-type="bebidas"],
     &[data-type="bebidas_calientes"] {
       .option-item {
@@ -203,6 +234,7 @@ $font-size-xxlarge: 32px;
       }
     }
 
+    // Pie de sección
     .section-footer {
       display: flex;
       justify-content: center;
@@ -210,6 +242,7 @@ $font-size-xxlarge: 32px;
       padding-top: 16px;
       border-top: 1px solid rgba($title-color, 0.1);
 
+      // Botón de cerrar sección
       .close-section-button {
         height: 36px;
         padding: 0 24px;
@@ -219,7 +252,7 @@ $font-size-xxlarge: 32px;
         border-radius: $border-radius;
         background: white;
         transition: all 0.3s ease;
-        
+
         &:hover {
           color: $primary-color;
           border-color: $primary-color;
@@ -234,6 +267,7 @@ $font-size-xxlarge: 32px;
     }
   }
 
+  // Sección de opciones adicionales
   .additional-options {
     width: 100%;
     max-width: 1000px;
@@ -243,18 +277,21 @@ $font-size-xxlarge: 32px;
     border-radius: $border-radius;
     box-shadow: $box-shadow;
 
+    // Título de la sección
     h3 {
       color: $title-color;
       font-size: $font-size-large;
       margin-bottom: 20px;
     }
 
+    // Resumen de preparaciones
     .preparaciones-summary {
       background: rgba($background-color, 0.5);
       border-radius: $border-radius;
       padding: 20px;
       margin-bottom: 30px;
 
+      // Título del resumen
       h4 {
         color: $title-color;
         font-size: $font-size-large;
@@ -263,6 +300,7 @@ $font-size-xxlarge: 32px;
         border-bottom: 2px solid rgba($primary-color, 0.1);
       }
 
+      // Item individual de preparación
       .preparacion-item {
         display: flex;
         justify-content: space-between;
@@ -273,16 +311,17 @@ $font-size-xxlarge: 32px;
         margin-bottom: 12px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba($primary-color, 0.1);
         }
 
+        // Información de la bebida
         .bebida-info {
           flex: 1;
           display: flex;
@@ -300,6 +339,7 @@ $font-size-xxlarge: 32px;
           }
         }
 
+        // Información de preparación
         .preparacion-info {
           color: $primary-color;
           font-weight: 600;
@@ -307,10 +347,11 @@ $font-size-xxlarge: 32px;
           min-width: 200px;
           text-align: center;
           position: relative;
-          
+
+          // Puntos decorativos
           &::before,
           &::after {
-            content: '';
+            content: "";
             position: absolute;
             top: 50%;
             width: 4px;
@@ -319,23 +360,24 @@ $font-size-xxlarge: 32px;
             border-radius: 50%;
             transform: translateY(-50%);
           }
-          
+
           &::before {
             left: 8px;
           }
-          
+
           &::after {
             right: 8px;
           }
         }
 
+        // Botón de enlace
         .ant-btn-link {
           color: $primary-color;
           font-size: $font-size-base;
           padding: 8px 16px;
           border-radius: $border-radius;
           transition: all 0.3s ease;
-          
+
           &:hover {
             background: rgba($primary-color, 0.05);
             transform: translateY(-1px);
@@ -345,6 +387,7 @@ $font-size-xxlarge: 32px;
     }
   }
 
+  // Acciones del formulario
   .form-actions {
     width: 100%;
     max-width: 1000px;
@@ -352,6 +395,7 @@ $font-size-xxlarge: 32px;
     display: flex;
     justify-content: center;
 
+    // Botón principal
     .ant-btn {
       height: 40px;
       width: 400px;
@@ -362,13 +406,14 @@ $font-size-xxlarge: 32px;
       border: none;
       transition: all 0.3s ease;
       box-shadow: $box-shadow;
-      
+
       &:hover {
         transform: translateY(-3px);
         background: darken($primary-color, 5%);
         box-shadow: 0 4px 12px rgba($primary-color, 0.3);
       }
-      
+
+      // Estado deshabilitado
       &:disabled {
         background: #d9d9d9;
         transform: none;
@@ -378,17 +423,18 @@ $font-size-xxlarge: 32px;
   }
 }
 
-// Estilos para el modal de preparación (fuera del contenedor principal)
+// Modal de preparación
 .preparacion-modal {
   .ant-modal-content {
     border-radius: $border-radius;
     overflow: hidden;
-    
+
+    // Encabezado del modal
     .ant-modal-header {
       padding: 20px 24px;
       border-bottom: 1px solid rgba($title-color, 0.1);
       background: white;
-      
+
       .ant-modal-title {
         color: $title-color;
         font-size: $font-size-large;
@@ -396,21 +442,24 @@ $font-size-xxlarge: 32px;
         text-align: center;
       }
     }
-    
+
+    // Cuerpo del modal
     .ant-modal-body {
       padding: 24px;
       background: rgba($background-color, 0.5);
     }
   }
 
+  // Opciones de preparación
   .preparacion-options {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     padding: 16px 0;
 
+    // Botón de opción
     .preparacion-button {
-      flex: 1 1 calc(50% - 6px);
+      flex: 1 1 calc(50% - 6px); // Dos botones por fila
       min-width: 160px;
       height: 44px;
       text-align: center;
@@ -424,7 +473,7 @@ $font-size-xxlarge: 32px;
       align-items: center;
       justify-content: center;
       transition: all 0.3s ease;
-      
+
       &:hover {
         background: rgba($primary-color, 0.05);
         border-color: $primary-color;
@@ -436,7 +485,7 @@ $font-size-xxlarge: 32px;
   }
 }
 
-// Responsive
+// Estilos responsivos
 @media (max-width: 1200px) {
   .realizar-pedido-container {
     padding: 20px;
@@ -447,19 +496,21 @@ $font-size-xxlarge: 32px;
   .realizar-pedido-container {
     padding: 15px;
 
+    // Ajustes de grupos de opciones
     .option-group {
       padding: 15px;
-      
+
       .options-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; // Una columna en móvil
       }
-      
+
       .option-item {
         min-height: 50px;
       }
     }
   }
 
+  // Ajustes de botones de acción
   .realizar-pedido-content {
     .form-actions {
       .ant-btn {
@@ -471,10 +522,11 @@ $font-size-xxlarge: 32px;
 }
 
 @media (max-width: 576px) {
+  // Ajustes para pantallas muy pequeñas
   .preparacion-modal {
     .preparacion-options {
       .preparacion-button {
-        flex: 1 1 100%;
+        flex: 1 1 100%; // Un botón por fila
       }
     }
   }
@@ -490,8 +542,14 @@ $font-size-xxlarge: 32px;
 
 // Animaciones
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideDown {
@@ -505,12 +563,13 @@ $font-size-xxlarge: 32px;
   }
 }
 
+// Animación del collapse
 .ant-collapse-item {
   &.ant-collapse-item-active {
     .ant-collapse-content {
       &.ant-collapse-content-active {
         transition: all 0.3s ease-out;
-        
+
         .ant-collapse-content-box {
           animation: slideDown 0.4s ease-out;
         }
@@ -519,18 +578,19 @@ $font-size-xxlarge: 32px;
   }
 }
 
-// Modal de confirmación
+// Modal de confirmación del pedido
 .confirm-pedido-modal {
   .ant-modal-content {
     border-radius: $border-radius;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba($title-color, 0.15);
-    
+
+    // Encabezado del modal
     .ant-modal-header {
       padding: 24px;
       background: white;
       border-bottom: 1px solid rgba($title-color, 0.1);
-      
+
       .ant-modal-title {
         color: $title-color;
         font-size: $font-size-xlarge;
@@ -538,12 +598,14 @@ $font-size-xxlarge: 32px;
         text-align: center;
       }
     }
-    
+
+    // Cuerpo del modal
     .ant-modal-body {
       padding: 24px;
       background: rgba($background-color, 0.5);
-      
+
       .confirm-content {
+        // Información del paciente
         .paciente-info {
           background: white;
           border-radius: $border-radius;
@@ -557,6 +619,7 @@ $font-size-xxlarge: 32px;
             font-weight: 600;
           }
 
+          // Filas de información
           .info-row {
             display: flex;
             margin-bottom: 8px;
@@ -582,6 +645,7 @@ $font-size-xxlarge: 32px;
           }
         }
 
+        // Resumen del pedido
         .pedido-resumen {
           background: #fff;
           border-radius: $border-radius;
@@ -589,15 +653,16 @@ $font-size-xxlarge: 32px;
           margin: 20px 0;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
+          // Título con línea decorativa
           h3 {
             color: $title-color;
             font-size: 1.7rem;
             margin-bottom: 24px;
             text-align: center;
             position: relative;
-            
+
             &:after {
-              content: '';
+              content: "";
               position: absolute;
               bottom: -8px;
               left: 50%;
@@ -609,6 +674,7 @@ $font-size-xxlarge: 32px;
             }
           }
 
+          // Sección de resumen
           .seccion-resumen {
             margin-bottom: 24px;
             animation: fadeIn 0.3s ease-out;
@@ -621,6 +687,7 @@ $font-size-xxlarge: 32px;
               border-bottom: 2px solid rgba($primary-color, 0.1);
             }
 
+            // Grupo de opciones seleccionadas
             .grupo-opciones {
               background: rgba($background-color, 0.5);
               border-radius: $border-radius;
@@ -633,15 +700,16 @@ $font-size-xxlarge: 32px;
                 margin-bottom: 12px;
                 display: flex;
                 align-items: center;
-                
+
                 &:before {
-                  content: '•';
+                  content: "•"; // Punto decorativo
                   color: $primary-color;
                   margin-right: 8px;
                   font-size: 1.4rem;
                 }
               }
 
+              // Lista de opciones
               ul {
                 list-style: none;
                 margin: 0;
@@ -664,14 +732,15 @@ $font-size-xxlarge: 32px;
                     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
                   }
 
+                  // Estilo de preparación
                   .preparacion {
                     margin-left: 8px;
                     font-size: 1rem;
                     color: rgba($title-color, 0.7);
                     font-style: italic;
-                    
+
                     &:before {
-                      content: '•';
+                      content: "•";
                       margin: 0 6px;
                       color: $primary-color;
                     }
@@ -682,14 +751,16 @@ $font-size-xxlarge: 32px;
           }
         }
 
+        // Alerta cuando no hay opciones
         .sin-opciones-alert {
           margin: 20px 0;
-          
+
           .ant-alert {
             border-radius: $border-radius;
           }
         }
 
+        // Mensaje de advertencia
         .advertencia {
           text-align: center;
           padding: 16px;
@@ -707,7 +778,8 @@ $font-size-xxlarge: 32px;
         }
       }
     }
-    
+
+    // Pie del modal
     .ant-modal-footer {
       padding: 16px 24px;
       border-top: 1px solid rgba($title-color, 0.1);
@@ -715,28 +787,31 @@ $font-size-xxlarge: 32px;
       justify-content: center;
       gap: 12px;
       background: white;
-      
+
+      // Botones de acción
       .ant-btn {
         min-width: 120px;
         height: 40px;
         font-size: $font-size-base;
         border-radius: $border-radius;
-        
+
+        // Botón cancelar
         &-default {
           border: 1px solid rgba($title-color, 0.2);
           color: $title-color;
-          
+
           &:hover {
             border-color: $primary-color;
             color: $primary-color;
           }
         }
-        
+
+        // Botón confirmar
         &-primary {
           background: $primary-color;
           border: none;
           box-shadow: 0 2px 8px rgba($primary-color, 0.2);
-          
+
           &:hover {
             background: darken($primary-color, 5%);
             transform: translateY(-1px);
@@ -747,4 +822,3 @@ $font-size-xxlarge: 32px;
     }
   }
 }
-  

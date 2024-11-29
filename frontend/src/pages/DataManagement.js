@@ -1,3 +1,20 @@
+/**
+ * Página de Gestión de Datos
+ * 
+ * Proporciona una interfaz para visualizar y gestionar:
+ * - Pacientes activos
+ * - Servicios hospitalarios
+ * - Habitaciones y camas
+ * - Dietas y alergias
+ * 
+ * Incluye:
+ * - Resumen estadístico
+ * - Filtros multinivel
+ * - Vista detallada de pacientes
+ * 
+ * @component
+ */
+
 import React, { useState, useEffect } from "react";
 import { Input, Select, Collapse, Typography, Card, Tabs } from "antd";
 import api from "../services/api";
@@ -23,26 +40,34 @@ const { Title } = Typography;
 const { TabPane } = Tabs;
 
 const DataManagement = () => {
+  // Estados principales
   const [pacientes, setPacientes] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [habitaciones, setHabitaciones] = useState([]);
   const [dietas, setDietas] = useState([]);
   const [alergias, setAlergias] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Estados de filtrado
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("todos");
   const [selectedService, setSelectedService] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedBed, setSelectedBed] = useState(null);
+
+  // Estados derivados
+  const [filteredHabitaciones, setFilteredHabitaciones] = useState([]);
+  const [filteredCamas, setFilteredCamas] = useState([]);
+  const [filteredPacientes, setFilteredPacientes] = useState([]);
   const [summary, setSummary] = useState({
     totalPacientesActivos: 0,
     habitacionesOcupadas: 0,
     camasDisponibles: 0,
   });
-  const [filteredHabitaciones, setFilteredHabitaciones] = useState([]);
-  const [filteredCamas, setFilteredCamas] = useState([]);
-  const [filteredPacientes, setFilteredPacientes] = useState([]);
 
+  /**
+   * Carga inicial de datos desde la API
+   */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -67,13 +92,15 @@ const DataManagement = () => {
         setAlergias(alergiasResponse.data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
         setLoading(false);
       }
     };
     fetchData();
   }, []);
 
+  /**
+   * Actualiza el resumen estadístico cuando cambian los datos
+   */
   useEffect(() => {
     const totalPacientesActivos = pacientes.filter((p) => p.activo).length;
     const habitacionesOcupadas = new Set(
@@ -81,9 +108,8 @@ const DataManagement = () => {
     ).size;
     const camasDisponibles = habitaciones
       .flatMap((h) => h.camas)
-      .filter(
-        (c) => c.activo && !pacientes.some((p) => p.cama.id === c.id)
-      ).length;
+      .filter((c) => c.activo && !pacientes.some((p) => p.cama.id === c.id))
+      .length;
 
     setSummary({
       totalPacientesActivos,
@@ -92,12 +118,14 @@ const DataManagement = () => {
     });
   }, [pacientes, habitaciones]);
 
+  /**
+   * Filtra las habitaciones cuando se selecciona un servicio
+   */
   useEffect(() => {
     if (selectedService) {
       const habitacionesActivas = habitaciones.filter(
         h => h.servicio === selectedService.nombre && h.activo
       );
-      console.log('Habitaciones filtradas:', habitacionesActivas);
       setFilteredHabitaciones(habitacionesActivas);
       setSelectedRoom(null);
       setSelectedBed(null);
@@ -130,10 +158,19 @@ const DataManagement = () => {
     setFilteredPacientes(filtered);
   }, [pacientes, selectedBed, selectedRoom, selectedService, searchTerm]);
 
+  /**
+   * Maneja la búsqueda por texto
+   * @param {string} value - Término de búsqueda
+   */
   const handleSearch = (value) => {
     setSearchTerm(value);
   };
 
+  /**
+   * Maneja el cambio de nivel de filtrado
+   * Resetea los filtros según el nivel seleccionado
+   * @param {string} newLevel - Nuevo nivel de filtrado ('todos', 'servicio', 'habitacion', 'cama')
+   */
   const handleFilterLevelChange = (newLevel) => {
     setFilterLevel(newLevel);
     if (newLevel === "todos" || newLevel === "servicio") {
@@ -148,12 +185,15 @@ const DataManagement = () => {
     }
   };
 
+  /**
+   * Maneja la selección de un servicio
+   * @param {number} serviceId - ID del servicio seleccionado
+   */
   const handleServiceSelect = (serviceId) => {
     if (serviceId) {
       const service = servicios.find(s => s.id === serviceId);
       setSelectedService(service);
       setFilterLevel("habitacion");
-      console.log('Servicio seleccionado:', service);
     } else {
       setSelectedService(null);
       setFilterLevel("servicio");
@@ -162,18 +202,29 @@ const DataManagement = () => {
     setSelectedBed(null);
   };
 
+  /**
+   * Maneja la selección de una habitación
+   * @param {number} roomId - ID de la habitación seleccionada
+   */
   const handleRoomSelect = (roomId) => {
     const room = filteredHabitaciones.find(h => h.id === roomId);
     setSelectedRoom(room);
     setFilterLevel("cama");
   };
 
+  /**
+   * Maneja la selección de una cama
+   * @param {number} bedId - ID de la cama seleccionada
+   */
   const handleBedSelect = (bedId) => {
     const bed = filteredCamas.find(c => c.id === bedId);
     setSelectedBed(bed);
     setFilterLevel("paciente");
   };
 
+  /**
+   * Actualiza los datos desde la API
+   */
   const refreshData = async () => {
     setLoading(true);
     try {
@@ -187,13 +238,14 @@ const DataManagement = () => {
       setPacientes(pacientesResponse.data);
       setServicios(serviciosResponse.data);
       setHabitaciones(habitacionesResponse.data);
-      setLoading(false);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      // Manejo silencioso del error
+    } finally {
       setLoading(false);
     }
   };
 
+  // Renderizado condicional para estado de carga
   if (loading) {
     return <div>Cargando...</div>;
   }
@@ -201,6 +253,7 @@ const DataManagement = () => {
   return (
     <div className="dm-container">
       <div className="dm-content">
+        {/* Cabecera con título y panel de gestión */}
         <div className="dm-header">
           <Title level={2} className="dm-title">
             Gestión de Pacientes, Servicios y Habitaciones
@@ -215,8 +268,10 @@ const DataManagement = () => {
           />
         </div>
 
+        {/* Sección de datos activos */}
         <div className="dm-active-data">
           <Card title="Pacientes Activos" className="dm-card">
+            {/* Resumen estadístico */}
             <div className="dm-summary">
               <div className="summary-item">
                 <TeamOutlined className="summary-icon" />
@@ -241,6 +296,7 @@ const DataManagement = () => {
               </div>
             </div>
 
+            {/* Filtros de búsqueda */}
             <div className="dm-filters">
               <Input
                 placeholder="Buscar por nombre o cédula"
@@ -295,6 +351,7 @@ const DataManagement = () => {
               )}
             </div>
 
+            {/* Pestañas de niveles de filtrado */}
             <Tabs activeKey={filterLevel} onChange={handleFilterLevelChange}>
               <TabPane tab="Todos" key="todos" />
               <TabPane tab="Servicios" key="servicio" />
@@ -302,6 +359,7 @@ const DataManagement = () => {
               {selectedRoom && <TabPane tab="Camas" key="cama" />}
             </Tabs>
 
+            {/* Lista colapsable de pacientes */}
             <Collapse className="dm-pacientes-collapse">
               {filteredPacientes.map((paciente) => (
                 <Panel

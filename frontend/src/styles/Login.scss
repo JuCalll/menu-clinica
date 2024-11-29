@@ -1,11 +1,12 @@
+// Importación de fuentes y definición de variables
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-// Variables
+// Variables globales del login
 $primary-color: #1890ff;
 $secondary-color: #ff4d4f;
 $background-color: #f0f2f5;
 $button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
+$font-family: "Syne", sans-serif;
 $border-radius: 12px;
 $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 $title-color: #174288;
@@ -14,7 +15,7 @@ $font-size-large: 18px;
 $font-size-xlarge: 20px;
 $font-size-xxlarge: 28px;
 
-// Mixins
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -29,6 +30,7 @@ $font-size-xxlarge: 28px;
   }
 }
 
+// Página de login con fondo gradiente y efectos visuales
 .login-page {
   margin: 0;
   padding: 0;
@@ -43,8 +45,9 @@ $font-size-xxlarge: 28px;
   min-height: 100vh;
   overflow: hidden;
 
+  // Patrón de líneas decorativo
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -60,8 +63,9 @@ $font-size-xxlarge: 28px;
     pointer-events: none;
   }
 
+  // Efecto de viñeta radial
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -77,6 +81,7 @@ $font-size-xxlarge: 28px;
   }
 }
 
+// Contenedor del formulario
 .login-container {
   @include flex-center;
   min-height: 100vh;
@@ -86,6 +91,7 @@ $font-size-xxlarge: 28px;
   z-index: 1;
 }
 
+// Formulario de login
 .login-form {
   background: white;
   padding: 40px;
@@ -96,6 +102,7 @@ $font-size-xxlarge: 28px;
   text-align: center;
   animation: slideUp 0.5s ease-out;
 
+  // Logo institucional
   .login-logo {
     width: 200px;
     height: auto;
@@ -103,10 +110,11 @@ $font-size-xxlarge: 28px;
     transition: transform 0.3s ease;
 
     &:hover {
-      transform: scale(1.05);
+      transform: scale(1.05); // Efecto hover suave
     }
   }
 
+  // Título del formulario
   h2 {
     color: $title-color;
     font-size: $font-size-xxlarge;
@@ -114,19 +122,22 @@ $font-size-xxlarge: 28px;
     font-weight: 700;
   }
 
+  // Estructura del formulario
   form {
     display: flex;
     flex-direction: column;
     gap: 20px;
 
+    // Campos de entrada
     .input-field {
       height: 45px;
       border-radius: $border-radius;
       font-size: $font-size-base;
       border: 1px solid rgba($title-color, 0.2);
       transition: all 0.3s ease;
-      
-      &:hover, &:focus {
+
+      &:hover,
+      &:focus {
         border-color: $primary-color;
         box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
       }
@@ -137,6 +148,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Botón de login
     .login-button {
       height: 45px;
       font-size: $font-size-large;
@@ -146,24 +158,29 @@ $font-size-xxlarge: 28px;
       border: none;
       margin-top: 12px;
       transition: all 0.3s ease;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba($primary-color, 0.3);
-        background: linear-gradient(to right, darken($primary-color, 5%), darken(#40a9ff, 5%));
+        background: linear-gradient(
+          to right,
+          darken($primary-color, 5%),
+          darken(#40a9ff, 5%)
+        );
       }
-      
+
       &:active {
         transform: translateY(0);
       }
     }
 
+    // Mensaje de error
     .error-message {
       margin-top: 16px;
       border-radius: $border-radius;
       border: none;
       background: rgba($secondary-color, 0.1);
-      
+
       .ant-alert-message {
         color: $secondary-color;
         font-family: $font-family;
@@ -172,22 +189,28 @@ $font-size-xxlarge: 28px;
   }
 }
 
+// Animaciones
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+// Ajustes responsivos
 @media (max-width: 768px) {
   .login-container {
     padding: 16px;
@@ -195,13 +218,13 @@ $font-size-xxlarge: 28px;
 
   .login-form {
     padding: 24px;
-    
+
     .login-logo {
-      width: 160px;
+      width: 160px; // Logo más pequeño en móviles
     }
 
     h2 {
-      font-size: $font-size-xlarge;
+      font-size: $font-size-xlarge; // Título más pequeño en móviles
       margin-bottom: 24px;
     }
   }

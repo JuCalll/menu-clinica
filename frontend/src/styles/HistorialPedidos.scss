@@ -1,11 +1,12 @@
+// Importación de fuente personalizada
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-// Variables
+// Variables globales del historial de pedidos
 $primary-color: #1890ff;
 $secondary-color: #ff4d4f;
 $background-color: #f0f2f5;
 $button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
+$font-family: "Syne", sans-serif;
 $border-radius: 12px;
 $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 $title-color: #174288;
@@ -14,7 +15,7 @@ $font-size-large: 18px;
 $font-size-xlarge: 20px;
 $font-size-xxlarge: 28px;
 
-// Mixins
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -29,13 +30,15 @@ $font-size-xxlarge: 28px;
   }
 }
 
+// Contenedor principal del historial
 .historial-pedidos {
   font-family: $font-family;
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1200px; // Ancho máximo para mejor legibilidad
   margin: 0 auto;
   animation: fadeIn 0.3s ease-out;
 
+  // Título principal
   h2 {
     text-align: center;
     margin-bottom: 24px;
@@ -44,11 +47,13 @@ $font-size-xxlarge: 28px;
     font-weight: 700;
   }
 
+  // Contenedor de carga
   .loading-container {
     @include flex-center;
     min-height: 200px;
   }
 
+  // Contenedor de filtros
   .filters-container {
     display: flex;
     gap: 16px;
@@ -58,22 +63,26 @@ $font-size-xxlarge: 28px;
     margin-right: auto;
     flex-wrap: wrap;
 
+    // Campo de búsqueda
     .search-input {
       flex: 2;
       min-width: 250px;
     }
 
+    // Selectores de estado y servicio
     .status-select,
     .service-select {
       flex: 1;
       min-width: 200px;
     }
 
+    // Selector de fecha
     .date-picker {
       flex: 1;
       min-width: 250px;
     }
 
+    // Botón de actualización
     .refresh-button {
       min-width: 40px;
       height: 40px;
@@ -84,6 +93,7 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Mensaje de no pedidos
   .no-pedidos {
     text-align: center;
     padding: 40px;
@@ -93,20 +103,24 @@ $font-size-xxlarge: 28px;
     font-size: $font-size-large;
   }
 
+  // Encabezado del panel
   .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     width: 100%;
 
+    // Sección izquierda del encabezado
     .panel-header-left {
       flex: 1;
 
+      // Detalles del paciente
       .patient-details {
         display: flex;
         flex-direction: column;
         gap: 8px;
 
+        // Información principal del paciente
         .patient-main-info {
           display: flex;
           justify-content: space-between;
@@ -126,6 +140,7 @@ $font-size-xxlarge: 28px;
           }
         }
 
+        // Información de ubicación
         .ubicacion-info {
           color: rgba($title-color, 0.65);
           font-size: 0.9em;
@@ -145,20 +160,23 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Tarjeta de pedido individual
   .pedido-card {
     box-shadow: $box-shadow;
     border-radius: $border-radius;
     background-color: white;
     margin-top: 16px;
 
+    // Secciones dentro de la tarjeta
     .section {
       padding: 20px;
       border-bottom: 1px solid rgba($title-color, 0.1);
 
       &:last-child {
-        border-bottom: none;
+        border-bottom: none; // Elimina borde en última sección
       }
 
+      // Encabezado de sección
       .section-header {
         display: flex;
         justify-content: space-between;
@@ -171,11 +189,13 @@ $font-size-xxlarge: 28px;
           margin: 0;
         }
 
+        // Contenedor de acciones
         .section-actions {
           display: flex;
           align-items: center;
           gap: 12px;
 
+          // Botón de detalles
           .details-button {
             height: 40px;
             font-size: $font-size-base;
@@ -188,25 +208,31 @@ $font-size-xxlarge: 28px;
             gap: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 2px 6px rgba($primary-color, 0.2);
-            
+
             &:hover {
-              transform: translateY(-2px);
+              transform: translateY(-2px); // Efecto de elevación
               box-shadow: 0 4px 12px rgba($primary-color, 0.3);
             }
-            
+
             &:active {
-              transform: translateY(0);
+              transform: translateY(0); // Efecto de presión
             }
-            
+
+            // Estado activo del botón
             &.active {
-              background: linear-gradient(to right, darken($title-color, 5%), $title-color);
+              background: linear-gradient(
+                to right,
+                darken($title-color, 5%),
+                $title-color
+              );
               box-shadow: 0 2px 6px rgba($title-color, 0.2);
-              
+
               &:hover {
                 box-shadow: 0 4px 12px rgba($title-color, 0.3);
               }
             }
 
+            // Icono dentro del botón
             .anticon {
               font-size: 18px;
               margin-right: 4px;
@@ -216,6 +242,7 @@ $font-size-xxlarge: 28px;
         }
       }
 
+      // Opciones expandibles de la sección
       .section-options {
         padding: 16px;
         background-color: rgba($background-color, 0.5);
@@ -226,16 +253,19 @@ $font-size-xxlarge: 28px;
         transform-origin: top;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
+        // Estado de carga
         &.loading {
-          background: linear-gradient(90deg, 
-            rgba($background-color, 0.5) 25%, 
-            rgba($background-color, 0.7) 50%, 
+          background: linear-gradient(
+            90deg,
+            rgba($background-color, 0.5) 25%,
+            rgba($background-color, 0.7) 50%,
             rgba($background-color, 0.5) 75%
           );
           background-size: 200% 100%;
           animation: loading 1.5s infinite;
         }
 
+        // Mensaje de no opciones
         .no-options {
           text-align: center;
           padding: 16px;
@@ -244,9 +274,10 @@ $font-size-xxlarge: 28px;
           border-radius: $border-radius;
         }
 
+        // Grupo de opciones
         .option-group {
           margin-bottom: 20px;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
@@ -260,6 +291,7 @@ $font-size-xxlarge: 28px;
             padding-bottom: 8px;
           }
 
+          // Item individual de opción
           .option-item {
             display: flex;
             align-items: center;
@@ -295,6 +327,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Sección de observaciones
     .observaciones {
       padding: 20px;
       background-color: rgba($primary-color, 0.05);
@@ -313,39 +346,43 @@ $font-size-xxlarge: 28px;
     }
   }
 
+  // Información del pedido
   .pedido-info {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .ant-tag {
       margin: 0;
     }
   }
 
+  // Contenedor de paginación
   .pagination-container {
     margin-top: 24px;
     display: flex;
     justify-content: center;
-    
+
+    // Estilos personalizados para la paginación de Ant Design
     .ant-pagination {
       display: flex;
       align-items: center;
       gap: 8px;
 
+      // Botones anterior y siguiente
       .ant-pagination-prev,
       .ant-pagination-next {
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: $border-radius;
-        
+
         button {
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: $border-radius;
-          
+
           &:hover {
             border-color: $primary-color;
             color: $primary-color;
@@ -353,6 +390,7 @@ $font-size-xxlarge: 28px;
         }
       }
 
+      // Items de paginación
       .ant-pagination-item {
         display: flex;
         align-items: center;
@@ -361,23 +399,24 @@ $font-size-xxlarge: 28px;
         height: 32px;
         border-radius: $border-radius;
         margin: 0;
-        
+
         a {
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 0;
         }
-        
+
+        // Página activa
         &-active {
           background: $button-gradient;
           border: none;
-          
+
           a {
             color: white;
             font-weight: 500;
           }
-          
+
           &:hover {
             background: $button-gradient;
             a {
@@ -385,7 +424,7 @@ $font-size-xxlarge: 28px;
             }
           }
         }
-        
+
         &:hover {
           border-color: $primary-color;
           a {
@@ -397,15 +436,17 @@ $font-size-xxlarge: 28px;
   }
 }
 
-// Responsive styles
+// Estilos responsivos
 @media screen and (max-width: 768px) {
   .historial-pedidos {
     padding: 16px;
 
+    // Ajustes de filtros en móvil
     .filters-container {
       flex-direction: column;
       padding: 0 12px;
 
+      // Campos de filtro a ancho completo
       .search-input,
       .status-select,
       .service-select,
@@ -415,6 +456,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Ajustes del encabezado en móvil
     .panel-header {
       flex-direction: column;
       gap: 8px;
@@ -429,17 +471,19 @@ $font-size-xxlarge: 28px;
         }
       }
 
+      // Ajustes de información de ubicación
       .ubicacion-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
 
         .separator {
-          display: none;
+          display: none; // Ocultar separadores en móvil
         }
       }
     }
 
+    // Ajustes de secciones en móvil
     .section {
       .section-header {
         flex-direction: column;
@@ -455,10 +499,16 @@ $font-size-xxlarge: 28px;
   }
 }
 
-// Animations
+// Animaciones
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes expandContent {
@@ -475,6 +525,10 @@ $font-size-xxlarge: 28px;
 }
 
 @keyframes loading {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }

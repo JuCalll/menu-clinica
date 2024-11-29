@@ -1,16 +1,20 @@
-/* MenuPage.scss */
+// Variables globales del menú
+$primary-color: #1890ff; // Color principal para elementos interactivos
+$secondary-color: #ff4d4f; // Color para alertas y errores
+$background-color: #f0f2f5; // Color de fondo general
+$button-gradient: linear-gradient(
+  // Gradiente para botones
+  to right,
+  #1890ff,
+  // Color inicial del gradiente
+  #40a9ff // Color final del gradiente
+);
+$font-family: "Syne", sans-serif; // Fuente principal de la aplicación
+$border-radius: 12px; // Radio de bordes consistente
+$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); // Sombra estándar para elementos elevados
+$menu-title-color: #174288; // Color específico para títulos del menú
 
-// Variables
-$primary-color: #1890ff;
-$secondary-color: #ff4d4f;
-$background-color: #f0f2f5;
-$button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
-$border-radius: 12px;
-$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-$menu-title-color: #174288;
-
-// Mixins
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -18,14 +22,14 @@ $menu-title-color: #174288;
 }
 
 @mixin hover-effect {
-  transition: all 0.3s ease;
+  transition: all 0.3s ease; // Transición suave para efectos hover
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: $box-shadow;
+    transform: translateY(-3px); // Elevación al pasar el mouse
+    box-shadow: $box-shadow; // Sombra al elevarse
   }
 }
 
-// Estilos Generales
+// Contenedor principal de la página
 .menu-page {
   padding: 30px;
   background-color: $background-color;
@@ -33,10 +37,11 @@ $menu-title-color: #174288;
   min-height: 100vh;
 
   @media (max-width: 768px) {
-    padding: 15px;
+    padding: 15px; // Padding reducido en móviles
   }
 }
 
+// Encabezado de la página
 .menu-page-header {
   display: flex;
   justify-content: space-between;
@@ -44,6 +49,7 @@ $menu-title-color: #174288;
   margin-bottom: 30px;
 }
 
+// Título principal
 .page-title {
   color: $menu-title-color;
   font-size: 2.5rem;
@@ -52,7 +58,7 @@ $menu-title-color: #174288;
   margin: 0;
 }
 
-// Estilo base para todos los botones
+// Botón base personalizado
 .custom-button {
   background: $button-gradient;
   border: none;
@@ -66,20 +72,29 @@ $menu-title-color: #174288;
   justify-content: center;
   gap: 8px;
   transition: all 0.3s ease;
-  
+
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px); // Efecto de elevación
     box-shadow: 0 4px 8px rgba($primary-color, 0.2);
-    background: linear-gradient(to right, darken($primary-color, 5%), darken(#40a9ff, 5%));
+    background: linear-gradient(
+      to right,
+      darken($primary-color, 5%),
+      darken(#40a9ff, 5%)
+    );
   }
 
+  // Icono dentro del botón
   .anticon {
     font-size: 1.2rem;
   }
 
-  // Variantes de botones
+  // Variantes de botones según su función
   &.view-button {
-    background: linear-gradient(to right, $primary-color, lighten($primary-color, 10%));
+    background: linear-gradient(
+      to right,
+      $primary-color,
+      lighten($primary-color, 10%)
+    );
   }
 
   &.edit-button {
@@ -87,14 +102,19 @@ $menu-title-color: #174288;
   }
 
   &.delete-button {
-    background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+    background: linear-gradient(
+      to right,
+      $secondary-color,
+      lighten($secondary-color, 10%)
+    );
   }
 
+  // Botón de cancelar con estilo invertido
   &.cancel-button {
     background: #fff;
     border: 1px solid $primary-color;
     color: $primary-color;
-    
+
     &:hover {
       background: rgba($primary-color, 0.05);
       color: darken($primary-color, 10%);
@@ -103,7 +123,7 @@ $menu-title-color: #174288;
   }
 }
 
-// Botón Crear Menú
+// Botón específico para crear menú
 .create-menu-button {
   @extend .custom-button;
   min-width: 170px;
@@ -111,6 +131,7 @@ $menu-title-color: #174288;
   padding: 14px 24px;
 }
 
+// Botón de guardar con color más oscuro
 .save-button {
   background: darken($primary-color, 10%);
   &:hover {
@@ -118,34 +139,38 @@ $menu-title-color: #174288;
   }
 }
 
+// Pie de modal con botones
 .modal-footer {
   display: flex;
-  justify-content: space-between; // Cambiado de flex-end a space-between
+  justify-content: space-between; // Distribuye los botones uniformemente
   gap: 15px;
   padding-top: 20px;
-  
+
   .custom-button {
-    flex: 1; // Hace que cada botón ocupe el mismo espacio
-    min-width: 0; // Permite que los botones se encojan si es necesario
-    justify-content: center; // Centra el texto en el botón
+    flex: 1; // Mismo ancho para todos los botones
+    min-width: 0; // Permite reducción de ancho
+    justify-content: center; // Centra el contenido
   }
-  
+
+  // Ajustes responsivos para móviles
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
-    
+
     .custom-button {
-      width: 100%; // Ocupa todo el ancho en dispositivos móviles
+      width: 100%; // Botones a ancho completo
     }
   }
 }
 
+// Sección de menú individual
 .menu-section {
   margin-bottom: 30px;
   background-color: #fff;
   border-radius: $border-radius;
   box-shadow: $box-shadow;
 
+  // Encabezado del collapse
   .ant-collapse-header {
     font-size: 1.2rem;
     font-weight: bold;
@@ -154,19 +179,22 @@ $menu-title-color: #174288;
     font-family: $font-family;
   }
 
+  // Contenido del collapse
   .ant-collapse-content-box {
     padding: 20px;
     font-family: $font-family;
   }
 
+  // Contenedor de botones de opciones
   .option-buttons {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px; // Aumentamos el espacio entre los botones
+    grid-template-columns: repeat(2, 1fr); // 2 botones por fila
+    gap: 15px;
     margin-top: 15px;
-    margin-bottom: 20px; // Añadimos margen inferior
+    margin-bottom: 20px;
   }
 
+  // Botón de opción individual
   .option-button {
     display: flex;
     align-items: center;
@@ -177,7 +205,7 @@ $menu-title-color: #174288;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    height: 48px; // Altura fija para todos los botones
+    height: 48px; // Altura fija
     overflow: hidden;
 
     &:hover {
@@ -185,11 +213,13 @@ $menu-title-color: #174288;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
+    // Icono del botón
     .anticon {
       margin-right: 8px;
       flex-shrink: 0;
     }
 
+    // Texto del botón con ellipsis
     .button-text {
       white-space: nowrap;
       overflow: hidden;
@@ -197,28 +227,33 @@ $menu-title-color: #174288;
     }
   }
 
+  // Lista de opciones del menú
   .menu-option-list {
-    margin-bottom: 20px; // Añadimos margen inferior a cada lista de opciones
+    margin-bottom: 20px;
   }
 }
 
+// Lista de menús
 .menu-list {
   margin-top: 40px;
 
+  // Contenedor de carga
   .loading-container {
     @include flex-center;
     height: 300px;
   }
 
+  // Ajustes de grid
   .ant-row {
-    margin: -8px !important; // Ajusta el espaciado negativo del Row
+    margin: -8px !important;
   }
 
   .ant-col {
-    padding: 8px !important; // Ajusta el padding de las columnas
+    padding: 8px !important;
   }
 }
 
+// Modal de vista de menú
 .view-menu-modal {
   .ant-modal-content {
     border-radius: $border-radius;
@@ -228,11 +263,11 @@ $menu-title-color: #174288;
     overflow-y: auto;
   }
 
-  // Estilos para el header del modal
+  // Encabezado del modal
   .ant-modal-header {
     border-bottom: none;
     padding: 0 0 20px 0;
-    
+
     .ant-modal-title {
       color: $menu-title-color;
       font-size: 1.8rem;
@@ -245,10 +280,11 @@ $menu-title-color: #174288;
     }
   }
 
+  // Pie del modal
   .ant-modal-footer {
     padding: 20px 24px;
     border-top: 1px solid #f0f0f0;
-    
+
     .ant-btn {
       @extend .custom-button;
       width: 100%;
@@ -256,6 +292,7 @@ $menu-title-color: #174288;
     }
   }
 
+  // Encabezado de sección del menú
   .menu-header {
     color: $menu-title-color;
     margin: 35px 0 20px;
@@ -264,12 +301,13 @@ $menu-title-color: #174288;
     font-weight: bold;
     font-family: $font-family;
     border-bottom: 2px solid $primary-color;
-    
+
     &:first-child {
       margin-top: 0;
     }
   }
 
+  // Lista de elementos del menú
   ul {
     list-style: none;
     padding: 0;
@@ -278,7 +316,7 @@ $menu-title-color: #174288;
     li {
       margin-bottom: 15px;
 
-      // Estilos para los títulos de las categorías
+      // Títulos de categorías
       .ant-typography-strong {
         display: block;
         color: $primary-color;
@@ -288,10 +326,10 @@ $menu-title-color: #174288;
         border-left: 3px solid $primary-color;
       }
 
-      // Estilos para las opciones individuales
+      // Opciones individuales
       ul {
         margin-left: 20px;
-        
+
         li {
           padding: 10px 18px;
           margin: 8px 0;
@@ -311,35 +349,39 @@ $menu-title-color: #174288;
   }
 }
 
+// Elemento individual del menú
 .menu-item {
   transition: all 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
-  
+
   &:hover {
     transform: translateY(-3px);
     box-shadow: $box-shadow;
   }
 
-  // Mejoramos el estilo del título
+  // Encabezado de la tarjeta
   .ant-card-head {
     padding: 0 16px;
-    min-height: auto; // Permite que el header se ajuste al contenido
+    min-height: auto; // Altura adaptable
 
+    // Título de la tarjeta con ellipsis
     .ant-card-head-title {
       padding: 16px 0;
       font-size: 1rem;
       line-height: 1.4;
       white-space: normal;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 2; // Límite de 2 líneas
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
     }
   }
 
+  // Cuerpo de la tarjeta
   .ant-card-body {
     flex-grow: 1;
     display: flex;
@@ -348,12 +390,14 @@ $menu-title-color: #174288;
     padding: 12px;
   }
 
+  // Contenedor de botones de acción
   .menu-item-actions {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-top: 12px;
 
+    // Botón de acción base
     .action-button {
       width: 100%;
       height: 32px;
@@ -362,25 +406,33 @@ $menu-title-color: #174288;
       transition: all 0.3s ease;
       font-size: 0.9rem;
       padding: 4px 8px;
-      
+
+      // Variantes de botones
       &.view-button {
         background: rgba($primary-color, 0.05);
         color: $primary-color;
-        &:hover { background: rgba($primary-color, 0.1); }
+        &:hover {
+          background: rgba($primary-color, 0.1);
+        }
       }
-      
+
       &.edit-button {
         background: rgba(#faad14, 0.05);
         color: #faad14;
-        &:hover { background: rgba(#faad14, 0.1); }
+        &:hover {
+          background: rgba(#faad14, 0.1);
+        }
       }
-      
+
       &.delete-button {
         background: rgba($secondary-color, 0.05);
         color: $secondary-color;
-        &:hover { background: rgba($secondary-color, 0.1); }
+        &:hover {
+          background: rgba($secondary-color, 0.1);
+        }
       }
 
+      // Icono dentro del botón
       .anticon {
         font-size: 0.9rem;
       }
@@ -388,22 +440,24 @@ $menu-title-color: #174288;
   }
 }
 
+// Alerta cuando no hay menús
 .no-menus-alert {
   font-size: 1.1rem;
   padding: 20px;
   border-radius: $border-radius;
 }
 
-// Ajustes Responsivos
+// Estilos responsivos
 @media (max-width: 768px) {
   .menu-section {
     .option-buttons {
-      grid-template-columns: repeat(2, 1fr); // Mantener dos columnas en tablets
+      grid-template-columns: repeat(2, 1fr); // Mantiene 2 columnas en tablets
     }
   }
 }
 
 @media (max-width: 576px) {
+  // Ajustes para móviles
   .menu-page-header {
     flex-direction: column;
     align-items: stretch;
@@ -421,7 +475,7 @@ $menu-title-color: #174288;
 
   .create-menu-button {
     margin-top: 15px;
-    width: 100%;
+    width: 100%; // Botón a ancho completo
   }
 
   .menu-option-list .ant-list-item {
@@ -434,6 +488,7 @@ $menu-title-color: #174288;
     flex-direction: column;
   }
 
+  // Ajustes de tarjeta de menú en móvil
   .menu-item {
     .menu-item-actions {
       flex-direction: column;
@@ -446,15 +501,22 @@ $menu-title-color: #174288;
   }
 }
 
+// Animaciones
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
+// Animación para elementos del menú
 .menu-item {
   animation: fadeIn 0.3s ease-in;
 }
 
+// Efectos de hover para botones
 .custom-button {
   transition: all 0.3s ease;
   &:hover {
@@ -463,13 +525,14 @@ $menu-title-color: #174288;
   }
 }
 
+// Animación del modal
 .modal {
   .ant-modal-content {
     animation: fadeIn 0.3s ease-in;
   }
 }
 
-// Estilos para el modal de creación/edición
+// Modal de creación/edición
 .ant-modal {
   .ant-modal-content {
     background: linear-gradient(145deg, #ffffff, #f5f7fa);
@@ -477,11 +540,13 @@ $menu-title-color: #174288;
     border-radius: $border-radius;
     animation: modalFadeIn 0.3s ease-out;
 
+    // Encabezado del modal
     .ant-modal-header {
       background: transparent;
       border-bottom: none;
       padding: 24px 24px 0;
 
+      // Título con línea decorativa
       .ant-modal-title {
         font-size: 1.8rem;
         color: $menu-title-color;
@@ -489,9 +554,9 @@ $menu-title-color: #174288;
         font-weight: bold;
         margin-bottom: 20px;
         position: relative;
-        
+
         &:after {
-          content: '';
+          content: "";
           position: absolute;
           bottom: -10px;
           left: 50%;
@@ -504,9 +569,11 @@ $menu-title-color: #174288;
       }
     }
 
+    // Cuerpo del modal
     .ant-modal-body {
       padding: 24px;
 
+      // Etiquetas del formulario
       .ant-form-item-label {
         label {
           color: $menu-title-color;
@@ -515,18 +582,21 @@ $menu-title-color: #174288;
         }
       }
 
+      // Campos de entrada
       .ant-input {
         border-radius: 8px;
         border: 2px solid #e8e8e8;
         padding: 12px;
         transition: all 0.3s ease;
-        
-        &:hover, &:focus {
+
+        &:hover,
+        &:focus {
           border-color: $primary-color;
           box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
         }
       }
 
+      // Componente Collapse
       .ant-collapse {
         background: transparent;
         border: none;
@@ -544,6 +614,7 @@ $menu-title-color: #174288;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
           }
 
+          // Encabezado del collapse
           .ant-collapse-header {
             padding: 16px 20px;
             font-size: 1.2rem;
@@ -556,6 +627,7 @@ $menu-title-color: #174288;
             }
           }
 
+          // Contenido del collapse
           .ant-collapse-content {
             border-top: 1px solid #f0f0f0;
 
@@ -563,20 +635,20 @@ $menu-title-color: #174288;
               padding: 25px;
               background: linear-gradient(145deg, #ffffff, #fafbfc);
 
-              // Contenedor principal para las opciones
+              // Contenedor de secciones
               .section-content {
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
 
-                // Contenedor para cada subsección
+                // Contenedor de subsecciones
                 .subsection-container {
                   position: relative;
                   display: flex;
                   flex-direction: column;
                   gap: 10px;
 
-                  // Botón de la subsección
+                  // Botón de opción
                   .option-button {
                     position: relative;
                     background: #fff;
@@ -597,6 +669,7 @@ $menu-title-color: #174288;
                       box-shadow: 0 4px 12px rgba($primary-color, 0.1);
                     }
 
+                    // Texto del botón
                     .button-text {
                       font-size: 1rem;
                       font-weight: 500;
@@ -604,6 +677,7 @@ $menu-title-color: #174288;
                       flex: 1;
                     }
 
+                    // Icono del botón
                     .anticon {
                       font-size: 1.1rem;
                       color: $primary-color;
@@ -611,14 +685,14 @@ $menu-title-color: #174288;
                     }
                   }
 
-                  // Lista de opciones
+                  // Lista de opciones del menú
                   .menu-option-list {
                     background: #f8f9fa;
                     border-radius: 8px;
                     padding: 15px;
                     margin-top: -4px;
                     border: 1px solid rgba($primary-color, 0.1);
-                    
+
                     ul {
                       list-style: none;
                       padding: 0;
@@ -634,12 +708,12 @@ $menu-title-color: #174288;
                         align-items: center;
                         transition: all 0.3s ease;
                         cursor: pointer;
-                        
+
                         &:hover {
                           transform: translateX(8px);
                           background-color: #f0f7ff;
                           box-shadow: 0 2px 8px rgba($primary-color, 0.1);
-                          
+
                           .anticon {
                             transform: scale(1.1);
                             color: darken($primary-color, 10%);
@@ -649,7 +723,7 @@ $menu-title-color: #174288;
                         .anticon {
                           transition: all 0.3s ease;
                         }
-                        
+
                         &:last-child {
                           margin-bottom: 0;
                         }
@@ -666,7 +740,7 @@ $menu-title-color: #174288;
   }
 }
 
-// Animaciones
+// Animaciones adicionales
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -689,17 +763,17 @@ $menu-title-color: #174288;
   }
 }
 
-// Ajustes responsivos
+// Ajustes responsivos para tablets
 @media (max-width: 768px) {
   .ant-modal {
     .ant-modal-content {
       .ant-modal-body {
         .option-buttons {
           grid-template-columns: 1fr; // Una columna en móviles
-          
+
           .option-button {
             padding: 10px 14px;
-            
+
             .button-text {
               font-size: 0.95rem;
             }
@@ -715,45 +789,52 @@ $menu-title-color: #174288;
   .ant-modal-confirm-btns {
     display: flex;
     gap: 8px;
-    
+
     button {
       @extend .custom-button;
-      
+
       &.ant-btn-default {
         @extend .cancel-button;
       }
-      
+
       &.ant-btn-primary {
-        background: linear-gradient(to right, $secondary-color, lighten($secondary-color, 10%));
+        background: linear-gradient(
+          to right,
+          $secondary-color,
+          lighten($secondary-color, 10%)
+        );
       }
     }
   }
 }
 
-// Ajustes para las tarjetas de menú
+// Grid de tarjetas de menú
 .menu-list {
   .ant-row {
-    margin: -8px !important; // Ajusta el espaciado negativo del Row
+    margin: -8px !important; // Espaciado negativo
   }
 
   .ant-col {
-    padding: 8px !important; // Ajusta el padding de las columnas
+    padding: 8px !important; // Padding uniforme
   }
 }
 
+// Tarjeta de menú individual
 .menu-item {
   height: 100%;
-  
+
   .ant-card-head {
-    min-height: auto; // Permite que el header se ajuste al contenido
-    
+    min-height: auto;
+
+    // Título con ellipsis
     .ant-card-head-title {
       padding: 16px 0;
       font-size: 1rem;
       line-height: 1.4;
       white-space: normal;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 2; // Límite de 2 líneas
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -764,6 +845,7 @@ $menu-title-color: #174288;
     padding: 12px;
   }
 
+  // Botones de acción
   .menu-item-actions {
     .action-button {
       font-size: 0.9rem;
@@ -777,11 +859,11 @@ $menu-title-color: #174288;
   }
 }
 
-// Ajustes responsivos mejorados
+// Breakpoints responsivos
 @media (max-width: 1200px) {
   .menu-list {
     .ant-col {
-      flex: 0 0 33.33%;
+      flex: 0 0 33.33%; // 3 columnas
       max-width: 33.33%;
     }
   }
@@ -790,7 +872,7 @@ $menu-title-color: #174288;
 @media (max-width: 992px) {
   .menu-list {
     .ant-col {
-      flex: 0 0 50%;
+      flex: 0 0 50%; // 2 columnas
       max-width: 50%;
     }
   }
@@ -800,6 +882,7 @@ $menu-title-color: #174288;
   }
 }
 
+// Ajustes para tablets
 @media (max-width: 768px) {
   .menu-page {
     padding: 15px;
@@ -809,18 +892,19 @@ $menu-title-color: #174288;
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
-    
+
     .page-title {
       font-size: 1.8rem;
       text-align: center;
     }
-    
+
     .create-menu-button {
       width: 100%;
       margin: 0;
     }
   }
 
+  // Ajustes de tarjeta en tablet
   .menu-item {
     .ant-card-head-title {
       font-size: 0.95rem;
@@ -839,49 +923,50 @@ $menu-title-color: #174288;
   }
 }
 
+// Ajustes para móviles
 @media (max-width: 576px) {
   .menu-list {
     .ant-col {
-      flex: 0 0 100%;
+      flex: 0 0 100%; // 1 columna
       max-width: 100%;
     }
   }
 
   .menu-item {
     margin-bottom: 0;
-    
+
     .ant-card-head-title {
       padding: 10px 0;
     }
-    
+
     .ant-card-body {
       padding: 10px;
     }
   }
 
-  // Ajustes para el modal
+  // Modal en móviles
   .ant-modal {
     .ant-modal-content {
       margin: 0 10px;
-      
+
       .ant-modal-header {
         padding: 16px 16px 0;
-        
+
         .ant-modal-title {
           font-size: 1.4rem;
         }
       }
-      
+
       .ant-modal-body {
         padding: 16px;
-        
+
         .ant-collapse {
           .ant-collapse-item {
             .ant-collapse-header {
               padding: 12px 16px;
               font-size: 1rem;
             }
-            
+
             .ant-collapse-content-box {
               padding: 16px;
             }
@@ -891,14 +976,14 @@ $menu-title-color: #174288;
     }
   }
 
-  // Ajustes para los botones de acción en móvil
+  // Botones de acción en móvil
   .menu-item-actions {
     .action-button {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 6px;
-      
+
       .anticon {
         margin: 0;
       }

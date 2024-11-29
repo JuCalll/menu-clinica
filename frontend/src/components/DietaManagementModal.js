@@ -1,20 +1,44 @@
+/**
+ * Componente modal para la gestión de dietas hospitalarias.
+ * 
+ * Proporciona una interfaz para:
+ * - Listar todas las dietas existentes
+ * - Crear nuevas dietas
+ * - Editar dietas existentes
+ * - Eliminar dietas
+ * - Activar/desactivar dietas
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Table, Input, Form, Popconfirm, message, Switch } from 'antd';
 import { getDietas, createDieta, updateDieta, deleteDieta } from '../services/api'; 
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
+/**
+ * @component
+ * @param {Object} props - Propiedades del componente
+ * @param {boolean} props.visible - Controla la visibilidad del modal
+ * @param {Function} props.onClose - Función para cerrar el modal
+ * @param {Function} props.refreshData - Función para actualizar los datos externos
+ */
 const DietaManagementModal = ({ visible, onClose, refreshData }) => {
-  const [dietas, setDietas] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingDieta, setEditingDieta] = useState(null);
-  const [form] = Form.useForm();
+  // Estados para gestionar las dietas y el modo de edición
+  const [dietas, setDietas] = useState([]); // Lista de dietas
+  const [isEditing, setIsEditing] = useState(false); // Modo edición activo/inactivo
+  const [editingDieta, setEditingDieta] = useState(null); // Dieta en edición
+  const [form] = Form.useForm(); // Formulario de Ant Design
 
+  // Cargar dietas cuando el modal se hace visible
   useEffect(() => {
     if (visible) {
       fetchDietas();
     }
   }, [visible]);
 
+  /**
+   * Obtiene la lista de dietas del servidor
+   * @async
+   */
   const fetchDietas = async () => {
     try {
       const data = await getDietas();
@@ -24,18 +48,30 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Prepara el formulario para añadir una nueva dieta
+   */
   const handleAdd = () => {
     setIsEditing(true);
     setEditingDieta(null);
     form.resetFields();
   };
 
+  /**
+   * Prepara el formulario para editar una dieta existente
+   * @param {Object} dieta - Dieta a editar
+   */
   const handleEdit = (dieta) => {
     setIsEditing(true);
     setEditingDieta(dieta);
     form.setFieldsValue(dieta);
   };
 
+  /**
+   * Elimina una dieta del sistema
+   * @async
+   * @param {number} id - ID de la dieta a eliminar
+   */
   const handleDelete = async (id) => {
     try {
       await deleteDieta(id);
@@ -51,9 +87,15 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Guarda una nueva dieta o actualiza una existente
+   * @async
+   */
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Verificar si ya existe una dieta con el mismo nombre
       const nombreExiste = dietas.some(
         d => d.nombre.toLowerCase() === values.nombre.toLowerCase() && 
             (!editingDieta || d.id !== editingDieta.id)
@@ -63,19 +105,23 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
         message.error('Ya existe una dieta con ese nombre');
         return;
       }
+
       if (editingDieta) {
+        // Actualizar dieta existente
         await updateDieta(editingDieta.id, {
           ...values,
           activo: editingDieta.activo
         });
         message.success('Dieta actualizada');
       } else {
+        // Crear nueva dieta
         await createDieta({
           ...values,
           activo: true
         });
         message.success('Dieta creada');
       }
+      
       setIsEditing(false);
       form.resetFields();
       await fetchDietas();
@@ -89,6 +135,11 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Cambia el estado activo/inactivo de una dieta
+   * @async
+   * @param {Object} dieta - Dieta a modificar
+   */
   const toggleActivo = async (dieta) => {
     try {
       const payload = {
@@ -109,6 +160,11 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Definición de columnas para la tabla de dietas
+   * @constant
+   * @type {Array<Object>}
+   */
   const columns = [
     {
       title: 'Nombre',
@@ -164,6 +220,10 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
     },
   ];
 
+  /**
+   * Renderiza el modal de gestión de dietas
+   * @returns {JSX.Element} Modal con tabla de dietas o formulario de edición
+   */
   return (
     <Modal
       open={visible}
@@ -175,6 +235,7 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
       className="gestion-panel__modal gestion-panel__fade-in"
     >
       {!isEditing ? (
+        // Vista de lista de dietas
         <>
           <div className="gestion-panel__actions-container">
             <Button 
@@ -196,6 +257,7 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
           />
         </>
       ) : (
+        // Formulario de edición/creación
         <Form form={form} layout="vertical">
           <Form.Item
             name="nombre"
@@ -217,4 +279,5 @@ const DietaManagementModal = ({ visible, onClose, refreshData }) => {
   );
 };
 
+// Exportación del componente
 export default DietaManagementModal;

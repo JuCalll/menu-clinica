@@ -30,6 +30,7 @@
   }
 }
 
+// Estilos principales del layout
 .layout {
   display: flex;
   flex-direction: column;
@@ -37,6 +38,7 @@
   background: $background-light;
   padding-top: $header-height;
   
+  // Contenedor principal del layout
   .main-layout {
     display: flex;
     flex: 1;
@@ -44,6 +46,7 @@
     position: relative;
   }
 
+  // Contenido principal
   .main-content {
     flex: 1;
     padding: 24px;
@@ -72,12 +75,14 @@
     }
   }
 
+  // Estilo cuando el sidebar está colapsado
   &.sidebar-collapsed {
     .main-content {
       margin-left: $sidebar-collapsed-width;
     }
   }
 
+  // Estilo para modo oscuro
   &.dark-mode {
     background: $background-dark;
 
@@ -100,6 +105,7 @@
     }
   }
 
+  // Ajustes responsivos para tablets
   @media (max-width: 992px) {
     .main-content {
       margin-left: 0;
@@ -107,6 +113,7 @@
     }
   }
 
+  // Ajustes responsivos para móviles
   @media (max-width: 768px) {
     padding-top: $header-height;
     
@@ -121,6 +128,7 @@
   }
 }
 
+// Animación de entrada
 @keyframes fadeIn {
   from {
     opacity: 0;

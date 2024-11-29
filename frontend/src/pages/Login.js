@@ -1,3 +1,15 @@
+/**
+ * Página de Inicio de Sesión
+ * 
+ * Proporciona la interfaz de autenticación con:
+ * - Formulario de login con validación
+ * - Manejo de tokens JWT
+ * - Redirección según rol de usuario
+ * - Manejo de errores de autenticación
+ * 
+ * @component
+ */
+
 import React, { useState, useEffect } from "react";
 import { Input, Button, Alert } from "antd";
 import api from "../axiosConfig";
@@ -6,11 +18,16 @@ import "../styles/Login.scss";
 import logo from "../assets/logo.png";
 
 const Login = () => {
+  // Estados del formulario
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Efecto para agregar clase CSS al body
+   * Mejora la presentación visual de la página de login
+   */
   useEffect(() => {
     document.body.classList.add("login-page");
     return () => {
@@ -18,6 +35,11 @@ const Login = () => {
     };
   }, []);
 
+  /**
+   * Valida la vigencia de un token JWT
+   * @param {string} token - Token JWT a validar
+   * @returns {boolean} true si el token es válido y no ha expirado
+   */
   const isTokenValid = (token) => {
     if (!token) return false;
     try {
@@ -29,11 +51,21 @@ const Login = () => {
     }
   };
 
+  /**
+   * Maneja el proceso de inicio de sesión
+   * - Valida campos requeridos
+   * - Realiza petición de autenticación
+   * - Almacena tokens y datos de usuario
+   * - Maneja errores de autenticación
+   * 
+   * @param {Event} e - Evento del formulario
+   */
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    // Validación de campos requeridos
     if (!username || !password) {
       setError("Por favor, ingrese su usuario y contraseña.");
       setLoading(false);
@@ -41,14 +73,15 @@ const Login = () => {
     }
 
     try {
+      // Petición de autenticación
       const response = await api.post("/auth/login/", {
         username,
         password,
       });
       const { access, refresh, user } = response.data;
-      const role = user.role;
-      const name = user.name;
+      const { role, name } = user;
 
+      // Validación y almacenamiento de tokens
       if (access && refresh && role && name) {
         if (isTokenValid(access)) {
           localStorage.setItem("token", access);
@@ -63,24 +96,13 @@ const Login = () => {
         setError("Error al iniciar sesión: respuesta inválida del servidor.");
       }
     } catch (error) {
-      if (
-        error.response &&
-        error.response.status === 400
-      ) {
-        setError(
-          "Credenciales incorrectas. Por favor, verifique e intente nuevamente."
-        );
-      } else if (
-        error.response &&
-        error.response.status === 500
-      ) {
-        setError(
-          "Error del servidor. Por favor, inténtelo más tarde."
-        );
+      // Manejo de errores específicos
+      if (error.response?.status === 400) {
+        setError("Credenciales incorrectas. Por favor, verifique e intente nuevamente.");
+      } else if (error.response?.status === 500) {
+        setError("Error del servidor. Por favor, inténtelo más tarde.");
       } else {
-        setError(
-          "No se pudo conectar al servidor. Por favor, verifique su conexión."
-        );
+        setError("No se pudo conectar al servidor. Por favor, verifique su conexión.");
       }
     } finally {
       setLoading(false);
@@ -90,12 +112,15 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-form">
+        {/* Logo y título */}
         <img
           src={logo}
           alt="Clínica San Juan de Dios"
           className="login-logo"
         />
         <h2>Menú Preferencial - CSJDD</h2>
+
+        {/* Formulario de login */}
         <form onSubmit={handleLogin}>
           <Input
             id="username-input"
@@ -109,9 +134,7 @@ const Login = () => {
           <Input.Password
             placeholder="Password"
             value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
+            onChange={(e) => setPassword(e.target.value)}
             className="input-field"
             disabled={loading}
           />
@@ -123,6 +146,8 @@ const Login = () => {
           >
             Login
           </Button>
+
+          {/* Mensaje de error */}
           {error && (
             <Alert
               message={error}

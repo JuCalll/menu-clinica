@@ -1,14 +1,36 @@
+/**
+ * Componente de botón flotante con menú desplegable.
+ * 
+ * Proporciona navegación rápida a diferentes secciones de la aplicación:
+ * - Inicio
+ * - Menús (para admin y coordinador)
+ * - Pedidos (con submenú)
+ * - Gestión de Datos (con submenú)
+ * 
+ * El acceso a las diferentes opciones está controlado por roles de usuario.
+ */
+
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FaBars, FaHome, FaUtensils, FaShoppingCart, FaDatabase } from "react-icons/fa";
 import "../styles/FloatingButton.scss";
 
+/**
+ * @component
+ * @param {Object} props - Propiedades del componente
+ * @param {boolean} props.isDarkMode - Controla el tema oscuro/claro del botón
+ */
 const FloatingButton = ({ isDarkMode }) => {
+  // Estados para controlar la visibilidad de los menús
   const [isOpen, setIsOpen] = useState(false);
   const [isPedidosOpen, setIsPedidosOpen] = useState(false);
   const [isGestionDatosOpen, setIsGestionDatosOpen] = useState(false);
   const userRole = localStorage.getItem("role");
 
+  /**
+   * Alterna la visibilidad del menú principal
+   * Cierra los submenús cuando se cierra el menú principal
+   */
   const toggleMenu = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
@@ -17,29 +39,44 @@ const FloatingButton = ({ isDarkMode }) => {
     }
   };
 
+  /**
+   * Alterna la visibilidad del submenú de pedidos
+   * @param {Event} e - Evento del click
+   */
   const togglePedidosMenu = (e) => {
     e.stopPropagation();
     setIsPedidosOpen(!isPedidosOpen);
     setIsGestionDatosOpen(false);
   };
 
+  /**
+   * Alterna la visibilidad del submenú de gestión de datos
+   * @param {Event} e - Evento del click
+   */
   const toggleGestionDatosMenu = (e) => {
     e.stopPropagation();
     setIsGestionDatosOpen(!isGestionDatosOpen);
     setIsPedidosOpen(false);
   };
 
+  /**
+   * Renderiza el botón flotante y su menú desplegable
+   * @returns {JSX.Element} Botón flotante con menú de navegación
+   */
   return (
     <div className={`floating-button ${isDarkMode ? 'dark' : ''}`}>
+      {/* Botón principal que despliega el menú */}
       <button className="btn" onClick={toggleMenu} aria-label="Menú">
         <FaBars />
       </button>
 
       <div className={`floating-menu ${isOpen ? "show" : ""}`}>
+        {/* Enlace a inicio - accesible para todos los roles */}
         <NavLink to="/home" className="nav-link" onClick={toggleMenu}>
           <FaHome /> <span>Inicio</span>
         </NavLink>
 
+        {/* Enlace a menús - solo para admin y coordinador */}
         {(userRole === "admin" || userRole === "coordinador") && (
           <NavLink to="/menus" className="nav-link" onClick={toggleMenu}>
             <FaUtensils /> <span>Menús</span>
@@ -92,7 +129,7 @@ const FloatingButton = ({ isDarkMode }) => {
           </div>
         )}
 
-        {/* Menú de Gestión de Datos */}
+        {/* Menú de Gestión de Datos - solo para admin y jefe de enfermería */}
         {(userRole === "admin" || userRole === "jefe_enfermeria") && (
           <div className="nav-group">
             <div className={`nav-link gestion-datos-toggle ${isGestionDatosOpen ? "open" : ""}`}
@@ -101,6 +138,7 @@ const FloatingButton = ({ isDarkMode }) => {
             </div>
             {isGestionDatosOpen && (
               <div className="submenu submenu-open">
+                {/* Datos Generales - accesible para admin y jefe de enfermería */}
                 <NavLink
                   to="/gestion-datos"
                   className="nav-link submenu-item"
@@ -108,6 +146,7 @@ const FloatingButton = ({ isDarkMode }) => {
                 >
                   Datos Generales
                 </NavLink>
+                {/* Gestión de Usuarios - exclusivo para admin */}
                 {userRole === "admin" && (
                   <NavLink
                     to="/gestion-usuarios"
@@ -126,4 +165,5 @@ const FloatingButton = ({ isDarkMode }) => {
   );
 };
 
+// Exportación del componente
 export default FloatingButton;

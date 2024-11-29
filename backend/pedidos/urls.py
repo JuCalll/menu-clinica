@@ -1,10 +1,46 @@
+"""
+Configuración de URLs para la aplicación de pedidos.
+
+Define las rutas y vistas relacionadas con la gestión de pedidos hospitalarios:
+- Listado y creación de pedidos
+- Detalle, actualización y eliminación de pedidos específicos
+- Actualización de estado de pedidos
+- Consulta de pedidos completados
+- Generación de impresiones de pedidos
+"""
+
 from django.urls import path
-from .views import PedidoListCreateView, PedidoDetailView, PedidoStatusUpdateView, PedidoCompletadosView, PedidoPrintView
+from .views import (
+    PedidoListCreateView, 
+    PedidoDetailView, 
+    PedidoStatusUpdateView, 
+    PedidoCompletadosView, 
+    PedidoPrintView
+)
 
 urlpatterns = [
-    path('', PedidoListCreateView.as_view(), name='pedido-list-create'),
-    path('<int:pk>/', PedidoDetailView.as_view(), name='pedido-detail'),
-    path('<int:pk>/status/', PedidoStatusUpdateView.as_view(), name='pedido-status-update'),
-    path('completados/', PedidoCompletadosView.as_view(), name='pedido-completados'),
-    path('<int:pk>/print/', PedidoPrintView.as_view(), name='pedido-print'),
+    # Ruta para listar todos los pedidos y crear nuevos
+    path('', 
+         PedidoListCreateView.as_view(), 
+         name='pedido-list-create'),
+    
+    # Ruta para ver, actualizar o eliminar un pedido específico
+    path('<int:pk>/', 
+         PedidoDetailView.as_view(), 
+         name='pedido-detail'),
+    
+    # Ruta para actualizar el estado de un pedido
+    path('<int:pk>/status/', 
+         PedidoStatusUpdateView.as_view(), 
+         name='pedido-status-update'),
+    
+    # Ruta para consultar pedidos completados
+    path('completados/', 
+         PedidoCompletadosView.as_view(), 
+         name='pedido-completados'),
+    
+    # Ruta para generar la versión imprimible de un pedido
+    path('<int:pk>/print/', 
+         PedidoPrintView.as_view(), 
+         name='pedido-print'),
 ]

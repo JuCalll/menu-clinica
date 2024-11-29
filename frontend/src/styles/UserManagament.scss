@@ -1,11 +1,12 @@
+// Importación de fuente personalizada
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
-// Variables
+// Variables globales para gestión de usuarios
 $primary-color: #1890ff;
 $secondary-color: #ff4d4f;
 $background-color: #f0f2f5;
 $button-gradient: linear-gradient(to right, #1890ff, #40a9ff);
-$font-family: 'Syne', sans-serif;
+$font-family: "Syne", sans-serif;
 $border-radius: 12px;
 $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 $title-color: #174288;
@@ -14,7 +15,7 @@ $font-size-large: 18px;
 $font-size-xlarge: 20px;
 $font-size-xxlarge: 28px;
 
-// Mixins
+// Mixins reutilizables
 @mixin flex-center {
   display: flex;
   justify-content: center;
@@ -24,41 +25,46 @@ $font-size-xxlarge: 28px;
 @mixin hover-effect {
   transition: all 0.3s ease;
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-3px); // Efecto de elevación al hover
     box-shadow: $box-shadow;
   }
 }
 
+// Contenedor principal de gestión de usuarios
 .user-management {
   font-family: $font-family;
   padding: 20px;
   background-color: $background-color;
   border-radius: $border-radius;
   box-shadow: $box-shadow;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 64px); // Altura mínima considerando header
 
+  // Contenedor con ancho máximo
   &__container {
     max-width: 1200px;
     margin: 0 auto;
   }
 
+  // Controles superiores (búsqueda y botones)
   &__controls {
     @include flex-center;
     justify-content: space-between;
     margin-bottom: 20px;
     gap: 16px;
 
+    // Campo de búsqueda con animación
     .search-input {
       width: 300px;
       transition: all 0.3s ease;
 
       &:focus {
-        width: 350px;
+        width: 350px; // Se expande al enfocar
         box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
       }
     }
   }
 
+  // Botón principal de acción
   &__button {
     height: 40px;
     padding: 0 24px;
@@ -71,38 +77,48 @@ $font-size-xxlarge: 28px;
     @include hover-effect;
 
     &:hover {
-      background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+      background: linear-gradient(
+        to right,
+        darken(#1890ff, 5%),
+        darken(#40a9ff, 5%)
+      );
       color: white;
     }
 
     &:active {
-      transform: translateY(0);
+      transform: translateY(0); // Efecto de presión
     }
   }
 
+  // Tabla de usuarios
   &__table {
     background-color: #fff;
     border-radius: $border-radius;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
+    // Estilos para el encabezado de la tabla
     .ant-table-thead > tr > th {
       background-color: rgba($primary-color, 0.05);
       font-weight: 600;
       color: $primary-color;
     }
 
+    // Efecto hover en las filas
     .ant-table-tbody > tr {
       @include hover-effect;
     }
   }
 
+  // Estilos del modal
   &__modal {
+    // Contenedor del modal
     .ant-modal-content {
       border-radius: $border-radius;
       overflow: hidden;
     }
 
+    // Encabezado del modal
     .ant-modal-header {
       background-color: $primary-color;
       padding: 16px 24px;
@@ -113,10 +129,12 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Contenedor de botones del modal
     .modal-button-container {
       margin-top: 24px;
       width: 100%;
 
+      // Botón personalizado
       .custom-button {
         width: 100%;
         height: 40px;
@@ -129,16 +147,21 @@ $font-size-xxlarge: 28px;
         @include hover-effect;
 
         &:hover {
-          background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+          background: linear-gradient(
+            to right,
+            darken(#1890ff, 5%),
+            darken(#40a9ff, 5%)
+          );
           color: white;
         }
 
         &:active {
-          transform: translateY(0);
+          transform: translateY(0); // Efecto de presión
         }
       }
     }
 
+    // Elementos del formulario
     .ant-form-item {
       margin-bottom: 24px;
 
@@ -148,6 +171,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Campos de entrada y selección
     .ant-input,
     .ant-select-selector,
     .ant-input-password {
@@ -155,13 +179,14 @@ $font-size-xxlarge: 28px;
       border-radius: $border-radius;
       font-size: $font-size-base;
 
+      // Input con afijos
       &.ant-input-affix-wrapper {
         padding: 0 11px;
-        
+
         .ant-input {
           height: 38px;
         }
-        
+
         .ant-input-suffix {
           margin: 0;
           height: 100%;
@@ -171,6 +196,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Control de contraseña
     .ant-form-item-control-input {
       .ant-input-password {
         height: 40px;
@@ -180,11 +206,13 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Selector personalizado
     .ant-select-selector {
       display: flex;
       align-items: center;
     }
 
+    // Switch de estado
     .ant-switch {
       background-color: $secondary-color;
 
@@ -193,6 +221,7 @@ $font-size-xxlarge: 28px;
       }
     }
 
+    // Detalles de usuario
     .user-details {
       .ant-btn {
         width: 100%;
@@ -207,7 +236,11 @@ $font-size-xxlarge: 28px;
         @include hover-effect;
 
         &:hover {
-          background: linear-gradient(to right, darken(#1890ff, 5%), darken(#40a9ff, 5%));
+          background: linear-gradient(
+            to right,
+            darken(#1890ff, 5%),
+            darken(#40a9ff, 5%)
+          );
           color: white;
         }
 
@@ -218,16 +251,16 @@ $font-size-xxlarge: 28px;
     }
   }
 
-  // Responsive styles
+  // Estilos responsivos
   @media (max-width: 768px) {
     padding: 10px;
 
     &__controls {
       flex-direction: column;
-      
+
       .search-input,
       .ant-btn {
-        width: 100%;
+        width: 100%; // Ancho completo en móviles
       }
     }
 
@@ -238,7 +271,7 @@ $font-size-xxlarge: 28px;
   }
 }
 
-// Animations
+// Animaciones
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -250,6 +283,7 @@ $font-size-xxlarge: 28px;
   }
 }
 
+// Animación de entrada para el componente
 .user-management {
   animation: fadeIn 0.3s ease;
 }

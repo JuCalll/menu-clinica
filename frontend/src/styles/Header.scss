@@ -1,19 +1,26 @@
-@import 'variables';
+// Importaciones
+@import "variables";
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap");
 
+// Contenedor principal del header
 .header {
   font-family: "Syne", sans-serif;
-  background: linear-gradient(90deg, #174288 0%, #1a4b9d 100%);
+  background: linear-gradient(
+    90deg,
+    #174288 0%,
+    #1a4b9d 100%
+  ); // Gradiente principal
   padding: 12px 24px;
-  position: fixed;
+  position: fixed; // Fijado en la parte superior
   top: 0;
   left: 0;
   right: 0;
   height: $header-height;
-  z-index: 1000;
+  z-index: 1000; // Asegura que esté sobre otros elementos
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
 
+  // Variante modo oscuro
   &.dark {
     background: linear-gradient(90deg, #0d2548 0%, #0f2d5d 100%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -25,7 +32,7 @@
     .collapse-button {
       color: rgba(255, 255, 255, 0.85);
       background: rgba(255, 255, 255, 0.1);
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.2);
       }
@@ -36,21 +43,24 @@
     }
   }
 
+  // Contenedor del contenido del header
   .header-content {
     height: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1400px;
+    max-width: 1400px; // Ancho máximo para pantallas grandes
     margin: 0 auto;
   }
 
+  // Sección izquierda (logo y botón de colapso)
   .header-left {
     display: flex;
     align-items: center;
     gap: 16px;
   }
 
+  // Estilos del logo
   .logo {
     height: 45px;
     padding: 6px;
@@ -60,10 +70,11 @@
     transition: transform 0.3s ease;
 
     &:hover {
-      transform: scale(1.05);
+      transform: scale(1.05); // Efecto hover suave
     }
   }
 
+  // Botón de colapso del sidebar
   .collapse-button {
     width: 36px;
     height: 36px;
@@ -83,28 +94,32 @@
     }
 
     @media (max-width: 992px) {
-      display: none;
+      display: none; // Oculto en móviles
     }
   }
 
+  // Sección derecha (tema, usuario, logout)
   .header-right {
     display: flex;
     align-items: center;
     gap: 20px;
   }
 
+  // Switch de tema
   .theme-switch {
     margin: 0;
   }
 
+  // Nombre de usuario
   .username {
     color: white;
     font-weight: 600;
     position: relative;
     padding-right: 20px;
 
+    // Separador vertical
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       right: 0;
       top: 50%;
@@ -115,9 +130,10 @@
     }
   }
 
+  // Enlace de cierre de sesión
   .logout-link {
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px); // Efecto de vidrio esmerilado
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px 16px;
     border-radius: 8px;
@@ -127,29 +143,30 @@
 
     &:hover {
       background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
+      transform: translateY(-2px); // Efecto de elevación
     }
   }
 }
 
+// Ajustes responsivos para móviles
 @media (max-width: 768px) {
   .header {
-    padding: 12px 16px;
+    padding: 12px 16px; // Padding reducido
 
     .header-content {
       gap: 12px;
     }
 
     .collapse-button {
-      display: none;
+      display: none; // Ocultar botón de colapso
     }
 
     .username {
-      display: none;
+      display: none; // Ocultar nombre de usuario
     }
 
     .header-right {
-      gap: 12px;
+      gap: 12px; // Reducir espaciado
     }
   }
 }

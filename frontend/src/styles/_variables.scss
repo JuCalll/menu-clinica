@@ -1,9 +1,17 @@
-// Variables globales
-$header-height: 70px;
-$sidebar-width: 280px;
-$sidebar-collapsed-width: 80px;
-$primary-color: #174288;
-$secondary-color: #00a7e2;
-$background-light: #f8f9fa;
-$background-dark: #1f1f1f;
-$transition-speed: 0.3s;
+// Variables globales de estilo para toda la aplicación
+
+// Dimensiones de elementos estructurales
+$header-height: 70px; // Altura del encabezado principal
+$sidebar-width: 280px; // Ancho de la barra lateral expandida
+$sidebar-collapsed-width: 80px; // Ancho de la barra lateral colapsada
+
+// Colores principales
+$primary-color: #174288; // Color principal - Azul institucional
+$secondary-color: #00a7e2; // Color secundario - Azul claro
+
+// Colores de fondo
+$background-light: #f8f9fa; // Fondo claro para modo día
+$background-dark: #1f1f1f; // Fondo oscuro para modo noche
+
+// Animaciones
+$transition-speed: 0.3s; // Velocidad estándar para transiciones

@@ -1,3 +1,9 @@
+# robots.txt para Menu Preferencial CSJD
 # https://www.robotstxt.org/robotstxt.html
+
+# Configuración para todos los robots de búsqueda
 User-agent: *
+
+# Permitir acceso a todo el sitio
+# Ya que es una aplicación interna, no hay rutas restringidas
 Disallow:

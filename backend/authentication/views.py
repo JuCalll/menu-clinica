@@ -1,25 +1,39 @@
+"""
+Vistas para la gestión de autenticación y usuarios.
+Proporciona endpoints para registro, login, gestión de usuarios y tokens.
+"""
+
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from django.db import transaction, models
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import TokenError
 from .models import CustomUser
 from .serializers import UserSerializer, LoginSerializer
 from logs.models import LogEntry
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework.views import APIView
-from django.db import models
-from django.core import serializers
-from django.db import transaction
 
 class RegisterView(generics.CreateAPIView):
+    """
+    Vista para registrar nuevos usuarios.
+    Solo accesible por administradores.
+    """
     queryset = CustomUser.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
+        """
+        Crea un nuevo usuario o reactiva uno existente.
+        
+        Maneja dos casos:
+        1. Reingreso: Usuario previamente inactivo con la misma cédula
+        2. Nuevo usuario: Primera vez que se registra
+        """
         serializer = self.get_serializer(data=request.data)
         
         try:
@@ -57,7 +71,6 @@ class RegisterView(generics.CreateAPIView):
                 )
             else:
                 # Es un nuevo usuario
-                # Verificamos si existe un usuario activo con el mismo email, cédula o username
                 active_user = CustomUser.objects.filter(
                     activo=True
                 ).filter(
@@ -88,6 +101,13 @@ class RegisterView(generics.CreateAPIView):
             )
 
     def perform_create(self, serializer, ingreso_count=1):
+        """
+        Ejecuta la creación del usuario y registra la acción.
+        
+        Args:
+            serializer: Serializador validado
+            ingreso_count (int): Contador de ingresos para el usuario
+        """
         instance = serializer.save(ingreso_count=ingreso_count)
         role = self.request.data.get('role')
         if role == 'admin':
@@ -108,10 +128,20 @@ class RegisterView(generics.CreateAPIView):
         )
 
 class LoginView(generics.GenericAPIView):
+    """
+    Vista para el inicio de sesión de usuarios.
+    Genera tokens JWT para la autenticación.
+    """
     permission_classes = (permissions.AllowAny,)
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
+        """
+        Procesa la solicitud de inicio de sesión.
+        
+        Returns:
+            Response con tokens JWT y datos del usuario si el login es exitoso
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = authenticate(
@@ -122,7 +152,6 @@ class LoginView(generics.GenericAPIView):
         if user and user.activo:
             refresh = RefreshToken.for_user(user)
             
-            # Registrar el login exitoso
             LogEntry.objects.create(
                 user=user,
                 action='LOGIN',
@@ -143,7 +172,6 @@ class LoginView(generics.GenericAPIView):
                 }
             })
         else:
-            # Registrar el intento fallido de login
             LogEntry.objects.create(
                 user=None,
                 action='LOGIN_FAILED',
@@ -153,16 +181,25 @@ class LoginView(generics.GenericAPIView):
                     'reason': 'Invalid credentials or user inactive'
                 }
             )
-            return Response({"error": "Invalid credentials or user inactive"}, status=400)
+            return Response(
+                {"error": "Invalid credentials or user inactive"}, 
+                status=400
+            )
 
 class UserListView(generics.ListAPIView):
+    """
+    Vista para listar usuarios activos.
+    Solo accesible por administradores.
+    """
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
+        """Retorna solo usuarios activos"""
         return CustomUser.objects.filter(activo=True)
 
     def list(self, request, *args, **kwargs):
+        """Lista usuarios y registra la acción"""
         response = super().list(request, *args, **kwargs)
         LogEntry.objects.create(
             user=self.request.user,
@@ -174,24 +211,28 @@ class UserListView(generics.ListAPIView):
         return response
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Vista para gestionar usuarios individuales.
+    Permite ver, actualizar y eliminar usuarios.
+    """
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def update(self, request, *args, **kwargs):
+        """
+        Actualiza un usuario, manejando especialmente la desactivación.
+        """
         instance = self.get_object()
         
         try:
             with transaction.atomic():
-                # Si estamos desactivando el usuario
                 if instance.activo and not request.data.get('activo'):
-                    # Primero modificamos temporalmente el email y username
                     temp_suffix = f"_temp_{timezone.now().timestamp()}"
                     instance.email = f"{instance.email}{temp_suffix}"
                     instance.username = f"{instance.username}{temp_suffix}"
                     instance.save()
                     
-                    # Ahora actualizamos con los datos reales
                     serializer = self.get_serializer(instance, data=request.data, partial=True)
                     serializer.is_valid(raise_exception=True)
                     self.perform_update(serializer)
@@ -209,6 +250,7 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
             )
 
     def perform_update(self, serializer):
+        """Actualiza el usuario y registra la acción"""
         instance = serializer.save()
         LogEntry.objects.create(
             user=self.request.user,
@@ -219,6 +261,7 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
     def perform_destroy(self, instance):
+        """Elimina el usuario y registra la acción"""
         LogEntry.objects.create(
             user=self.request.user,
             action='DELETE',
@@ -229,9 +272,16 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 class CustomTokenRefreshView(TokenRefreshView):
+    """
+    Vista personalizada para refrescar tokens JWT.
+    Extiende TokenRefreshView para agregar logging.
+    """
     serializer_class = TokenRefreshSerializer
 
     def post(self, request, *args, **kwargs):
+        """
+        Refresca un token JWT y registra la acción.
+        """
         serializer = self.get_serializer(data=request.data)
         
         try:
@@ -256,7 +306,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                         }
                     )
             except TokenError:
-                pass  # Token inválido o en blacklist, ignorar el logging
+                pass
             except Exception as log_error:
                 print(f"Error al registrar log de refresh token: {str(log_error)}")
 
@@ -269,7 +319,14 @@ class CustomTokenRefreshView(TokenRefreshView):
             )
 
 class LogoutView(APIView):
+    """
+    Vista para cerrar sesión.
+    Invalida el token JWT añadiéndolo a la blacklist.
+    """
     def post(self, request):
+        """
+        Procesa la solicitud de cierre de sesión.
+        """
         try:
             refresh_token = request.data.get('refresh')
             if not refresh_token:
@@ -281,7 +338,6 @@ class LogoutView(APIView):
             token = RefreshToken(refresh_token)
             user_id = token.payload.get('user_id')
             
-            # Primero registramos el logout
             if user_id:
                 LogEntry.objects.create(
                     user_id=user_id,
@@ -295,7 +351,6 @@ class LogoutView(APIView):
                     }
                 )
             
-            # Luego blacklisteamos el token
             token.blacklist()
             return Response(status=status.HTTP_200_OK)
             

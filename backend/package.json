@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "django": "^99.99.99",
-    "dotenv": "^16.4.5",
-    "sqlite3": "^5.1.7"
-  }
-}

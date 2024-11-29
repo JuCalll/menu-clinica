@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!-- 
+  Página principal de la aplicación de Menú Preferencial CSJD
+  
+  Esta es la plantilla HTML base que:
+  - Define los metadatos básicos de la aplicación
+  - Carga los recursos necesarios (favicon, manifest, etc.)
+  - Proporciona el punto de montaje para la aplicación React (#root)
+  
+  Atributos importantes:
+  - lang: Define el idioma principal como inglés
+  - viewport: Asegura una correcta visualización en dispositivos móviles
+  - theme-color: Define el color del tema para la interfaz del navegador
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,17 +20,20 @@
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Sistema de gestión de menús preferenciales para pacientes hospitalarios"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     
+    <!-- Manifest para configuración PWA -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
     <title>Menu Preferencial - CSJD</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <!-- Mensaje para usuarios sin JavaScript habilitado -->
+    <noscript>Necesita habilitar JavaScript para ejecutar esta aplicación.</noscript>
     
+    <!-- Punto de montaje de la aplicación React -->
+    <div id="root"></div>
   </body>
 </html>

@@ -1,14 +1,35 @@
+"""
+Serializadores para la aplicación de menús.
+
+Define los serializadores para convertir los modelos de menús, secciones y opciones
+en representaciones JSON y viceversa, incluyendo la gestión anidada de sus relaciones.
+"""
+
 from rest_framework import serializers
 from .models import Menu, MenuSection, MenuOption
 from django.db import transaction
 
 class MenuOptionSerializer(serializers.ModelSerializer):
+    """
+    Serializador para el modelo MenuOption.
+    
+    Proporciona la conversión entre instancias de opciones de menú
+    y su representación en JSON.
+    """
     class Meta:
         model = MenuOption
-        # Eliminamos el campo 'preparado_en'
         fields = ['id', 'texto', 'tipo']
 
 class MenuSectionSerializer(serializers.ModelSerializer):
+    """
+    Serializador para el modelo MenuSection.
+    
+    Maneja la conversión de secciones de menú incluyendo sus opciones
+    agrupadas por tipo.
+    
+    Atributos:
+        opciones (DictField): Diccionario de opciones agrupadas por tipo.
+    """
     opciones = serializers.DictField(
         child=serializers.ListField(child=MenuOptionSerializer()),
         required=False
@@ -19,13 +40,24 @@ class MenuSectionSerializer(serializers.ModelSerializer):
         fields = ['id', 'titulo', 'opciones']
 
     def create(self, validated_data):
+        """
+        Crea una nueva sección de menú con sus opciones asociadas.
+        
+        Args:
+            validated_data: Datos validados de la sección y sus opciones.
+            
+        Returns:
+            MenuSection: Nueva instancia de sección creada.
+            
+        Raises:
+            ValidationError: Si no se proporciona el menú asociado.
+        """
         opciones_data = validated_data.pop('opciones', {})
         menu = self.context.get('menu')
         if not menu:
             raise serializers.ValidationError("El menú asociado es requerido.")
         section = MenuSection.objects.create(menu=menu, **validated_data)
 
-        # Crear opciones
         for tipo, opciones_list in opciones_data.items():
             for opcion_data in opciones_list:
                 opcion_data['tipo'] = tipo
@@ -33,11 +65,20 @@ class MenuSectionSerializer(serializers.ModelSerializer):
         return section
 
     def update(self, instance, validated_data):
+        """
+        Actualiza una sección existente y sus opciones.
+        
+        Args:
+            instance: Instancia de MenuSection a actualizar.
+            validated_data: Nuevos datos validados.
+            
+        Returns:
+            MenuSection: Instancia actualizada.
+        """
         opciones_data = validated_data.pop('opciones', {})
         instance.titulo = validated_data.get('titulo', instance.titulo)
         instance.save()
 
-        # Actualizar o crear opciones
         existing_option_ids = []
         for tipo, opciones_list in opciones_data.items():
             for opcion_data in opciones_list:
@@ -57,12 +98,19 @@ class MenuSectionSerializer(serializers.ModelSerializer):
                     new_option = MenuOption.objects.create(section=instance, **opcion_data)
                     existing_option_ids.append(new_option.id)
 
-        # Eliminar opciones que no están en la nueva lista
         MenuOption.objects.filter(section=instance).exclude(id__in=existing_option_ids).delete()
-
         return instance
 
     def to_representation(self, instance):
+        """
+        Convierte una instancia de MenuSection a su representación JSON.
+        
+        Args:
+            instance: Instancia de MenuSection a representar.
+            
+        Returns:
+            dict: Representación JSON de la sección con opciones agrupadas.
+        """
         representation = super().to_representation(instance)
         options = instance.options.all()
         grouped_options = {}
@@ -75,6 +123,15 @@ class MenuSectionSerializer(serializers.ModelSerializer):
         return representation
 
 class MenuSerializer(serializers.ModelSerializer):
+    """
+    Serializador para el modelo Menu.
+    
+    Maneja la conversión de menús completos incluyendo todas sus secciones
+    y opciones de manera anidada.
+    
+    Atributos:
+        sections (MenuSectionSerializer): Serializador anidado para las secciones.
+    """
     sections = MenuSectionSerializer(many=True)
 
     class Meta:
@@ -82,6 +139,15 @@ class MenuSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre', 'sections']
 
     def create(self, validated_data):
+        """
+        Crea un nuevo menú con todas sus secciones y opciones.
+        
+        Args:
+            validated_data: Datos validados del menú y sus secciones.
+            
+        Returns:
+            Menu: Nueva instancia de menú creada.
+        """
         sections_data = validated_data.pop('sections', [])
         with transaction.atomic():
             menu = Menu.objects.create(nombre=validated_data.get('nombre'))
@@ -95,11 +161,20 @@ class MenuSerializer(serializers.ModelSerializer):
         return menu
 
     def update(self, instance, validated_data):
+        """
+        Actualiza un menú existente y todas sus secciones.
+        
+        Args:
+            instance: Instancia de Menu a actualizar.
+            validated_data: Nuevos datos validados.
+            
+        Returns:
+            Menu: Instancia actualizada.
+        """
         sections_data = validated_data.pop('sections', [])
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.save()
 
-        # Actualizar o crear secciones
         existing_section_ids = []
         for section_data in sections_data:
             section_id = section_data.get('id', None)
@@ -131,7 +206,5 @@ class MenuSerializer(serializers.ModelSerializer):
                 new_section_serializer.save()
                 existing_section_ids.append(new_section_serializer.instance.id)
 
-        # Eliminar secciones que no están en la nueva lista
         MenuSection.objects.filter(menu=instance).exclude(id__in=existing_section_ids).delete()
-
         return instance

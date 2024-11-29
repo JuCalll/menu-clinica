@@ -1,73 +1,110 @@
-# Node.js dependencies
-node_modules/
-
-# Python bytecode files
-__pycache__/
-*.pyc
+# Dependencias y entornos
+node_modules/      # Dependencias de Node.js
+**/node_modules/   # Agregar esto para que coincida con node_modules en cualquier subdirectorio
+backend/node_modules/
+frontend/node_modules/
+/__pycache__/      # Caché de Python
+*.pyc              # Archivos compilados de Python
 *.pyo
 *.pyd
 *.py[cod]
+.env*  
+.env            # Variables de entorno (todos los tipos)
+!.env.example      # Excepto el ejemplo
+/venv/             # Entorno virtual de Python
+/.cache/           # Caché de desarrollo
+/build/            # Build del frontend
+/dist/             # Distribución
+/.pnp              # Plug'n'Play de Yarn
+.pnp.js            # Configuración de Plug'n'Play
 
-# Environment variables
-.env
+# Archivos de base de datos
+db.sqlite3         # Base de datos SQLite
+*.sql              # Archivos SQL
 
-# Django database file
-db.sqlite3
+# Archivos del sistema
+.DS_Store          # macOS
+Thumbs.db          # Windows
+desktop.ini
+*~                 # Archivos de respaldo Unix
 
-# Frontend build directory
-build/
+# Logs y archivos temporales
+*.log              # Archivos de log
+*.pot              # Archivos de traducción
+*.swp              # Archivos temporales de Vim
+npm-debug.log*     # Logs de npm
+yarn-debug.log*    # Logs de Yarn
+yarn-error.log*    # Errores de Yarn
+*.tmp              # Archivos temporales
+*.temp             # Archivos temporales
+*.bak              # Archivos de respaldo
+*.backup           # Archivos de respaldo
 
-# macOS metadata files
-.DS_Store
+# Archivos de Django
+/staticfiles/      # Archivos estáticos recolectados
+/media/            # Archivos subidos por usuarios
 
-# Windows metadata files
-Thumbs.db
+# Archivos de pruebas y cobertura
+/coverage/         # Reportes de cobertura
+/.pytest_cache/    # Caché de pytest
+/htmlcov/          # Reportes de cobertura HTML
+.coverage          # Datos de cobertura
+/.tox/             # Entornos de prueba tox
+coverage.xml       # Reporte XML de cobertura
+*.cover            # Archivos de cobertura
 
-# Logs and temporary files
-*.log
-*.pot
-*.swp  # Vim swap files
+# IDEs y editores
+/.vscode/          # Visual Studio Code
+/.idea/            # JetBrains IDEs
+*.sublime-project  # Sublime Text
+*.sublime-workspace
 
-# Distribution / Packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+# Archivos específicos de React/Frontend
+/frontend/build/
+/frontend/.cache/
+/frontend/dist/
+.eslintcache
+.stylelintcache
 
-# Django related files
-*.log
-staticfiles/
-media/
+# Archivos de dependencias específicos
+# Descomentar según el gestor de paquetes usado
+# package-lock.json # Si se usa yarn exclusivamente
+yarn.lock        # Si se usa npm exclusivamente
 
-# Celery beat schedule file
-celerybeat-schedule
+# Entorno virtual
+/env/
+/venv/
+/backend/env/
+/backend/venv/
+*.pyc
+__pycache__/
 
-# pytest cache
+# Tests
+pytest.ini
 .pytest_cache/
+test_*.py
+*/tests/
 
-# Docker related files
-docker-compose.override.yml
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Coverage reports
-htmlcov/
-.coverage
-.tox/
-nosetests.xml
-coverage.xml
-*.cover
+# Node
+package-lock.json
+package.json
+node_modules/
 
-# MyPy type checker cache
-.mypy_cache/
-dmypy.json
+# Configuración local
+local_settings.py
+settings.py
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Node (en backend)
+backend/package.json
+backend/node_modules/

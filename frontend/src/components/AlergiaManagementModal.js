@@ -1,20 +1,44 @@
+/**
+ * Componente modal para la gestión de alergias.
+ * 
+ * Proporciona una interfaz para:
+ * - Listar todas las alergias existentes
+ * - Crear nuevas alergias
+ * - Editar alergias existentes
+ * - Eliminar alergias
+ * - Activar/desactivar alergias
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Table, Input, Form, Popconfirm, message, Switch } from 'antd';
 import { getAlergias, createAlergia, updateAlergia, deleteAlergia } from '../services/api'; 
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
+/**
+ * @component
+ * @param {Object} props - Propiedades del componente
+ * @param {boolean} props.visible - Controla la visibilidad del modal
+ * @param {Function} props.onClose - Función para cerrar el modal
+ * @param {Function} props.refreshData - Función para actualizar los datos externos
+ */
 const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
-  const [alergias, setAlergias] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingAlergia, setEditingAlergia] = useState(null);
-  const [form] = Form.useForm();
+  // Estados para gestionar las alergias y el modo de edición
+  const [alergias, setAlergias] = useState([]); // Lista de alergias
+  const [isEditing, setIsEditing] = useState(false); // Modo edición activo/inactivo
+  const [editingAlergia, setEditingAlergia] = useState(null); // Alergia en edición
+  const [form] = Form.useForm(); // Formulario de Ant Design
 
+  // Cargar alergias cuando el modal se hace visible
   useEffect(() => {
     if (visible) {
       fetchAlergias();
     }
   }, [visible]);
 
+  /**
+   * Obtiene la lista de alergias del servidor
+   * @async
+   */
   const fetchAlergias = async () => {
     try {
       const data = await getAlergias();
@@ -24,18 +48,30 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Prepara el formulario para añadir una nueva alergia
+   */
   const handleAdd = () => {
     setIsEditing(true);
     setEditingAlergia(null);
     form.resetFields();
   };
 
+  /**
+   * Prepara el formulario para editar una alergia existente
+   * @param {Object} alergia - Alergia a editar
+   */
   const handleEdit = (alergia) => {
     setIsEditing(true);
     setEditingAlergia(alergia);
     form.setFieldsValue(alergia);
   };
 
+  /**
+   * Elimina una alergia
+   * @async
+   * @param {number} id - ID de la alergia a eliminar
+   */
   const handleDelete = async (id) => {
     try {
       await deleteAlergia(id);
@@ -51,9 +87,15 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Guarda una nueva alergia o actualiza una existente
+   * @async
+   */
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Verificar si ya existe una alergia con el mismo nombre
       const nombreExiste = alergias.some(
         a => a.nombre.toLowerCase() === values.nombre.toLowerCase() && 
             (!editingAlergia || a.id !== editingAlergia.id)
@@ -63,19 +105,23 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
         message.error('Ya existe una alergia con ese nombre');
         return;
       }
+
       if (editingAlergia) {
+        // Actualizar alergia existente
         await updateAlergia(editingAlergia.id, {
           ...values,
           activo: editingAlergia.activo
         });
         message.success('Alergia actualizada');
       } else {
+        // Crear nueva alergia
         await createAlergia({
           ...values,
           activo: true
         });
         message.success('Alergia creada');
       }
+      
       setIsEditing(false);
       form.resetFields();
       await fetchAlergias();
@@ -89,6 +135,11 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Cambia el estado activo/inactivo de una alergia
+   * @async
+   * @param {Object} alergia - Alergia a modificar
+   */
   const toggleActivo = async (alergia) => {
     try {
       const payload = {
@@ -109,6 +160,10 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
     }
   };
 
+  /**
+   * Definición de columnas para la tabla de alergias
+   * @constant
+   */
   const columns = [
     {
       title: 'Nombre',
@@ -164,6 +219,10 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
     },
   ];
 
+  /**
+   * Renderiza el modal de gestión de alergias
+   * @returns {JSX.Element} Modal con tabla de alergias o formulario de edición
+   */
   return (
     <Modal
       open={visible}
@@ -175,6 +234,7 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
       className="gestion-panel__modal gestion-panel__fade-in"
     >
       {!isEditing ? (
+        // Vista de lista de alergias
         <>
           <div className="gestion-panel__actions-container">
             <Button 
@@ -196,6 +256,7 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
           />
         </>
       ) : (
+        // Formulario de edición/creación
         <Form form={form} layout="vertical">
           <Form.Item
             name="nombre"
@@ -217,4 +278,5 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
   );
 };
 
+// Exportación del componente
 export default AlergiaManagementModal;

@@ -1,3 +1,14 @@
+"""
+Vistas para la gestión de pedidos hospitalarios.
+
+Define las vistas que manejan las operaciones CRUD y funcionalidades específicas:
+- Listado y creación de pedidos
+- Detalle, actualización y eliminación de pedidos
+- Gestión de estados de pedidos
+- Consulta de pedidos completados
+- Impresión de pedidos
+"""
+
 from rest_framework import generics, views, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -10,9 +21,23 @@ import socket
 import time
 
 class PedidoListCreateView(generics.ListCreateAPIView):
+    """
+    Vista para listar todos los pedidos y crear nuevos.
+    
+    Proporciona filtrado por:
+    - Estado del pedido
+    - ID del paciente
+    - Rango de fechas
+    """
     serializer_class = PedidoSerializer
 
     def get_queryset(self):
+        """
+        Obtiene el queryset de pedidos aplicando los filtros especificados.
+        
+        Returns:
+            QuerySet: Pedidos filtrados y optimizados con select_related.
+        """
         queryset = Pedido.objects.all()
         status = self.request.query_params.get('status', None)
         paciente_id = self.request.query_params.get('paciente_id', None)
@@ -20,10 +45,9 @@ class PedidoListCreateView(generics.ListCreateAPIView):
         fecha_fin = self.request.query_params.get('fecha_fin', None)
 
         if status == 'pendiente':
-            # Filtra pedidos que no estén completamente terminados
             queryset = queryset.filter(
-                Q(sectionStatus={}) |  # Sin secciones completadas
-                ~Q(status='completado')  # O no marcado como completado
+                Q(sectionStatus={}) |  
+                ~Q(status='completado')  
             )
         elif status:
             queryset = queryset.filter(status=status)
@@ -43,6 +67,15 @@ class PedidoListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
+        """
+        Crea un nuevo pedido y registra la acción en el log.
+        
+        Args:
+            serializer: Serializer validado con los datos del pedido.
+            
+        Returns:
+            Pedido: Instancia del pedido creado.
+        """
         instance = serializer.save()
         LogEntry.objects.create(
             user=self.request.user,
@@ -61,10 +94,21 @@ class PedidoListCreateView(generics.ListCreateAPIView):
         return instance
 
 class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Vista para ver, actualizar y eliminar pedidos específicos.
+    
+    Incluye registro de acciones en el log del sistema.
+    """
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
     def perform_update(self, serializer):
+        """
+        Actualiza un pedido y registra la acción en el log.
+        
+        Args:
+            serializer: Serializer validado con los datos actualizados.
+        """
         instance = serializer.save()
         log_data = {
             'status': serializer.validated_data.get('status'),
@@ -80,6 +124,12 @@ class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
     def perform_destroy(self, instance):
+        """
+        Elimina un pedido y registra la acción en el log.
+        
+        Args:
+            instance: Instancia del pedido a eliminar.
+        """
         LogEntry.objects.create(
             user=self.request.user,
             action='DELETE',
@@ -90,7 +140,21 @@ class PedidoDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 class PedidoCompletadosView(views.APIView):
+    """
+    Vista para consultar pedidos completados.
+    
+    Permite filtrar por paciente específico.
+    """
     def get(self, request):
+        """
+        Obtiene la lista de pedidos completados.
+        
+        Args:
+            request: Request HTTP con posibles parámetros de filtrado.
+            
+        Returns:
+            Response: Lista serializada de pedidos completados.
+        """
         paciente_id = request.query_params.get('paciente', None)
         pedidos_completados = Pedido.objects.filter(status='completado')
         
@@ -101,10 +165,24 @@ class PedidoCompletadosView(views.APIView):
         return Response(serializer.data)
 
 class PedidoStatusUpdateView(generics.UpdateAPIView):
+    """
+    Vista para actualizar el estado de un pedido.
+    
+    Permite actualizaciones parciales del estado.
+    """
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
     def partial_update(self, request, *args, **kwargs):
+        """
+        Actualiza parcialmente un pedido.
+        
+        Args:
+            request: Request HTTP con los datos a actualizar.
+            
+        Returns:
+            Response: Datos actualizados del pedido.
+        """
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -112,6 +190,27 @@ class PedidoStatusUpdateView(generics.UpdateAPIView):
         return Response(serializer.data)
 
 class PedidoPrintView(views.APIView):
+    """
+    Vista para generar e imprimir pedidos.
+    
+    Gestiona la impresión de pedidos en una impresora térmica DIG-K200L,
+    incluyendo el formateo del texto y manejo de errores de conexión.
+    
+    Attributes:
+        INITIALIZE_PRINTER (bytes): Secuencia de inicialización de impresora
+        CODEPAGE_LATINO (bytes): Configuración de página de códigos latina
+        LINE_SPACING (bytes): Espaciado entre líneas
+        ALIGN_CENTER (bytes): Alineación centrada
+        ALIGN_LEFT (bytes): Alineación izquierda 
+        DOUBLE_WIDTH (bytes): Texto ancho doble
+        NORMAL_TEXT (bytes): Texto normal
+        CUT_PAPER (bytes): Comando para cortar papel
+        PRINTER_IP (str): IP de la impresora
+        PRINTER_PORT (int): Puerto de la impresora
+        SOCKET_TIMEOUT (int): Tiempo máximo de espera para conexión
+        MAX_RETRIES (int): Máximo número de reintentos
+        RETRY_DELAY (int): Tiempo entre reintentos
+    """
     INITIALIZE_PRINTER = b'\x1b\x40'
     CODEPAGE_LATINO = b'\x1b\x74\x12'
     LINE_SPACING = b'\x1b\x33\x30'
@@ -120,30 +219,33 @@ class PedidoPrintView(views.APIView):
     DOUBLE_WIDTH = b'\x1b\x21\x20'
     NORMAL_TEXT = b'\x1b\x21\x00'
     CUT_PAPER = b'\x1d\x56\x41\x10'
-    PRINTER_IP = '172.168.11.177'
+    PRINTER_IP = '172.168.2.216'
     PRINTER_PORT = 9100
     SOCKET_TIMEOUT = 10
     MAX_RETRIES = 5
     RETRY_DELAY = 3
 
     def test_printer_connection(self):
-        """Prueba la conexión específicamente para la DIG-K200L y verifica posibles bloqueos"""
+        """
+        Prueba la conexión con la impresora DIG-K200L.
+        
+        Returns:
+            tuple: (bool, str) Indica si la conexión fue exitosa y mensaje descriptivo
+        """
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.SOCKET_TIMEOUT)
         
         try:
-            # Intenta resolver el nombre de host
             try:
                 socket.gethostbyname(self.PRINTER_IP)
             except socket.gaierror as e:
                 return False, "Error de DNS: No se puede resolver la IP de la impresora"
             
-            # Intenta conectar específicamente al puerto 9100
             result = sock.connect_ex((self.PRINTER_IP, self.PRINTER_PORT))
             
             if result == 0:
                 return True, "Conexión exitosa"
-            elif result in [10061, 111]:  # Códigos comunes de conexión rechazada
+            elif result in [10061, 111]:
                 return False, "Conexión rechazada: Posible bloqueo por firewall"
             else:
                 return False, f"Error de conexión (código {result}): Posible puerto cerrado o bloqueado por firewall"
@@ -156,6 +258,15 @@ class PedidoPrintView(views.APIView):
             sock.close()
 
     def format_title(self, title):
+        """
+        Formatea títulos de secciones para impresión.
+        
+        Args:
+            title (str): Título a formatear
+            
+        Returns:
+            str: Título formateado
+        """
         formatted_names = {
             "acompanante": "Acompanante",
             "bebidas_calientes": "Bebidas Calientes",
@@ -164,7 +275,7 @@ class PedidoPrintView(views.APIView):
             "plato_principal": "Plato Principal",
             "media_manana_fit": "Media Manana Fit",
             "media_manana_tradicional": "Media Manana Tradicional",
-            "refrigerio_fit": "Refrigerio Fit",
+            "refrigerio_fit": "Refrigerio Fit", 
             "refrigerio_tradicional": "Refrigerio Tradicional",
             "entrada": "Entrada",
             "huevos": "Huevos",
@@ -182,6 +293,16 @@ class PedidoPrintView(views.APIView):
         return formatted_names.get(title.lower(), title.replace('_', ' ').title())
 
     def print_pedido(self, pedido, section_title):
+        """
+        Imprime un pedido específico.
+        
+        Args:
+            pedido (Pedido): Pedido a imprimir
+            section_title (str): Título de la sección a imprimir
+            
+        Raises:
+            Exception: Si hay error de conexión o impresión
+        """
         attempts = 0
         last_error = None
         
@@ -200,7 +321,6 @@ class PedidoPrintView(views.APIView):
                         continue
                     raise Exception(f"Error de conexión: {str(e)}")
 
-                # Secuencia de inicialización específica para DIG-K200L
                 init_sequence = (
                     self.INITIALIZE_PRINTER +
                     self.CODEPAGE_LATINO +
@@ -210,7 +330,6 @@ class PedidoPrintView(views.APIView):
                 
                 print_data = ""
                 
-                # 1. DATOS DEL PACIENTE
                 print_data += "=== DATOS DEL PACIENTE ===\n"
                 print_data += "-------------------------------\n"
                 print_data += f"Pedido: {pedido.id}\n"
@@ -220,7 +339,6 @@ class PedidoPrintView(views.APIView):
                     print_data += f"Alergias: {pedido.paciente.alergias}\n"
                 print_data += "-------------------------------\n\n"
 
-                # 2. UBICACION
                 print_data += "=== UBICACION ===\n"
                 print_data += "-------------------------------\n"
                 print_data += f"Servicio: {pedido.paciente.cama.habitacion.servicio.nombre}\n"
@@ -228,7 +346,6 @@ class PedidoPrintView(views.APIView):
                 print_data += f"Cama: {pedido.paciente.cama.nombre}\n"
                 print_data += "-------------------------------\n\n"
 
-                # 3. DETALLES DEL PEDIDO
                 print_data += f"=== {self.format_title(section_title)} ===\n"
                 print_data += "-------------------------------\n"
 
@@ -258,20 +375,17 @@ class PedidoPrintView(views.APIView):
                                 print_data += f"  Preparacion: {self.format_title(prep)}\n"
                 print_data += "-------------------------------\n\n"
 
-                # 4. OBSERVACIONES (si existen)
                 if pedido.observaciones:
                     print_data += "=== OBSERVACIONES ===\n"
                     print_data += "-------------------------------\n"
                     print_data += f"{pedido.observaciones}\n"
                     print_data += "-------------------------------\n\n"
 
-                # 5. FECHA (Modificado para usar la hora actual con AM/PM)
                 print_data += "=== FECHA Y HORA ===\n"
                 print_data += "-------------------------------\n"
                 print_data += f"{datetime.now().strftime('%d/%m/%Y %I:%M %p')}\n"
                 print_data += "===============================\n"
 
-                # Reemplazar caracteres especiales
                 char_map = {
                     'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
                     'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
@@ -292,7 +406,6 @@ class PedidoPrintView(views.APIView):
                 except socket.error as e:
                     raise Exception(f"Error al enviar datos a la impresora: {str(e)}")
 
-                # Si llegamos aquí y la impresión es exitosa, salimos del bucle
                 break
 
             except Exception as e:
@@ -312,6 +425,16 @@ class PedidoPrintView(views.APIView):
                         pass
 
     def post(self, request, pk):
+        """
+        Maneja solicitudes POST para imprimir pedidos.
+        
+        Args:
+            request (Request): Request HTTP con datos del pedido
+            pk (int): ID del pedido a imprimir
+            
+        Returns:
+            Response: Respuesta con estado de la impresión
+        """
         try:
             pedido = Pedido.objects.get(id=pk)
             section_title = request.data.get('section_title')
@@ -322,14 +445,12 @@ class PedidoPrintView(views.APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Información de diagnóstico detallada
             diagnostic_info = {
                 'printer_ip': self.PRINTER_IP,
                 'attempted_ports': [self.PRINTER_PORT],
                 'network_info': {}
             }
             
-            # Intenta hacer ping a la impresora
             try:
                 import subprocess
                 ping_result = subprocess.run(['ping', '-c', '1', self.PRINTER_IP], 
@@ -338,7 +459,6 @@ class PedidoPrintView(views.APIView):
             except:
                 diagnostic_info['network_info']['ping'] = 'Error al ejecutar ping'
             
-            # Prueba la conexión
             connection_ok, diagnostic = self.test_printer_connection()
             diagnostic_info['connection_test'] = diagnostic
             
