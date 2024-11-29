@@ -184,6 +184,9 @@ $font-size-xxlarge: 28px; // Tamaño de fuente para títulos principales
     .ant-modal-content {
       border-radius: $border-radius;
       overflow: hidden;
+      max-height: 90vh; // Altura máxima del 90% de la ventana
+      display: flex;
+      flex-direction: column;
     }
 
     .ant-modal-header {
@@ -204,6 +207,44 @@ $font-size-xxlarge: 28px; // Tamaño de fuente para títulos principales
 
     .ant-modal-body {
       padding: 24px;
+      flex: 1;
+      overflow-y: auto; // Permitir scroll vertical
+      
+      // Personalización del scrollbar
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba($primary-color, 0.2);
+        border-radius: 3px;
+      }
+    }
+
+    // Ajustes para la tabla dentro del modal
+    .ant-table-wrapper {
+      margin: -8px; // Compensar el padding interno
+      
+      .ant-table {
+        .ant-table-container {
+          border-radius: $border-radius;
+          overflow: hidden;
+        }
+        
+        // Hacer la tabla responsiva
+        .ant-table-content {
+          overflow-x: auto;
+          
+          &::-webkit-scrollbar {
+            height: 6px;
+          }
+          
+          &::-webkit-scrollbar-thumb {
+            background-color: rgba($primary-color, 0.2);
+            border-radius: 3px;
+          }
+        }
+      }
     }
 
     // Pie del modal
@@ -802,6 +843,44 @@ $font-size-xxlarge: 28px; // Tamaño de fuente para títulos principales
     &__main-button {
       width: auto;
       min-width: 250px; // Ancho mínimo para legibilidad
+    }
+  }
+}
+
+// Ajustes responsivos específicos para los modales de dietas y alergias
+@media (max-width: 768px) {
+  .gestion-panel__modal {
+    // Ajustar el ancho del modal en móviles
+    .ant-modal {
+      width: 90vw !important;
+      margin: 0 auto;
+    }
+
+    // Ajustar el contenido de la tabla
+    .ant-table {
+      font-size: 14px; // Reducir tamaño de fuente
+
+      // Hacer las columnas más compactas
+      .ant-table-thead > tr > th,
+      .ant-table-tbody > tr > td {
+        padding: 8px;
+        white-space: nowrap; // Evitar que el texto se rompa
+      }
+
+      // Ajustar columna de acciones
+      .ant-table-tbody > tr > td:last-child {
+        min-width: 100px; // Ancho mínimo para botones de acción
+      }
+    }
+
+    // Ajustar botones de acción
+    .gestion-panel__actions-container {
+      padding: 12px;
+      
+      .gestion-panel__button {
+        height: 40px;
+        font-size: 14px;
+      }
     }
   }
 }

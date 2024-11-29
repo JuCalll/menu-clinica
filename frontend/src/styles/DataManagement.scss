@@ -183,90 +183,72 @@ $font-size-xxlarge: 32px; // Tamaño doble extra grande de fuente
 // Collapse de pacientes
 .dm-pacientes-collapse {
   .ant-collapse-item {
+    background: white;
     margin-bottom: 16px;
-    border: 1px solid rgba($primary-color, 0.1) !important;
-    border-radius: $border-radius !important;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    
+    .ant-collapse-header {
+      padding: 16px !important;
+      background: white;
+      transition: all 0.3s ease;
 
-    .panel-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .panel-icon {
-        font-size: 20px;
-        color: $primary-color;
-        background: rgba($primary-color, 0.05);
-        padding: 8px;
-        border-radius: 50%;
-      }
-
-      span:not(.panel-subinfo) {
-        font-weight: 500;
-        color: $title-color;
-      }
-
-      .panel-subinfo {
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        color: rgba($title-color, 0.65);
-
-        .anticon {
-          margin-right: 4px;
-          color: $primary-color;
-        }
+      &:hover {
+        background: rgba($primary-color, 0.02);
       }
     }
 
-    // Grid de información del paciente
-    .paciente-info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      padding: 20px;
-
-      .info-item {
-        background: white;
-        padding: 16px;
-        border-radius: $border-radius;
-        border: 1px solid rgba($primary-color, 0.1);
-        transition: all 0.3s ease;
+    .panel-header {
+      .panel-main-info {
         display: flex;
-        align-items: flex-start;
-        gap: 12px;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
 
-        &:hover {
-          transform: translateX(4px);
-          border-color: $primary-color;
-          background: rgba($primary-color, 0.02);
-        }
-
-        .info-icon {
-          font-size: 24px;
-          color: $primary-color;
-          background: rgba($primary-color, 0.05);
-          padding: 8px;
-          border-radius: 8px;
-        }
-
-        .info-content {
+        .panel-name {
+          font-size: 16px;
+          font-weight: 600;
+          color: $title-color;
           flex: 1;
+        }
 
-          .info-label {
-            font-size: $font-size-base;
-            color: rgba($title-color, 0.75);
-            margin-bottom: 4px;
-            display: block;
+        .panel-badges {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+
+          .panel-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            background: rgba($primary-color, 0.04);
+            border-radius: 20px;
+            font-size: 14px;
+            color: $primary-color;
+            
+            .anticon {
+              font-size: 14px;
+              color: $primary-color;
+            }
           }
+        }
+      }
 
-          .info-value {
-            font-size: $font-size-large;
-            color: $title-color;
-            font-weight: 500;
-            display: block;
+      @media (max-width: 768px) {
+        .panel-main-info {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+
+          .panel-badges {
+            width: 100%;
+            justify-content: flex-start;
+            
+            .panel-badge {
+              flex: 1;
+              justify-content: center;
+            }
           }
         }
       }
@@ -353,5 +335,142 @@ $font-size-xxlarge: 32px; // Tamaño doble extra grande de fuente
     margin-bottom: 10px !important;
     width: 100%;
     text-align: center;
+  }
+}
+
+// Ajustes adicionales para la visualización de datos
+.ant-collapse-content {
+  .ant-collapse-content-box {
+    @media (max-width: 768px) {
+      padding: 8px !important;
+    }
+  }
+}
+
+// Mejorar la visualización de los filtros en móviles
+.dm-filters {
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    
+    .dm-search-input,
+    .dm-filter-select {
+      width: 100%;
+    }
+  }
+}
+
+// Ajustes para el resumen en móviles
+.dm-summary {
+  @media (max-width: 768px) {
+    .summary-item {
+      padding: 12px;
+      
+      .summary-icon {
+        font-size: 24px;
+        padding: 8px;
+      }
+
+      .summary-content {
+        .summary-label {
+          font-size: 14px;
+        }
+
+        .summary-value {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
+
+// Mejoras en el diseño de las tarjetas de información
+.paciente-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: $border-radius;
+
+  .info-item {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba($primary-color, 0.08);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-icon {
+      color: $primary-color;
+      font-size: 20px;
+      padding: 10px;
+      background: rgba($primary-color, 0.06);
+      border-radius: 10px;
+    }
+
+    .info-content {
+      flex: 1;
+
+      .info-label {
+        font-size: 14px;
+        color: rgba($title-color, 0.65);
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+
+      .info-value {
+        font-size: 16px;
+        color: $title-color;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+    }
+  }
+}
+
+// Mejoras responsivas
+@media (max-width: 768px) {
+  .paciente-info-grid {
+    padding: 12px;
+    gap: 12px;
+
+    .info-item {
+      padding: 12px;
+      
+      .info-icon {
+        padding: 8px;
+        font-size: 18px;
+      }
+    }
+  }
+
+  .dm-pacientes-collapse {
+    .panel-header {
+      .panel-main-info {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      .panel-subinfo {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        span {
+          flex: 1;
+          min-width: 140px;
+          justify-content: center;
+        }
+      }
+    }
   }
 }

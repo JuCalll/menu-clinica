@@ -587,23 +587,26 @@ const RealizarPedido = () => {
      */
     return (
       <div className="confirm-content">
-        {/* Información del paciente */}
         <div className="paciente-info">
           <h3>Datos del Paciente</h3>
-          <div className="info-row">
-            <span className="label">Nombre:</span>
+          <div className="info-row nombre">
+            <span className="label">Nombre del Paciente:</span>
             <span className="value">{paciente?.name}</span>
           </div>
           <div className="info-row highlight">
-            <span className="label">Dieta Recomendada:</span>
+            <span className="label">
+              Dieta Recomendada por el Médico Tratante
+            </span>
             <span className="value">
               {paciente?.recommended_diet || "No especificada"}
             </span>
           </div>
           <div className="info-row highlight">
-            <span className="label">Alergias:</span>
-            <span className="value">
-              {paciente?.alergias || "Ninguna registrada"}
+            <span className="label">
+              Alergias e Intolerancias
+            </span>
+            <span className={`value ${!paciente?.alergias ? 'no-alergias' : ''}`}>
+              {paciente?.alergias || "Sin alergias registradas"}
             </span>
           </div>
         </div>

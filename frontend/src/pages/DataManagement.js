@@ -365,60 +365,67 @@ const DataManagement = () => {
                 <Panel
                   header={
                     <div className="panel-header">
-                      <UserOutlined className="panel-icon" />
-                      <span>{paciente.name}</span>
-                      <span className="panel-subinfo">
-                        <HomeOutlined /> {paciente.cama.habitacion.nombre}
-                        <MedicineBoxOutlined /> {paciente.cama.habitacion.servicio.nombre}
-                      </span>
+                      <div className="panel-main-info">
+                        <div className="panel-name">
+                          <UserOutlined className="panel-icon" />
+                          <span>{paciente.name}</span>
+                        </div>
+                        <div className="panel-badges">
+                          <span className="panel-badge">
+                            <HomeOutlined /> {paciente.cama.habitacion.nombre}
+                          </span>
+                          <span className="panel-badge">
+                            <EnvironmentOutlined /> {paciente.cama.habitacion.servicio.nombre}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   }
                   key={`paciente-${paciente.id}`}
-                  className="dm-paciente-panel"
                 >
                   <div className="paciente-info-grid">
                     <div className="info-item">
                       <IdcardOutlined className="info-icon" />
                       <div className="info-content">
-                        <span className="info-label">Cédula</span>
-                        <span className="info-value">{paciente.cedula}</span>
+                        <div className="info-label">Cédula</div>
+                        <div className="info-value">{paciente.cedula}</div>
                       </div>
                     </div>
                     <div className="info-item">
                       <RestOutlined className="info-icon" />
                       <div className="info-content">
-                        <span className="info-label">Cama</span>
-                        <span className="info-value">{paciente.cama.nombre}</span>
+                        <div className="info-label">Cama</div>
+                        <div className="info-value">{paciente.cama.nombre}</div>
                       </div>
                     </div>
                     <div className="info-item">
                       <EnvironmentOutlined className="info-icon" />
                       <div className="info-content">
-                        <span className="info-label">Ubicación</span>
-                        <span className="info-value">
+                        <div className="info-label">Ubicación</div>
+                        <div className="info-value">
                           {paciente.cama.habitacion.nombre} - {paciente.cama.habitacion.servicio.nombre}
-                        </span>
+                        </div>
                       </div>
                     </div>
                     <div className="info-item">
                       <MedicineBoxOutlined className="info-icon" />
                       <div className="info-content">
-                        <span className="info-label">Dieta Recomendada</span>
-                        <span className="info-value">{paciente.recommended_diet}</span>
+                        <div className="info-label">Dieta Recomendada</div>
+                        <div className="info-value">{paciente.recommended_diet}</div>
                       </div>
                     </div>
                     <div className="info-item">
                       <WarningOutlined className="info-icon" />
                       <div className="info-content">
-                        <span className="info-label">Alergias</span>
-                        <span className="info-value">{paciente.alergias || 'Sin alergias'}</span>
+                        <div className="info-label">Alergias</div>
+                        <div className="info-value">{paciente.alergias || 'Sin alergias'}</div>
                       </div>
                     </div>
                     <div className="info-item">
                       <ClockCircleOutlined className="info-icon" />
                       <div className="info-content">
-                        <span className="info-label">Registrado en</span>
-                        <span className="info-value">{paciente.created_at}</span>
+                        <div className="info-label">Registrado en</div>
+                        <div className="info-value">{paciente.created_at}</div>
                       </div>
                     </div>
                   </div>

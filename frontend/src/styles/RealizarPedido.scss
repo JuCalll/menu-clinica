@@ -605,42 +605,103 @@ $font-size-xxlarge: 32px; // Tamaño doble extra grande
       background: rgba($background-color, 0.5);
 
       .confirm-content {
-        // Información del paciente
         .paciente-info {
           background: white;
           border-radius: $border-radius;
-          padding: 20px;
-          margin-bottom: 20px;
+          padding: 24px;
+          margin-bottom: 24px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
           h3 {
             color: $title-color;
-            font-size: $font-size-large;
-            margin-bottom: 16px;
+            font-size: $font-size-xlarge;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba($primary-color, 0.1);
             font-weight: 600;
           }
 
-          // Filas de información
           .info-row {
             display: flex;
-            margin-bottom: 8px;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: $font-size-base;
+            flex-direction: column;
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: $border-radius;
+            background: white;
+            transition: all 0.3s ease;
+
+            &.nombre {
+              background: white;
+              padding: 20px;
+              margin-bottom: 24px;
+              border-radius: $border-radius;
+              
+              .label {
+                color: $title-color;
+                font-size: 16px;
+                margin-bottom: 8px;
+              }
+              
+              .value {
+                color: $title-color;
+                font-size: 24px;
+                font-weight: 600;
+                letter-spacing: -0.5px;
+              }
+            }
 
             &.highlight {
-              background: rgba($primary-color, 0.05);
-              border: 1px solid rgba($primary-color, 0.1);
-            }
+              background: rgba($secondary-color, 0.04);
+              border: 2px solid rgba($secondary-color, 0.15);
+              margin-bottom: 20px;
+              position: relative;
 
-            .label {
-              font-weight: 500;
-              min-width: 170px;
-              color: $title-color;
-            }
+              // Icono de advertencia
+              &::before {
+                content: "⚠️";
+                position: absolute;
+                top: -12px;
+                left: 24px;
+                background: white;
+                padding: 0 8px;
+                font-size: 16px;
+              }
 
-            .value {
-              flex: 1;
-              color: rgba($title-color, 0.85);
+              .label {
+                color: $secondary-color;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+              }
+
+              .value {
+                background: white;
+                padding: 16px;
+                border-radius: 8px;
+                color: $title-color;
+                font-weight: 500;
+                font-size: 16px;
+                line-height: 1.6;
+                border: 1px solid rgba($secondary-color, 0.1);
+                
+                &.no-alergias {
+                  color: rgba($title-color, 0.7);
+                  font-style: italic;
+                }
+              }
+
+              // Mensaje de importancia
+              &::after {
+                content: "Información importante para el servicio";
+                display: block;
+                margin-top: 12px;
+                color: rgba($secondary-color, 0.8);
+                font-size: 14px;
+                font-style: italic;
+                text-align: right;
+              }
             }
           }
         }

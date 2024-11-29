@@ -115,14 +115,7 @@ const CreateUserModal = ({
         label="Contraseña"
         rules={[
           { required: true, message: "Por favor ingrese la contraseña" },
-          { min: 8, message: "La contraseña debe tener al menos 8 caracteres" },
-          {
-            pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-            message:
-              "La contraseña debe contener al menos una letra y un número",
-          },
         ]}
-        extra="La contraseña debe tener al menos 8 caracteres, una letra y un número"
       >
         <Input.Password
           id="password-create"
@@ -561,13 +554,6 @@ const UserManagement = () => {
             <Form.Item
               name="password"
               label="Contraseña"
-              rules={[
-                {
-                  pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-                  message:
-                    "La contraseña debe contener al menos una letra y un número",
-                },
-              ]}
             >
               <Input.Password
                 placeholder="Dejar en blanco para mantener la actual"

@@ -232,6 +232,8 @@ const AlergiaManagementModal = ({ visible, onClose, refreshData }) => {
       footer={!isEditing ? null : undefined}
       width={600}
       className="gestion-panel__modal gestion-panel__fade-in"
+      style={{ top: 20 }}
+      styles={{ maxHeight: 'calc(90vh - 200px)', overflow: 'auto' }}
     >
       {!isEditing ? (
         // Vista de lista de alergias
