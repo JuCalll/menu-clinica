@@ -349,31 +349,31 @@ class PedidoPrintView(views.APIView):
                 print_data += f"=== {self.format_title(section_title)} ===\n"
                 print_data += "-------------------------------\n"
 
-                selected_options = pedido.pedidomenuoption_set.filter(
-                    menu_option__section__titulo=section_title,
-                    selected=True
-                ).select_related('menu_option')
-
-                options_by_type = {}
-                for pmo in selected_options:
-                    option = pmo.menu_option
-                    tipo = option.tipo
-                    if tipo not in options_by_type:
-                        options_by_type[tipo] = []
-                    options_by_type[tipo].append(option)
-
-                for tipo, opciones in options_by_type.items():
-                    if opciones:
-                        print_data += f"{self.format_title(tipo)}:\n"
-                        for opcion in opciones:
-                            print_data += f"- {opcion.texto}\n"
-                            if section_title in ["bebidas_calientes", "bebidas_frias"] and \
-                               pedido.adicionales and \
-                               'bebidasPreparacion' in pedido.adicionales and \
-                               str(opcion.id) in pedido.adicionales['bebidasPreparacion']:
-                                prep = pedido.adicionales['bebidasPreparacion'][str(opcion.id)]
-                                print_data += f"  Preparacion: {self.format_title(prep)}\n"
-                print_data += "-------------------------------\n\n"
+                #selected_options = pedido.pedidomenuoption_set.filter(
+                #    menu_option__section__titulo=section_title,
+                #    selected=True
+                #).select_related('menu_option')
+                #
+                #options_by_type = {}
+                #for pmo in selected_options:
+                #    option = pmo.menu_option
+                #    tipo = option.tipo
+                #    if tipo not in options_by_type:
+                #        options_by_type[tipo] = []
+                #    options_by_type[tipo].append(option)
+                #
+                #for tipo, opciones in options_by_type.items():
+                #    if opciones:
+                #        print_data += f"{self.format_title(tipo)}:\n"
+                #        for opcion in opciones:
+                #            print_data += f"- {opcion.texto}\n"
+                #            if section_title in ["bebidas_calientes", "bebidas_frias"] and \
+                #               pedido.adicionales and \
+                #               'bebidasPreparacion' in pedido.adicionales and \
+                #               str(opcion.id) in pedido.adicionales['bebidasPreparacion']:
+                #                prep = pedido.adicionales['bebidasPreparacion'][str(opcion.id)]
+                #                print_data += f"  Preparacion: {self.format_title(prep)}\n"
+                #print_data += "-------------------------------\n\n"
 
                 if pedido.observaciones:
                     print_data += "=== OBSERVACIONES ===\n"
@@ -381,10 +381,10 @@ class PedidoPrintView(views.APIView):
                     print_data += f"{pedido.observaciones}\n"
                     print_data += "-------------------------------\n\n"
 
-                print_data += "=== FECHA Y HORA ===\n"
-                print_data += "-------------------------------\n"
-                print_data += f"{datetime.now().strftime('%d/%m/%Y %I:%M %p')}\n"
-                print_data += "===============================\n"
+                #print_data += "=== FECHA Y HORA ===\n"
+                #print_data += "-------------------------------\n"
+                #print_data += f"{datetime.now().strftime('%d/%m/%Y %I:%M %p')}\n"
+                #print_data += "===============================\n"
 
                 char_map = {
                     'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',

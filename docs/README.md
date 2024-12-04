@@ -174,8 +174,7 @@ npm start
 ### Production
 
 - Backend
-python manage.py collectstatic
-gunicorn backend.wsgi:application
+python manage.py runserver 0.0.0.0:8000
 
 - Frontend
 npm run build
@@ -222,11 +221,6 @@ npm run build
 4. Push a la rama / Push to branch (`git push origin feature/AmazingFeature`)
 5. Abrir Pull Request / Open Pull Request
 
-## 📄 Licencia
-## 📄 License
-Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
-This project is under MIT License. See [LICENSE](LICENSE) for more details.
-
 ## ✨ Agradecimientos
 ## ✨ Acknowledgments
 - Equipo de TICS CSJD / CSJD IT Team
@@ -235,4 +229,5 @@ This project is under MIT License. See [LICENSE](LICENSE) for more details.
 
 ## 📞 Contacto
 ## 📞 Contact
-- **Proyecto / Project**: [GitHub](https://github.com/tu-usuario/menu-preferencial)
+- **Página Web / Website**: [CSJD](https://clinicasanjuandediosmanizales.com.co/contacto/contactanos/)
+- **Email**: [CSJD](mailto:cpsiquia@clinicasanjuandedios.com.co)

@@ -108,3 +108,20 @@ settings.py
 # Node (en backend)
 backend/package.json
 backend/node_modules/
+
+# Django
+/staticfiles/      # Archivos estáticos recolectados
+/media/            # Archivos subidos por usuarios
+*/migrations/*     # Todas las migraciones en cualquier app
+!*/migrations/__init__.py  # Excepto el archivo __init__.py
+
+# Específicamente para cada app 
+/authentication/migrations/*
+/pacientes/migrations/*
+/habitaciones/migrations/*
+/servicios/migrations/*
+/menus/migrations/*
+/pedidos/migrations/*
+/camas/migrations/*
+/dietas/migrations/*
+!*/migrations/__init__.py

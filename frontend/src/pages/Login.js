@@ -118,7 +118,7 @@ const Login = () => {
           alt="Clínica San Juan de Dios"
           className="login-logo"
         />
-        <h2>Menú Preferencial - CSJDD</h2>
+        <h2>Menú Preferencial - CSJDM</h2>
 
         {/* Formulario de login */}
         <form onSubmit={handleLogin}>
