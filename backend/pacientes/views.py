@@ -49,7 +49,7 @@ class PacienteListCreateView(generics.ListCreateAPIView):
             details={
                 'name': response.data.get('name'),
                 'cedula': response.data.get('cedula'),
-                'recommended_diet': response.data.get('recommended_diet'),
+                'dietas': response.data.get('dietas'),
                 'alergias': response.data.get('alergias'),
                 'activo': response.data.get('activo'),
             }
@@ -83,7 +83,7 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
             details={
                 'name': instance.name,
                 'cedula': instance.cedula,
-                'recommended_diet': instance.recommended_diet.nombre if instance.recommended_diet else None,
+                'dietas': instance.dietas.nombre if instance.dietas else None,
                 'alergias': instance.alergias.nombre if instance.alergias else None,
                 'activo': instance.activo,
             }

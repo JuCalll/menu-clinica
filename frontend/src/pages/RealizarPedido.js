@@ -58,7 +58,6 @@ const RealizarPedido = () => {
   const opcionesPreparado = [
     { value: "leche_entera", label: "Leche Entera" },
     { value: "leche_deslactosada", label: "Leche Deslactosada" },
-    { value: "leche_almendras", label: "Leche de Almendras" },
     { value: "agua", label: "Agua" },
     { value: "unica_preparacion", label: "Única Preparación" },
   ];
@@ -355,7 +354,6 @@ const RealizarPedido = () => {
       adicionales: "Adicionales",
       leche_entera: "Leche Entera",
       leche_deslactosada: "Leche Deslactosada",
-      leche_almendras: "Leche de Almendras",
       agua: "Agua",
       unica_preparacion: "Única Preparación",
     };
@@ -595,18 +593,22 @@ const RealizarPedido = () => {
           </div>
           <div className="info-row highlight">
             <span className="label">
-              Dieta Recomendada por el Médico Tratante
+              Dietas Recomendadas
             </span>
             <span className="value">
-              {paciente?.recommended_diet || "No especificada"}
+              {paciente?.dietas?.length > 0 
+                ? paciente.dietas.join(', ')
+                : "No especificada"}
             </span>
           </div>
           <div className="info-row highlight">
             <span className="label">
               Alergias e Intolerancias
             </span>
-            <span className={`value ${!paciente?.alergias ? 'no-alergias' : ''}`}>
-              {paciente?.alergias || "Sin alergias registradas"}
+            <span className={`value ${!paciente?.alergias?.length ? 'no-alergias' : ''}`}>
+              {paciente?.alergias?.length > 0 
+                ? paciente.alergias.join(', ')
+                : "Sin alergias registradas"}
             </span>
           </div>
         </div>

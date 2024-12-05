@@ -3,7 +3,6 @@
  *
  * Muestra y gestiona los pedidos que aún no han sido completados:
  * - Lista filtrable de pedidos pendientes
- * - Impresión de secciones específicas
  * - Actualización automática de datos
  * - Filtros por servicio y búsqueda
  *
@@ -24,15 +23,17 @@ import {
   Select,
 } from "antd";
 import {
-  PrinterOutlined, // Icono para impresión
   CheckCircleOutlined, // Icono de completado
   InfoCircleOutlined, // Icono de información
   ReloadOutlined, // Icono de recarga
   UpOutlined, // Icono de flecha arriba
+  PrinterOutlined, // Icono de impresión
 } from "@ant-design/icons";
 import { getPedidos, updatePedido } from "../services/api";
 import "../styles/PedidosPendientes.scss";
 import api from "../axiosConfig";
+import PrintableSection from '../components/PrintableSection';
+import ReactDOM from 'react-dom';
 
 const { Panel } = Collapse;
 
@@ -119,64 +120,6 @@ const PedidosPendientes = () => {
 
     setFilteredPedidos(filtered);
   }, [pedidos, searchTerm, selectedServicio]);
-
-  /**
-   * Maneja la impresión de una sección específica de un pedido
-   * @param {Object} pedido - Pedido a imprimir
-   * @param {Object} section - Sección específica a imprimir
-   */
-  const handlePrint = async (pedido, section) => {
-    const key = `print-${pedido.id}-${section.titulo}`;
-
-    try {
-      message.loading({
-        content: "Conectando con la impresora...",
-        key,
-        duration: 0,
-      });
-
-      const response = await api.post(`/pedidos/${pedido.id}/print/`, {
-        section_title: section.titulo,
-      });
-
-      if (response.status === 200) {
-        message.success({
-          content: `Imprimiendo ${formatTitle(section.titulo)}`,
-          key,
-          duration: 3,
-        });
-      }
-    } catch (error) {
-      // Manejo específico de error de conexión con impresora
-      if (error.response?.data?.type === "printer_connection_error") {
-        message.warning({
-          content: (
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-            >
-              <div>
-                <InfoCircleOutlined
-                  style={{ color: "#faad14", marginRight: "8px" }}
-                />
-                Impresora no disponible
-              </div>
-              <div style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)" }}>
-                {error.response.data.message}
-              </div>
-            </div>
-          ),
-          key,
-          duration: 5,
-        });
-      } else {
-        message.error({
-          content: `Error al imprimir ${formatTitle(section.titulo)}`,
-          key,
-          duration: 3,
-        });
-      }
-    }
-  };
 
   /**
    * Maneja el cambio de estado de una sección de pedido
@@ -393,6 +336,155 @@ const PedidosPendientes = () => {
       .replace(/[\u0300-\u036f]/g, "");
   };
 
+  /**
+   * Maneja la impresión de una sección específica de un pedido
+   * @param {Object} pedido - Pedido a imprimir
+   * @param {Object} section - Sección específica a imprimir
+   */
+  const handlePrint = (pedido, section) => {
+    const printWindow = window.open('', '_blank');
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pedido #${pedido.id} - ${section.titulo}</title>
+          <meta charset="UTF-8">
+          <style>
+            @page { 
+              size: 80mm auto; 
+              margin: 0; 
+            }
+            
+            body { 
+              margin: 0;
+              padding: 4mm;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            
+            .printable-section {
+              width: 72mm;
+              padding: 0;
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              background: white;
+            }
+            
+            .print-header {
+              text-align: center;
+              margin-bottom: 8px;
+              border-bottom: 1px dashed #000;
+              padding-bottom: 6px;
+            }
+            
+            .print-header h2 {
+              margin: 0;
+              font-size: 16px;
+              font-weight: bold;
+              letter-spacing: 0.5px;
+            }
+            
+            .print-header p {
+              margin: 2px 0 0;
+              font-size: 12px;
+            }
+            
+            .patient-info, .location-info {
+              margin: 6px 0;
+            }
+            
+            .patient-info h3, .location-info h3 {
+              font-size: 14px;
+              font-weight: bold;
+              text-transform: uppercase;
+              margin: 0 0 4px;
+            }
+            
+            .patient-info p, .location-info p {
+              margin: 4px 0;
+              line-height: 1.4;
+              display: flex;
+              justify-content: space-between;
+              font-size: 12px;
+            }
+            
+            .patient-info strong, .location-info strong {
+              font-weight: bold;
+            }
+            
+            .patient-info strong::after, .location-info strong::after {
+              content: ":";
+            }
+            
+            .patient-info::after, .location-info::after {
+              content: "";
+              display: block;
+              border-bottom: 1px dashed #000;
+              margin-top: 6px;
+            }
+            
+            .observaciones {
+              margin-top: 6px;
+              page-break-inside: auto;
+            }
+            
+            .observaciones h3 {
+              font-size: 14px;
+              font-weight: bold;
+              text-transform: uppercase;
+              margin: 0 0 4px;
+            }
+            
+            .observaciones p {
+              font-size: 12px;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              margin: 0;
+              padding: 4px;
+              border: 1px dashed #000;
+              min-height: fit-content;
+              height: auto;
+            }
+            
+            .printable-section::after {
+              content: "";
+              display: block;
+              border-bottom: 1px dashed #000;
+              margin-top: 6px;
+            }
+
+            @media print {
+              .observaciones {
+                break-inside: auto;
+              }
+              .observaciones p {
+                break-inside: auto;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div id="print-root"></div>
+        </body>
+      </html>
+    `);
+  
+    ReactDOM.render(
+      <PrintableSection pedido={pedido} section={section} />,
+      printWindow.document.getElementById('print-root')
+    );
+  
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+      setTimeout(() => printWindow.close(), 1000);
+    }, 500);
+  };
+
   // Renderizado condicional para estado de carga
   if (loading) {
     return (
@@ -559,7 +651,7 @@ const PedidosPendientes = () => {
                       <div className="patient-medical-info">
                         <Tag color="blue">
                           Dieta:{" "}
-                          {pedido.paciente.recommended_diet ||
+                          {pedido.paciente.dietas ||
                             "No especificada"}
                         </Tag>
                         {pedido.paciente.alergias && (
@@ -617,10 +709,11 @@ const PedidosPendientes = () => {
                         Marcar como Completado
                       </Button>
                       <Button
-                        type="default"
-                        icon={<PrinterOutlined />}
                         onClick={() => handlePrint(pedido, section)}
-                      />
+                        icon={<PrinterOutlined />}
+                      >
+                        Imprimir
+                      </Button>
                     </div>
                   </div>
                 ))}

@@ -91,24 +91,27 @@ class PacienteSerializer(serializers.ModelSerializer):
         write_only=True
     )
     cama = CamaSerializer(read_only=True)
-    recommended_diet_id = serializers.PrimaryKeyRelatedField(
-        queryset=Dieta.objects.all(), 
-        source='recommended_diet', 
-        write_only=True
+    dietas_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Dieta.objects.all(),
+        source='dietas',
+        write_only=True,
+        many=True
     )
-    recommended_diet = serializers.StringRelatedField(read_only=True)
-    alergias = serializers.StringRelatedField(read_only=True)
-    alergias_id = serializers.PrimaryKeyRelatedField(
-        queryset=Alergia.objects.all(), 
-        source='alergias', 
-        write_only=True
+    dietas = serializers.StringRelatedField(many=True, read_only=True)
+    alergias_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Alergia.objects.all(),
+        source='alergias',
+        write_only=True,
+        many=True
     )
+    alergias = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Paciente
         fields = ['id', 'cedula', 'name', 'cama_id', 'cama', 
-                 'recommended_diet_id', 'recommended_diet', 
-                 'alergias', 'alergias_id', 'activo', 'created_at']
+                 'dietas_ids', 'dietas', 
+                 'alergias_ids', 'alergias', 
+                 'activo', 'created_at']
 
     def create(self, validated_data):
         """
@@ -120,7 +123,16 @@ class PacienteSerializer(serializers.ModelSerializer):
         Returns:
             Paciente: Nueva instancia del paciente creado.
         """
+        dietas = validated_data.pop('dietas', [])
+        alergias = validated_data.pop('alergias', [])
+        
         paciente = Paciente.objects.create(**validated_data)
+        
+        if dietas:
+            paciente.dietas.set(dietas)
+        if alergias:
+            paciente.alergias.set(alergias)
+            
         return paciente
 
     def update(self, instance, validated_data):
@@ -139,7 +151,7 @@ class PacienteSerializer(serializers.ModelSerializer):
         """
         instance.name = validated_data.get('name', instance.name)
         instance.cama = validated_data.get('cama', instance.cama)
-        instance.recommended_diet = validated_data.get('recommended_diet', instance.recommended_diet)
+        instance.dietas = validated_data.get('dietas', instance.dietas)
         instance.alergias = validated_data.get('alergias', instance.alergias)
         instance.activo = validated_data.get('activo', instance.activo)
         

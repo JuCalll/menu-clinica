@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('alergias', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='dietas.alergia')),
                 ('cama', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='camas.cama')),
-                ('recommended_diet', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='dietas.dieta')),
+                ('dietas', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='dietas.dieta')),
             ],
         ),
     ]

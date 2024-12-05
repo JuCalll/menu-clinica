@@ -86,7 +86,7 @@ class DietaDetailView(generics.RetrieveUpdateDestroyAPIView):
     def _validar_pacientes_activos(self, dieta):
         """Método auxiliar para validar pacientes activos con una dieta."""
         pacientes_con_dieta = Paciente.objects.filter(
-            recommended_diet=dieta, 
+            dietas=dieta, 
             activo=True
         )
         if pacientes_con_dieta.exists():

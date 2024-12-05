@@ -6,7 +6,6 @@ Define las rutas y vistas relacionadas con la gestión de pedidos hospitalarios:
 - Detalle, actualización y eliminación de pedidos específicos
 - Actualización de estado de pedidos
 - Consulta de pedidos completados
-- Generación de impresiones de pedidos
 """
 
 from django.urls import path
@@ -15,7 +14,6 @@ from .views import (
     PedidoDetailView, 
     PedidoStatusUpdateView, 
     PedidoCompletadosView, 
-    PedidoPrintView
 )
 
 urlpatterns = [
@@ -38,9 +36,4 @@ urlpatterns = [
     path('completados/', 
          PedidoCompletadosView.as_view(), 
          name='pedido-completados'),
-    
-    # Ruta para generar la versión imprimible de un pedido
-    path('<int:pk>/print/', 
-         PedidoPrintView.as_view(), 
-         name='pedido-print'),
 ]

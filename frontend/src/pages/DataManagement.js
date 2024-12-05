@@ -410,15 +410,23 @@ const DataManagement = () => {
                     <div className="info-item">
                       <MedicineBoxOutlined className="info-icon" />
                       <div className="info-content">
-                        <div className="info-label">Dieta Recomendada</div>
-                        <div className="info-value">{paciente.recommended_diet}</div>
+                        <div className="info-label">Dietas Recomendadas</div>
+                        <div className="info-value">
+                          {paciente.dietas?.length > 0 
+                            ? paciente.dietas.join(', ') 
+                            : 'Sin dietas asignadas'}
+                        </div>
                       </div>
                     </div>
                     <div className="info-item">
                       <WarningOutlined className="info-icon" />
                       <div className="info-content">
                         <div className="info-label">Alergias</div>
-                        <div className="info-value">{paciente.alergias || 'Sin alergias'}</div>
+                        <div className="info-value">
+                          {paciente.alergias?.length > 0 
+                            ? paciente.alergias.join(', ') 
+                            : 'Sin alergias'}
+                        </div>
                       </div>
                     </div>
                     <div className="info-item">

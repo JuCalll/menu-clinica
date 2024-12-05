@@ -428,10 +428,28 @@ $font-size-xxlarge: 32px; // Tamaño doble extra grande de fuente
       }
 
       .info-value {
-        font-size: 16px;
         color: $title-color;
-        font-weight: 600;
+        font-size: 16px;
         line-height: 1.4;
+        
+        // Para listas largas de dietas/alergias
+        &.multi-value {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          
+          span {
+            background: rgba($primary-color, 0.05);
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            
+            &:not(:last-child):after {
+              content: ",";
+              margin-left: 4px;
+            }
+          }
+        }
       }
     }
   }

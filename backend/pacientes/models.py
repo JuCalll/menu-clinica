@@ -26,8 +26,8 @@ class Paciente(models.Model):
         cedula (str): Número de identificación del paciente.
         name (str): Nombre completo del paciente.
         cama (Cama): Cama asignada al paciente.
-        recommended_diet (Dieta): Dieta recomendada para el paciente.
-        alergias (Alergia): Alergias registradas del paciente.
+        dietas (ManyToManyField): Dietas recomendadas para el paciente.
+        alergias (ManyToManyField): Alergias registradas del paciente.
         activo (bool): Estado del paciente en el sistema.
         created_at (DateTime): Fecha y hora de registro del paciente.
     """
@@ -35,8 +35,8 @@ class Paciente(models.Model):
     cedula = models.CharField(max_length=20)  
     name = models.CharField(max_length=100)
     cama = models.ForeignKey(Cama, on_delete=models.CASCADE)
-    recommended_diet = models.ForeignKey(Dieta, on_delete=models.SET_NULL, null=True)
-    alergias = models.ForeignKey(Alergia, on_delete=models.SET_NULL, null=True)
+    dietas = models.ManyToManyField(Dieta, related_name='pacientes')
+    alergias = models.ManyToManyField(Alergia, related_name='pacientes')
     activo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)  
 

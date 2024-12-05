@@ -651,6 +651,75 @@ $font-size-xxlarge: 28px; // Tamaño de fuente para títulos principales
       }
     }
   }
+
+  &__select-multiple {
+    .ant-select-selection-overflow {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 4px;
+      padding: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .ant-select-selection-item {
+      background: #e6f7ff;
+      border: 1px solid #91d5ff;
+      border-radius: 16px;
+      margin: 2px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      
+      .ant-select-selection-item-content {
+        margin-right: 4px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &__tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+
+    .tag-item {
+      background: rgba($primary-color, 0.05);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      
+      .anticon-close {
+        margin-left: 6px;
+        cursor: pointer;
+        
+        &:hover {
+          color: $secondary-color;
+        }
+      }
+    }
+  }
+
+  // Estilos específicos para el modal de creación
+  .ant-modal-body {
+    .ant-form-item {
+      margin-bottom: 16px;
+      
+      .ant-select {
+        width: 100%;
+      }
+    }
+  }
 }
 
 // Animación de entrada deslizante
@@ -880,6 +949,23 @@ $font-size-xxlarge: 28px; // Tamaño de fuente para títulos principales
       .gestion-panel__button {
         height: 40px;
         font-size: 14px;
+      }
+    }
+  }
+}
+
+// Ajustes para el modo oscuro si lo tienes
+.ant-select-dropdown {
+  &.ant-select-dropdown-placement-bottomLeft {
+    .ant-select-item-option {
+      padding: 8px 12px;
+      
+      &-selected {
+        background-color: #f0f2f5;
+      }
+      
+      &-active {
+        background-color: #f5f5f5;
       }
     }
   }

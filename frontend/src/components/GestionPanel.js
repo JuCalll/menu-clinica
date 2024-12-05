@@ -29,6 +29,7 @@ import {
   notification,
   Select,
   message,
+  Tag,
 } from "antd";
 import {
   createServicio,
@@ -86,8 +87,8 @@ const GestionPanel = ({
   const [newCamaName, setNewCamaName] = useState("");
   const [newPacienteID, setNewPacienteID] = useState("");
   const [newPacienteName, setNewPacienteName] = useState("");
-  const [newRecommendedDiet, setNewRecommendedDiet] = useState("");
-  const [newAllergies, setNewAllergies] = useState("");
+  const [newRecommendedDiet, setNewRecommendedDiet] = useState([]);
+  const [newAllergies, setNewAllergies] = useState([]);
 
   // Estados para selecciones
   const [selectedServicio, setSelectedServicio] = useState(null);
@@ -217,7 +218,7 @@ const GestionPanel = ({
    * Genera los mensajes de confirmación para activar/desactivar elementos
    * @param {boolean} isActivating - True si se está activando, false si se está desactivando
    * @param {string} type - Tipo de elemento ('servicios', 'habitaciones', 'camas', etc.)
-   * @returns {Object} Objeto con título y contenido del mensaje de confirmación
+   * @returns {Object} Objeto con título y contenido del mensaje de confirmaci��n
    */
   const getConfirmationMessages = (isActivating, type) => {
     /**
@@ -428,26 +429,25 @@ const GestionPanel = ({
       updatedItem.cama_id = cama.id;
 
       // Maneja alergias
-      if (item.alergias && item.alergias.id) {
-        updatedItem.alergias_id = item.alergias.id;
-      } else if (item.alergias && typeof item.alergias === "string") {
-        const alergia = alergias.find((a) => a.nombre === item.alergias);
-        updatedItem.alergias_id = alergia ? alergia.id : null;
+      if (item.alergias_ids && Array.isArray(item.alergias_ids)) {
+        updatedItem.alergias_ids = item.alergias_ids;
+      } else if (item.alergias && Array.isArray(item.alergias)) {
+        updatedItem.alergias_ids = item.alergias.map((alergia) =>
+          typeof alergia === "object" ? alergia.id : alergia
+        );
       } else {
-        updatedItem.alergias_id = null;
+        updatedItem.alergias_ids = [];
       }
 
-      // Maneja dietas recomendadas
-      if (item.recommended_diet && item.recommended_diet.id) {
-        updatedItem.recommended_diet_id = item.recommended_diet.id;
-      } else if (
-        item.recommended_diet &&
-        typeof item.recommended_diet === "string"
-      ) {
-        const dieta = dietas.find((d) => d.nombre === item.recommended_diet);
-        updatedItem.recommended_diet_id = dieta ? dieta.id : null;
+      // Maneja dietas
+      if (item.dietas_ids && Array.isArray(item.dietas_ids)) {
+        updatedItem.dietas_ids = item.dietas_ids;
+      } else if (item.dietas && Array.isArray(item.dietas)) {
+        updatedItem.dietas_ids = item.dietas.map((dieta) =>
+          typeof dieta === "object" ? dieta.id : dieta
+        );
       } else {
-        updatedItem.recommended_diet_id = null;
+        updatedItem.dietas_ids = [];
       }
     }
 
@@ -460,7 +460,11 @@ const GestionPanel = ({
    */
   const handleError = (error) => {
     const errorMessage = error.response?.data?.detail || "Ha ocurrido un error";
-    showNotification("error", "Error", errorMessage);
+    showNotification(
+      "error",
+      "Error",
+      errorMessage
+    );
   };
 
   /**
@@ -470,8 +474,9 @@ const GestionPanel = ({
     setNewPacienteID("");
     setNewPacienteName("");
     setSelectedCama(null);
-    setNewRecommendedDiet(null);
-    setNewAllergies(null);
+    setNewRecommendedDiet([]);
+    setNewAllergies([]);
+    form.resetFields();
   };
 
   /**
@@ -672,8 +677,8 @@ const GestionPanel = ({
         cedula: newPacienteID,
         name: newPacienteName,
         cama_id: selectedCama,
-        recommended_diet_id: newRecommendedDiet || null,
-        alergias_id: newAllergies || null,
+        dietas_ids: newRecommendedDiet || [],
+        alergias_ids: newAllergies || [],
       });
       showNotification(
         "success",
@@ -705,7 +710,10 @@ const GestionPanel = ({
   };
   const openCreateHabitacionModal = () => setIsHabitacionModalOpen(true);
   const openCreateCamaModal = () => setIsCamaModalOpen(true);
-  const openCreatePacienteModal = () => setIsPacienteModalOpen(true);
+  const openCreatePacienteModal = () => {
+    resetPacienteForm();
+    setIsPacienteModalOpen(true);
+  };
   const openDietaManagementModal = () => setIsDietaModalOpen(true);
   const openAlergiaManagementModal = () => setIsAlergiaModalOpen(true);
 
@@ -881,9 +889,9 @@ const GestionPanel = ({
     setEditingPaciente(paciente);
 
     // Verificaciones de estado para dietas y alergias
-    if (paciente.recommended_diet?.id) {
+    if (paciente.dietas?.id) {
       const dietaActual = dietas.find(
-        (d) => d.id === paciente.recommended_diet.id
+        (d) => d.id === paciente.dietas.id
       );
       if (dietaActual && !dietaActual.activo) {
         message.warning(`La dieta "${dietaActual.nombre}" está inactiva`);
@@ -901,7 +909,7 @@ const GestionPanel = ({
       pacienteCedula: paciente.cedula,
       pacienteName: paciente.name,
       camaId: paciente.cama.id,
-      recommendedDietId: paciente.recommended_diet?.id,
+      recommendedDietId: paciente.dietas?.id,
       alergiasId: paciente.alergias?.id,
     });
 
@@ -920,8 +928,8 @@ const GestionPanel = ({
         cedula: values.pacienteCedula,
         name: values.pacienteName,
         cama_id: values.camaId,
-        recommended_diet_id: values.recommendedDietId,
-        alergias_id: values.alergiasId,
+        dietas_ids: values.recommendedDietId || [],
+        alergias_ids: values.alergiasId || [],
       };
 
       await api.put(`/pacientes/${editingPaciente.id}/`, updatedPaciente);
@@ -1440,15 +1448,43 @@ const GestionPanel = ({
                 },
                 {
                   title: "Dieta Recomendada",
-                  dataIndex: "recommended_diet",
-                  key: "recommended_diet",
+                  dataIndex: "dietas",
+                  key: "dietas",
                   width: 450,
+                  render: (dietas) => {
+                    if (!dietas || dietas.length === 0) return null;
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {Array.isArray(dietas) ? dietas.map((dieta, index) => (
+                          <Tag color="blue" key={index}>
+                            {typeof dieta === 'string' ? dieta : dieta.nombre}
+                          </Tag>
+                        )) : (
+                          <Tag color="blue">{dietas}</Tag>
+                        )}
+                      </div>
+                    );
+                  }
                 },
                 {
                   title: "Alergias",
                   dataIndex: "alergias",
                   key: "alergias",
                   width: 400,
+                  render: (alergias) => {
+                    if (!alergias || alergias.length === 0) return null;
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {Array.isArray(alergias) ? alergias.map((alergia, index) => (
+                          <Tag color="red" key={index}>
+                            {typeof alergia === 'string' ? alergia : alergia.nombre}
+                          </Tag>
+                        )) : (
+                          <Tag color="red">{alergias}</Tag>
+                        )}
+                      </div>
+                    );
+                  }
                 },
                 {
                   title: "Activo",
@@ -1553,24 +1589,45 @@ const GestionPanel = ({
                 </Form.Item>
 
                 {/* Asignación de dieta */}
-                <Form.Item name="recommendedDietId" label="Dieta Recomendada">
-                  <Select placeholder="Seleccione una dieta" allowClear>
-                    {dietas.map((dieta) => (
-                      <Option key={`dieta-${dieta.id}`} value={dieta.id}>
-                        {dieta.nombre}
-                      </Option>
-                    ))}
+                <Form.Item label="Dietas">
+                  <Select
+                    mode="multiple"
+                    value={newRecommendedDiet}
+                    onChange={(value) => setNewRecommendedDiet(value)}
+                    placeholder="Seleccione las dietas"
+                    style={{ width: "100%" }}
+                  >
+                    {dietas
+                      .filter((dieta) => dieta.activo)
+                      .map((dieta) => (
+                        <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                          {dieta.nombre}
+                        </Option>
+                      ))}
                   </Select>
                 </Form.Item>
 
-                {/* Asignación de alergias */}
-                <Form.Item name="alergiasId" label="Alergias">
-                  <Select placeholder="Seleccione una alergia" allowClear>
-                    {alergias.map((alergia) => (
-                      <Option key={`alergia-${alergia.id}`} value={alergia.id}>
-                        {alergia.nombre}
-                      </Option>
-                    ))}
+                <Form.Item name="alergias_ids" label="Alergias">
+                  <Select
+                    mode="multiple"
+                    value={newAllergies}
+                    onChange={(value) => setNewAllergies(value)}
+                    placeholder="Seleccione las alergias"
+                    style={{ width: "100%" }}
+                    allowClear
+                    className="gestion-panel__select-multiple"
+                  >
+                    {/* Muestra solo alergias activas */}
+                    {alergias
+                      .filter((alergia) => alergia.activo)
+                      .map((alergia) => (
+                        <Option
+                          key={`alergia-${alergia.id}`}
+                          value={alergia.id}
+                        >
+                          {alergia.nombre}
+                        </Option>
+                      ))}
                   </Select>
                 </Form.Item>
               </Form>
@@ -1650,10 +1707,12 @@ const GestionPanel = ({
                 {/* Asignación de dieta */}
                 <Form.Item label="Dieta Recomendada">
                   <Select
+                    mode="multiple"
                     value={newRecommendedDiet}
                     onChange={(value) => setNewRecommendedDiet(value)}
-                    placeholder="Seleccione una dieta"
-                    allowClear
+                    placeholder="Seleccione las dietas"
+                    style={{ width: "100%" }}
+                    className="gestion-panel__select-multiple"
                   >
                     {/* Muestra solo dietas activas */}
                     {dietas
@@ -1669,10 +1728,13 @@ const GestionPanel = ({
                 {/* Asignación de alergias */}
                 <Form.Item label="Alergias">
                   <Select
+                    mode="multiple"
                     value={newAllergies}
                     onChange={(value) => setNewAllergies(value)}
-                    placeholder="Seleccione una alergia"
+                    placeholder="Seleccione las alergias"
+                    style={{ width: "100%" }}
                     allowClear
+                    className="gestion-panel__select-multiple"
                   >
                     {/* Muestra solo alergias activas */}
                     {alergias
