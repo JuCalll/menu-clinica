@@ -1611,6 +1611,7 @@ const GestionPanel = ({
                     }}
                     placeholder="Seleccione las dietas"
                     style={{ width: "100%" }}
+                    className="gestion-panel__select-multiple"
                   >
                     {dietas
                       .filter((dieta) => dieta.activo)
@@ -1634,6 +1635,7 @@ const GestionPanel = ({
                     placeholder="Seleccione las alergias"
                     style={{ width: "100%" }}
                     allowClear
+                    className="gestion-panel__select-multiple"
                   >
                     {alergias
                       .filter((alergia) => alergia.activo)
@@ -1732,7 +1734,7 @@ const GestionPanel = ({
                     {dietas
                       .filter((dieta) => dieta.activo)
                       .map((dieta) => (
-                        <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                        <Option key={dieta.id} value={dieta.id}>
                           {dieta.nombre}
                         </Option>
                       ))}
