@@ -218,7 +218,7 @@ const GestionPanel = ({
    * Genera los mensajes de confirmación para activar/desactivar elementos
    * @param {boolean} isActivating - True si se está activando, false si se está desactivando
    * @param {string} type - Tipo de elemento ('servicios', 'habitaciones', 'camas', etc.)
-   * @returns {Object} Objeto con título y contenido del mensaje de confirmaci��n
+   * @returns {Object} Objeto con título y contenido del mensaje de confirmación
    */
   const getConfirmationMessages = (isActivating, type) => {
     /**
@@ -401,6 +401,11 @@ const GestionPanel = ({
 
     // Actualización específica para pacientes
     if (type === "pacientes") {
+      // Si solo estamos cambiando el estado activo, enviamos solo ese campo
+      if (Object.keys(updatedItem).length === 2 && 'activo' in updatedItem) {
+        return { activo: updatedItem.activo };
+      }
+
       const cama = item.cama ? item.cama : null;
       if (!cama) return;
 
@@ -886,31 +891,34 @@ const GestionPanel = ({
    * @param {Object} paciente - Paciente a editar
    */
   const handleEditPaciente = (paciente) => {
+    console.log('Editando paciente:', paciente);
     setEditingPaciente(paciente);
 
-    // Verificaciones de estado para dietas y alergias
-    if (paciente.dietas?.id) {
-      const dietaActual = dietas.find(
-        (d) => d.id === paciente.dietas.id
-      );
-      if (dietaActual && !dietaActual.activo) {
-        message.warning(`La dieta "${dietaActual.nombre}" está inactiva`);
-      }
-    }
+    // Extraer los IDs de las dietas y alergias
+    const dietasIds = paciente.dietas ? 
+      (Array.isArray(paciente.dietas) ? 
+        paciente.dietas.map(d => d.id) : 
+        []
+      ) : [];
 
-    if (paciente.alergias?.id) {
-      const alergiaActual = alergias.find((a) => a.id === paciente.alergias.id);
-      if (alergiaActual && !alergiaActual.activo) {
-        message.warning(`La alergia "${alergiaActual.nombre}" está inactiva`);
-      }
-    }
+    const alergiasIds = paciente.alergias ? 
+      (Array.isArray(paciente.alergias) ? 
+        paciente.alergias.map(a => a.id) : 
+        []
+      ) : [];
 
+    console.log('Dietas IDs:', dietasIds);
+    console.log('Alergias IDs:', alergiasIds);
+
+    // Establecer los valores iniciales en el estado
+    setNewRecommendedDiet(dietasIds);
+    setNewAllergies(alergiasIds);
+
+    // Establecer los valores en el formulario
     form.setFieldsValue({
       pacienteCedula: paciente.cedula,
       pacienteName: paciente.name,
-      camaId: paciente.cama.id,
-      recommendedDietId: paciente.dietas?.id,
-      alergiasId: paciente.alergias?.id,
+      camaId: paciente.cama.id
     });
 
     setIsEditPacienteModalOpen(true);
@@ -923,14 +931,18 @@ const GestionPanel = ({
   const handleUpdatePaciente = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Usar los estados actualizados de dietas y alergias
       const updatedPaciente = {
-        ...editingPaciente,
         cedula: values.pacienteCedula,
         name: values.pacienteName,
         cama_id: values.camaId,
-        dietas_ids: values.recommendedDietId || [],
-        alergias_ids: values.alergiasId || [],
+        dietas_ids: newRecommendedDiet,
+        alergias_ids: newAllergies,
+        activo: editingPaciente.activo
       };
+
+      console.log('Enviando actualización:', updatedPaciente);
 
       await api.put(`/pacientes/${editingPaciente.id}/`, updatedPaciente);
       showNotification(
@@ -942,6 +954,7 @@ const GestionPanel = ({
       form.resetFields();
       refreshData();
     } catch (error) {
+      console.error('Error en actualización:', error);
       handleError(error);
     }
   };
@@ -1572,12 +1585,11 @@ const GestionPanel = ({
                 >
                   <Select placeholder="Seleccione una cama">
                     {habitaciones
-                      .flatMap((h) =>
-                        h.camas.filter(
-                          (c) =>
-                            c.activo &&
-                            (!pacientes.some((p) => p.cama.id === c.id) ||
-                              c.id === editingPaciente?.cama.id)
+                      .flatMap((h) => 
+                        h.camas.filter((c) => 
+                          c.activo && 
+                          (!pacientes.some((p) => p.cama.id === c.id) || 
+                            c.id === editingPaciente?.cama.id)
                         )
                       )
                       .map((cama) => (
@@ -1588,43 +1600,45 @@ const GestionPanel = ({
                   </Select>
                 </Form.Item>
 
-                {/* Asignación de dieta */}
+                {/* Asignación de dietas */}
                 <Form.Item label="Dietas">
                   <Select
                     mode="multiple"
                     value={newRecommendedDiet}
-                    onChange={(value) => setNewRecommendedDiet(value)}
+                    onChange={(value) => {
+                      console.log('Nuevas dietas seleccionadas:', value);
+                      setNewRecommendedDiet(value);
+                    }}
                     placeholder="Seleccione las dietas"
                     style={{ width: "100%" }}
                   >
                     {dietas
                       .filter((dieta) => dieta.activo)
                       .map((dieta) => (
-                        <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                        <Option key={dieta.id} value={dieta.id}>
                           {dieta.nombre}
                         </Option>
                       ))}
                   </Select>
                 </Form.Item>
 
-                <Form.Item name="alergias_ids" label="Alergias">
+                {/* Asignación de alergias */}
+                <Form.Item label="Alergias">
                   <Select
                     mode="multiple"
                     value={newAllergies}
-                    onChange={(value) => setNewAllergies(value)}
+                    onChange={(value) => {
+                      console.log('Nuevas alergias seleccionadas:', value);
+                      setNewAllergies(value);
+                    }}
                     placeholder="Seleccione las alergias"
                     style={{ width: "100%" }}
                     allowClear
-                    className="gestion-panel__select-multiple"
                   >
-                    {/* Muestra solo alergias activas */}
                     {alergias
                       .filter((alergia) => alergia.activo)
                       .map((alergia) => (
-                        <Option
-                          key={`alergia-${alergia.id}`}
-                          value={alergia.id}
-                        >
+                        <Option key={alergia.id} value={alergia.id}>
                           {alergia.nombre}
                         </Option>
                       ))}

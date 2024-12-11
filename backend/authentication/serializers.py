@@ -13,10 +13,12 @@ class UserSerializer(serializers.ModelSerializer):
     Maneja la serialización y deserialización de usuarios, incluyendo validaciones personalizadas.
     """
     
+    password = serializers.CharField(write_only=True)
+    
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'name', 'cedula', 'role', 'activo', 'password', 'ingreso_count')
-        extra_kwargs = {'password': {'write_only': True, 'required': False}}
+        fields = ('id', 'username', 'email', 'password', 'name', 'cedula', 'role', 'activo', 'ingreso_count')
+        read_only_fields = ('id', 'ingreso_count')
 
     def validate(self, data):
         """
@@ -61,25 +63,25 @@ class UserSerializer(serializers.ModelSerializer):
 
         return data
 
+    def create(self, validated_data):
+        """
+        Crea un nuevo usuario con contraseña hasheada.
+        """
+        password = validated_data.pop('password')
+        user = CustomUser(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
     def update(self, instance, validated_data):
         """
-        Actualiza una instancia de usuario existente.
-        
-        Args:
-            instance (CustomUser): Instancia del usuario a actualizar
-            validated_data (dict): Datos validados para la actualización
-            
-        Returns:
-            CustomUser: Instancia del usuario actualizada
+        Actualiza un usuario existente, hasheando la contraseña si se proporciona.
         """
         password = validated_data.pop('password', None)
-        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-
         if password:
             instance.set_password(password)
-
         instance.save()
         return instance
 

@@ -34,7 +34,7 @@ const PrintableSection = ({ pedido, section }) => {
         {pedido.paciente.alergias.length > 0 && (
           <p><strong>Alergias:</strong> {pedido.paciente.alergias.join(', ')}</p>
         )}
-        <p><strong>Sección:</strong> {formatTitle(section.titulo)}</p>
+        <p><strong>Sección:</strong> {formatTitle(section.titulo)} ({pedido.menu.nombre})</p>
       </div>
 
       <div className="location-info">

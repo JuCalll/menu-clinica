@@ -7,12 +7,3 @@ djangorestframework-simplejwt==5.3.1
 django-cors-headers==4.3.1
 pytest==8.0.0  # Para pruebas 
 pytest-django==4.8.0  # Para pruebas de Django
-
-## Development Dependencies
-@babel/plugin-proposal-private-property-in-object@7.21.11
-@babel/preset-env@7.25.4
-@babel/preset-react@7.24.7
-@testing-library/jest-dom@6.5.0
-@testing-library/react@16.0.1
-babel-jest@29.7.0
-jest@29.7.0

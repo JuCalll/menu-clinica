@@ -91,20 +91,26 @@ class PacienteSerializer(serializers.ModelSerializer):
         write_only=True
     )
     cama = CamaSerializer(read_only=True)
+    
+    # Campos para lectura y escritura de dietas
+    dietas = DietaSerializer(many=True, read_only=True)
     dietas_ids = serializers.PrimaryKeyRelatedField(
         queryset=Dieta.objects.all(),
-        source='dietas',
+        many=True,
         write_only=True,
-        many=True
+        required=False,
+        source='dietas'
     )
-    dietas = serializers.StringRelatedField(many=True, read_only=True)
+    
+    # Campos para lectura y escritura de alergias
+    alergias = AlergiaSerializer(many=True, read_only=True)
     alergias_ids = serializers.PrimaryKeyRelatedField(
         queryset=Alergia.objects.all(),
-        source='alergias',
+        many=True,
         write_only=True,
-        many=True
+        required=False,
+        source='alergias'
     )
-    alergias = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Paciente
@@ -123,16 +129,19 @@ class PacienteSerializer(serializers.ModelSerializer):
         Returns:
             Paciente: Nueva instancia del paciente creado.
         """
+        # Extraer las relaciones many-to-many
         dietas = validated_data.pop('dietas', [])
         alergias = validated_data.pop('alergias', [])
         
+        # Crear el paciente sin las relaciones many-to-many
         paciente = Paciente.objects.create(**validated_data)
         
+        # Establecer las relaciones many-to-many después de crear el paciente
         if dietas:
             paciente.dietas.set(dietas)
         if alergias:
             paciente.alergias.set(alergias)
-            
+        
         return paciente
 
     def update(self, instance, validated_data):
@@ -149,15 +158,23 @@ class PacienteSerializer(serializers.ModelSerializer):
         Raises:
             DRFValidationError: Si hay errores en la validación del modelo.
         """
-        instance.name = validated_data.get('name', instance.name)
-        instance.cama = validated_data.get('cama', instance.cama)
-        instance.dietas = validated_data.get('dietas', instance.dietas)
-        instance.alergias = validated_data.get('alergias', instance.alergias)
-        instance.activo = validated_data.get('activo', instance.activo)
+        dietas = validated_data.pop('dietas', None)
+        alergias = validated_data.pop('alergias', None)
         
+        # Actualizar los campos básicos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+            
         try:
             instance.save()
+            
+            # Actualizar relaciones many-to-many si se proporcionaron
+            if dietas is not None:
+                instance.dietas.set(dietas)
+            if alergias is not None:
+                instance.alergias.set(alergias)
+                
+            return instance
+            
         except ValidationError as e:
-            raise DRFValidationError({"detail": e.messages})
-
-        return instance
+            raise DRFValidationError(detail=str(e))

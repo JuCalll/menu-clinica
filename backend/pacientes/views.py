@@ -83,8 +83,8 @@ class PacienteDetailView(generics.RetrieveUpdateDestroyAPIView):
             details={
                 'name': instance.name,
                 'cedula': instance.cedula,
-                'dietas': instance.dietas.nombre if instance.dietas else None,
-                'alergias': instance.alergias.nombre if instance.alergias else None,
+                'dietas': [dieta.nombre for dieta in instance.dietas.all()],
+                'alergias': [alergia.nombre for alergia in instance.alergias.all()],
                 'activo': instance.activo,
             }
         )
