@@ -412,9 +412,13 @@ const DataManagement = () => {
                       <div className="info-content">
                         <div className="info-label">Dietas Recomendadas</div>
                         <div className="info-value">
-                          {paciente.dietas?.length > 0 
-                            ? paciente.dietas.join(', ') 
-                            : 'Sin dietas asignadas'}
+                          {paciente.dietas ? (
+                            Array.isArray(paciente.dietas) ? 
+                              paciente.dietas.map(d => typeof d === 'object' ? d.nombre : d).join(', ') :
+                              typeof paciente.dietas === 'object' ? 
+                                paciente.dietas.nombre || 'No especificada' : 
+                                paciente.dietas || 'No especificada'
+                          ) : 'Sin dietas asignadas'}
                         </div>
                       </div>
                     </div>
@@ -423,9 +427,13 @@ const DataManagement = () => {
                       <div className="info-content">
                         <div className="info-label">Alergias</div>
                         <div className="info-value">
-                          {paciente.alergias?.length > 0 
-                            ? paciente.alergias.join(', ') 
-                            : 'Sin alergias'}
+                          {paciente.alergias ? (
+                            Array.isArray(paciente.alergias) ? 
+                              paciente.alergias.map(a => typeof a === 'object' ? a.nombre : a).join(', ') :
+                              typeof paciente.alergias === 'object' ? 
+                                paciente.alergias.nombre || 'No especificada' : 
+                                paciente.alergias || 'Sin alergias'
+                          ) : 'Sin alergias'}
                         </div>
                       </div>
                     </div>

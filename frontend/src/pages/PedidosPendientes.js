@@ -309,11 +309,11 @@ const PedidosPendientes = () => {
           <h5>{formatTitle(tipo)}</h5>
           {opcionesSeleccionadas.map((opcion) => (
             <div key={opcion.id} className="option-item">
-              <span className="option-text">{opcion.texto}</span>
+              <span className="option-text">{opcion.texto || ''}</span>
               {pedido.adicionales?.bebidasPreparacion?.[opcion.id] && (
                 <Tag color="blue" className="preparacion-tag">
                   {formatTitle(
-                    pedido.adicionales.bebidasPreparacion[opcion.id]
+                    pedido.adicionales.bebidasPreparacion[opcion.id] || ''
                   )}
                 </Tag>
               )}
@@ -343,7 +343,7 @@ const PedidosPendientes = () => {
    */
   const handlePrint = (pedido, section) => {
     const printWindow = window.open('', '_blank');
-    
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -470,19 +470,34 @@ const PedidosPendientes = () => {
         </body>
       </html>
     `);
-  
+
     ReactDOM.render(
       <PrintableSection pedido={pedido} section={section} />,
       printWindow.document.getElementById('print-root')
     );
-  
+
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.focus();
       printWindow.print();
       setTimeout(() => printWindow.close(), 1000);
     }, 500);
+  };
+
+  // Función auxiliar para formatear arrays de objetos (dietas o alergias)
+  const formatArrayData = (data) => {
+    if (!data) return 'No especificada';
+    if (Array.isArray(data)) {
+      return data
+        .map(item => typeof item === 'object' ? item.nombre : item)
+        .filter(Boolean)
+        .join(', ') || 'No especificada';
+    }
+    if (typeof data === 'object' && data !== null) {
+      return data.nombre || 'No especificada';
+    }
+    return data || 'No especificada';
   };
 
   // Renderizado condicional para estado de carga
@@ -571,13 +586,12 @@ const PedidosPendientes = () => {
                         <div
                           className="progress-fill"
                           style={{
-                            width: `${
-                              (Object.values(pedido.sectionStatus || {}).filter(
-                                (status) => status === "completado"
-                              ).length /
+                            width: `${(Object.values(pedido.sectionStatus || {}).filter(
+                              (status) => status === "completado"
+                            ).length /
                                 pedido.menu.sections.length) *
                               100
-                            }%`,
+                              }%`,
                           }}
                         />
                       </div>
@@ -597,14 +611,14 @@ const PedidosPendientes = () => {
                                 <Tag
                                   color={
                                     pedido.sectionStatus?.[section.titulo] ===
-                                    "completado"
+                                      "completado"
                                       ? "success"
                                       : "warning"
                                   }
                                   className="status-tag"
                                 >
                                   {pedido.sectionStatus?.[section.titulo] ===
-                                  "completado"
+                                    "completado"
                                     ? "Completado"
                                     : "Pendiente"}
                                 </Tag>
@@ -650,13 +664,11 @@ const PedidosPendientes = () => {
                       {/* Información médica */}
                       <div className="patient-medical-info">
                         <Tag color="blue">
-                          Dieta:{" "}
-                          {pedido.paciente.dietas ||
-                            "No especificada"}
+                          Dieta: {formatArrayData(pedido.paciente.dietas)}
                         </Tag>
                         {pedido.paciente.alergias && (
                           <Tag color="red">
-                            Alergias: {pedido.paciente.alergias}
+                            Alergias: {formatArrayData(pedido.paciente.alergias)}
                           </Tag>
                         )}
                       </div>
@@ -667,9 +679,8 @@ const PedidosPendientes = () => {
             >
               {/* Contenido del pedido */}
               <Card
-                className={`pedido-card ${
-                  !pedido.paciente.activo ? "inactive-patient" : ""
-                }`}
+                className={`pedido-card ${!pedido.paciente.activo ? "inactive-patient" : ""
+                  }`}
               >
                 {/* Secciones del menú */}
                 {pedido.menu.sections.map((section) => (
@@ -679,7 +690,7 @@ const PedidosPendientes = () => {
                       <Tag
                         color={
                           pedido.sectionStatus?.[section.titulo] ===
-                          "completado"
+                            "completado"
                             ? "success"
                             : "warning"
                         }

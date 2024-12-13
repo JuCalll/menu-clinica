@@ -211,7 +211,7 @@ const RealizarPedido = () => {
       selectedIds.forEach((optionId) => {
         opcionesArray.push({
           id: optionId,
-          selected: true,
+          selected: true
         });
       });
     });
@@ -559,6 +559,21 @@ const RealizarPedido = () => {
     const opcionesPorSeccion = {};
     let totalOpciones = 0;
 
+    // Función auxiliar para formatear arrays de objetos (dietas o alergias)
+    const formatArrayData = (data) => {
+      if (!data) return 'No especificada';
+      if (Array.isArray(data)) {
+        return data
+          .map(item => typeof item === 'object' ? item.nombre : item)
+          .filter(Boolean)
+          .join(', ') || 'No especificada';
+      }
+      if (typeof data === 'object' && data !== null) {
+        return data.nombre || 'No especificada';
+      }
+      return data || 'No especificada';
+    };
+
     // Organiza las opciones seleccionadas por sección
     selectedMenu?.sections.forEach((section) => {
       const opcionesSeccion = [];
@@ -596,19 +611,15 @@ const RealizarPedido = () => {
               Dietas Recomendadas
             </span>
             <span className="value">
-              {paciente?.dietas?.length > 0 
-                ? paciente.dietas.join(', ')
-                : "No especificada"}
+              {formatArrayData(paciente?.dietas)}
             </span>
           </div>
           <div className="info-row highlight">
             <span className="label">
               Alergias e Intolerancias
             </span>
-            <span className={`value ${!paciente?.alergias?.length ? 'no-alergias' : ''}`}>
-              {paciente?.alergias?.length > 0 
-                ? paciente.alergias.join(', ')
-                : "Sin alergias registradas"}
+            <span className={`value ${!paciente?.alergias ? 'no-alergias' : ''}`}>
+              {formatArrayData(paciente?.alergias) || 'Sin alergias registradas'}
             </span>
           </div>
         </div>
