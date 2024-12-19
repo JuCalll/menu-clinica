@@ -149,11 +149,18 @@ class PacienteSerializer(serializers.ModelSerializer):
         Raises:
             DRFValidationError: Si hay errores en la validación del modelo.
         """
-        instance.name = validated_data.get('name', instance.name)
-        instance.cama = validated_data.get('cama', instance.cama)
-        instance.dietas = validated_data.get('dietas', instance.dietas)
-        instance.alergias = validated_data.get('alergias', instance.alergias)
-        instance.activo = validated_data.get('activo', instance.activo)
+        # Si solo se está actualizando el estado activo, no requerimos las relaciones
+        if len(validated_data) == 1 and 'activo' in validated_data:
+            instance.activo = validated_data['activo']
+        else:
+            # Actualización normal con todos los campos
+            instance.name = validated_data.get('name', instance.name)
+            instance.cama = validated_data.get('cama', instance.cama)
+            if 'dietas' in validated_data:
+                instance.dietas.set(validated_data['dietas'])
+            if 'alergias' in validated_data:
+                instance.alergias.set(validated_data['alergias'])
+            instance.activo = validated_data.get('activo', instance.activo)
         
         try:
             instance.save()

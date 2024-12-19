@@ -218,7 +218,7 @@ const GestionPanel = ({
    * Genera los mensajes de confirmación para activar/desactivar elementos
    * @param {boolean} isActivating - True si se está activando, false si se está desactivando
    * @param {string} type - Tipo de elemento ('servicios', 'habitaciones', 'camas', etc.)
-   * @returns {Object} Objeto con título y contenido del mensaje de confirmaci��n
+   * @returns {Object} Objeto con título y contenido del mensaje de confirmación
    */
   const getConfirmationMessages = (isActivating, type) => {
     /**
@@ -401,6 +401,11 @@ const GestionPanel = ({
 
     // Actualización específica para pacientes
     if (type === "pacientes") {
+      // Si solo estamos cambiando el estado activo, enviamos solo ese campo
+      if (Object.keys(updatedItem).length === 2 && 'activo' in updatedItem) {
+        return { activo: updatedItem.activo };
+      }
+
       const cama = item.cama ? item.cama : null;
       if (!cama) return;
 
