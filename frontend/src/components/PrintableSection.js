@@ -20,6 +20,21 @@ const PrintableSection = ({ pedido, section }) => {
     ));
   };
 
+  // Función auxiliar para formatear arrays de objetos (dietas o alergias)
+  const formatArrayData = (data) => {
+    if (!data) return 'No especificada';
+    if (Array.isArray(data)) {
+      return data
+        .map(item => typeof item === 'object' ? item.nombre : item)
+        .filter(Boolean)
+        .join(', ') || 'No especificada';
+    }
+    if (typeof data === 'object' && data !== null) {
+      return data.nombre || 'No especificada';
+    }
+    return data || 'No especificada';
+  };
+
   return (
     <div className="printable-section">
       <div className="print-header">
@@ -30,9 +45,9 @@ const PrintableSection = ({ pedido, section }) => {
       <div className="patient-info">
         <h3>Datos del Paciente</h3>
         <p><strong>Nombre:</strong> {pedido.paciente.name}</p>
-        <p><strong>Dietas:</strong> {pedido.paciente.dietas.join(', ') || "No especificada"}</p>
-        {pedido.paciente.alergias.length > 0 && (
-          <p><strong>Alergias:</strong> {pedido.paciente.alergias.join(', ')}</p>
+        <p><strong>Dietas:</strong> {formatArrayData(pedido.paciente.dietas)}</p>
+        {pedido.paciente.alergias && (
+          <p><strong>Alergias:</strong> {formatArrayData(pedido.paciente.alergias)}</p>
         )}
         <p><strong>Sección:</strong> {formatTitle(section.titulo)} ({pedido.menu.nombre})</p>
       </div>

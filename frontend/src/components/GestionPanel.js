@@ -891,31 +891,41 @@ const GestionPanel = ({
    * @param {Object} paciente - Paciente a editar
    */
   const handleEditPaciente = (paciente) => {
+    console.log('Editando paciente:', paciente);
     setEditingPaciente(paciente);
 
-    // Verificaciones de estado para dietas y alergias
-    if (paciente.dietas?.id) {
-      const dietaActual = dietas.find(
-        (d) => d.id === paciente.dietas.id
-      );
-      if (dietaActual && !dietaActual.activo) {
-        message.warning(`La dieta "${dietaActual.nombre}" está inactiva`);
+    // Extraer los IDs de las dietas
+    let dietasIds = [];
+    if (paciente.dietas) {
+      if (Array.isArray(paciente.dietas)) {
+        dietasIds = paciente.dietas.map(d => typeof d === 'object' ? d.id : d);
+      } else if (typeof paciente.dietas === 'object') {
+        dietasIds = [paciente.dietas.id];
       }
     }
 
-    if (paciente.alergias?.id) {
-      const alergiaActual = alergias.find((a) => a.id === paciente.alergias.id);
-      if (alergiaActual && !alergiaActual.activo) {
-        message.warning(`La alergia "${alergiaActual.nombre}" está inactiva`);
+    // Extraer los IDs de las alergias
+    let alergiasIds = [];
+    if (paciente.alergias) {
+      if (Array.isArray(paciente.alergias)) {
+        alergiasIds = paciente.alergias.map(a => typeof a === 'object' ? a.id : a);
+      } else if (typeof paciente.alergias === 'object') {
+        alergiasIds = [paciente.alergias.id];
       }
     }
 
+    console.log('Dietas IDs:', dietasIds);
+    console.log('Alergias IDs:', alergiasIds);
+
+    // Establecer los valores en el estado
+    setNewRecommendedDiet(dietasIds);
+    setNewAllergies(alergiasIds);
+
+    // Establecer los valores en el formulario
     form.setFieldsValue({
       pacienteCedula: paciente.cedula,
       pacienteName: paciente.name,
-      camaId: paciente.cama.id,
-      recommendedDietId: paciente.dietas?.id,
-      alergiasId: paciente.alergias?.id,
+      camaId: paciente.cama?.id
     });
 
     setIsEditPacienteModalOpen(true);
@@ -928,14 +938,18 @@ const GestionPanel = ({
   const handleUpdatePaciente = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Usar los estados actualizados de dietas y alergias
       const updatedPaciente = {
-        ...editingPaciente,
         cedula: values.pacienteCedula,
         name: values.pacienteName,
         cama_id: values.camaId,
-        dietas_ids: values.recommendedDietId || [],
-        alergias_ids: values.alergiasId || [],
+        dietas_ids: newRecommendedDiet,
+        alergias_ids: newAllergies,
+        activo: editingPaciente.activo
       };
+
+      console.log('Enviando actualización:', updatedPaciente);
 
       await api.put(`/pacientes/${editingPaciente.id}/`, updatedPaciente);
       showNotification(
@@ -947,6 +961,7 @@ const GestionPanel = ({
       form.resetFields();
       refreshData();
     } catch (error) {
+      console.error('Error en actualización:', error);
       handleError(error);
     }
   };
@@ -1116,18 +1131,22 @@ const GestionPanel = ({
           <TabPane tab="Habitaciones" key="2">
             {/* Contenedor de acciones principales */}
             <div className="gestion-panel__actions-container">
-              <Button
-                className="gestion-panel__button"
-                onClick={openCreateHabitacionModal}
-              >
-                Crear Habitación
-              </Button>
-              <Button
-                className="gestion-panel__button"
-                onClick={openCreateCamaModal}
-              >
-                Crear Cama
-              </Button>
+              {userRole !== "jefe_enfermeria" && (
+                <>
+                  <Button
+                    className="gestion-panel__button"
+                    onClick={openCreateHabitacionModal}
+                  >
+                    Crear Habitación
+                  </Button>
+                  <Button
+                    className="gestion-panel__button"
+                    onClick={openCreateCamaModal}
+                  >
+                    Crear Cama
+                  </Button>
+                </>
+              )}
 
               {/* Filtro de habitaciones por servicio */}
               <Select
@@ -1200,20 +1219,24 @@ const GestionPanel = ({
                           >
                             <span className="cama-nombre">{cama.nombre}</span>
                             <div className="gestion-panel__cama-actions">
-                              <Button
-                                type="link"
-                                onClick={() => handleEditCama(cama)}
-                                className="gestion-panel__edit-button"
-                              >
-                                <EditOutlined />
-                              </Button>
-                              <Button
-                                type="link"
-                                onClick={() => handleDeleteCama(cama)}
-                                className="gestion-panel__delete-button"
-                              >
-                                <DeleteOutlined />
-                              </Button>
+                              {userRole !== "jefe_enfermeria" && (
+                                <>
+                                  <Button
+                                    type="link"
+                                    onClick={() => handleEditCama(cama)}
+                                    className="gestion-panel__edit-button"
+                                  >
+                                    <EditOutlined />
+                                  </Button>
+                                  <Button
+                                    type="link"
+                                    onClick={() => handleDeleteCama(cama)}
+                                    className="gestion-panel__delete-button"
+                                  >
+                                    <DeleteOutlined />
+                                  </Button>
+                                </>
+                              )}
                               <Switch
                                 checked={cama.activo}
                                 onChange={() => toggleActivo(cama, "camas")}
@@ -1225,7 +1248,7 @@ const GestionPanel = ({
                     </ul>
                   ),
                 },
-                {
+                userRole !== "jefe_enfermeria" && {
                   title: "Editar",
                   key: "edit",
                   width: 80,
@@ -1250,7 +1273,7 @@ const GestionPanel = ({
                     />
                   ),
                 },
-              ]}
+              ].filter(Boolean)}
             />
 
             {/* Modal para crear nueva habitación */}
@@ -1457,15 +1480,17 @@ const GestionPanel = ({
                   key: "dietas",
                   width: 450,
                   render: (dietas) => {
-                    if (!dietas || dietas.length === 0) return null;
+                    if (!dietas || dietas.length === 0) return "No especificada";
                     return (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {Array.isArray(dietas) ? dietas.map((dieta, index) => (
                           <Tag color="blue" key={index}>
-                            {typeof dieta === 'string' ? dieta : dieta.nombre}
+                            {typeof dieta === 'object' ? dieta.nombre || 'No especificada' : dieta}
                           </Tag>
-                        )) : (
-                          <Tag color="blue">{dietas}</Tag>
+                        )) : typeof dietas === 'object' ? (
+                          <Tag color="blue">{dietas.nombre || 'No especificada'}</Tag>
+                        ) : (
+                          <Tag color="blue">{dietas || 'No especificada'}</Tag>
                         )}
                       </div>
                     );
@@ -1477,15 +1502,17 @@ const GestionPanel = ({
                   key: "alergias",
                   width: 400,
                   render: (alergias) => {
-                    if (!alergias || alergias.length === 0) return null;
+                    if (!alergias || alergias.length === 0) return "Sin alergias";
                     return (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {Array.isArray(alergias) ? alergias.map((alergia, index) => (
                           <Tag color="red" key={index}>
-                            {typeof alergia === 'string' ? alergia : alergia.nombre}
+                            {typeof alergia === 'object' ? alergia.nombre || 'No especificada' : alergia}
                           </Tag>
-                        )) : (
-                          <Tag color="red">{alergias}</Tag>
+                        )) : typeof alergias === 'object' ? (
+                          <Tag color="red">{alergias.nombre || 'No especificada'}</Tag>
+                        ) : (
+                          <Tag color="red">{alergias || 'No especificada'}</Tag>
                         )}
                       </div>
                     );
@@ -1504,11 +1531,12 @@ const GestionPanel = ({
                     />
                   ),
                 },
-                {
+                userRole !== "jefe_enfermeria" ? {
                   title: "Editar",
                   key: "edit",
                   width: 80,
                   align: "center",
+                  fixed: "right",
                   render: (_, record) => (
                     <Button
                       type="link"
@@ -1518,8 +1546,8 @@ const GestionPanel = ({
                       <EditOutlined />
                     </Button>
                   ),
-                },
-              ]}
+                } : null,
+              ].filter(Boolean)}
             />
             <Modal
               className="gestion-panel__modal gestion-panel__fade-in"
@@ -1547,9 +1575,19 @@ const GestionPanel = ({
                       required: true,
                       message: "Por favor ingrese la cédula del paciente",
                     },
+                    {
+                      pattern: /^[a-zA-Z0-9]+$/,
+                      message: "La cédula solo puede contener letras y números",
+                    }
                   ]}
                 >
-                  <Input placeholder="Ingrese la cédula del paciente" />
+                  <Input 
+                    placeholder="Ingrese la cédula del paciente (números y letras permitidos)"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                      form.setFieldsValue({ pacienteCedula: value });
+                    }}
+                  />
                 </Form.Item>
                 <Form.Item
                   name="pacienteName"
@@ -1577,12 +1615,11 @@ const GestionPanel = ({
                 >
                   <Select placeholder="Seleccione una cama">
                     {habitaciones
-                      .flatMap((h) =>
-                        h.camas.filter(
-                          (c) =>
-                            c.activo &&
-                            (!pacientes.some((p) => p.cama.id === c.id) ||
-                              c.id === editingPaciente?.cama.id)
+                      .flatMap((h) => 
+                        h.camas.filter((c) => 
+                          c.activo && 
+                          (!pacientes.some((p) => p.cama.id === c.id) || 
+                            c.id === editingPaciente?.cama.id)
                         )
                       )
                       .map((cama) => (
@@ -1593,43 +1630,47 @@ const GestionPanel = ({
                   </Select>
                 </Form.Item>
 
-                {/* Asignación de dieta */}
+                {/* Asignación de dietas */}
                 <Form.Item label="Dietas">
                   <Select
                     mode="multiple"
                     value={newRecommendedDiet}
-                    onChange={(value) => setNewRecommendedDiet(value)}
+                    onChange={(value) => {
+                      console.log('Nuevas dietas seleccionadas:', value);
+                      setNewRecommendedDiet(value);
+                    }}
                     placeholder="Seleccione las dietas"
                     style={{ width: "100%" }}
+                    className="gestion-panel__select-multiple"
                   >
                     {dietas
                       .filter((dieta) => dieta.activo)
                       .map((dieta) => (
-                        <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                        <Option key={dieta.id} value={dieta.id}>
                           {dieta.nombre}
                         </Option>
                       ))}
                   </Select>
                 </Form.Item>
 
-                <Form.Item name="alergias_ids" label="Alergias">
+                {/* Asignación de alergias */}
+                <Form.Item label="Alergias">
                   <Select
                     mode="multiple"
                     value={newAllergies}
-                    onChange={(value) => setNewAllergies(value)}
+                    onChange={(value) => {
+                      console.log('Nuevas alergias seleccionadas:', value);
+                      setNewAllergies(value);
+                    }}
                     placeholder="Seleccione las alergias"
                     style={{ width: "100%" }}
                     allowClear
                     className="gestion-panel__select-multiple"
                   >
-                    {/* Muestra solo alergias activas */}
                     {alergias
                       .filter((alergia) => alergia.activo)
                       .map((alergia) => (
-                        <Option
-                          key={`alergia-${alergia.id}`}
-                          value={alergia.id}
-                        >
+                        <Option key={`alergia-${alergia.id}`} value={alergia.id}>
                           {alergia.nombre}
                         </Option>
                       ))}
@@ -1673,8 +1714,12 @@ const GestionPanel = ({
                 <Form.Item label="Cédula">
                   <Input
                     value={newPacienteID}
-                    onChange={(e) => setNewPacienteID(e.target.value)}
-                    placeholder="Ingrese la cédula del paciente"
+                    onChange={(e) => {
+                      // Permitir letras y números, eliminar espacios
+                      const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                      setNewPacienteID(value);
+                    }}
+                    placeholder="Ingrese la cédula del paciente (números y letras permitidos)"
                   />
                 </Form.Item>
                 <Form.Item label="Nombre">
@@ -1723,7 +1768,7 @@ const GestionPanel = ({
                     {dietas
                       .filter((dieta) => dieta.activo)
                       .map((dieta) => (
-                        <Option key={`dieta-${dieta.id}`} value={dieta.id}>
+                        <Option key={dieta.id} value={dieta.id}>
                           {dieta.nombre}
                         </Option>
                       ))}
