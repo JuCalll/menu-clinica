@@ -1642,6 +1642,10 @@ const GestionPanel = ({
                     placeholder="Seleccione las dietas"
                     style={{ width: "100%" }}
                     className="gestion-panel__select-multiple"
+                    showSearch
+                    filterOption={(input, option) =>
+                      option.children.toLowerCase().includes(input.toLowerCase())
+                    }
                   >
                     {dietas
                       .filter((dieta) => dieta.activo)
@@ -1666,11 +1670,18 @@ const GestionPanel = ({
                     style={{ width: "100%" }}
                     allowClear
                     className="gestion-panel__select-multiple"
+                    showSearch
+                    filterOption={(input, option) =>
+                      option.children.toLowerCase().includes(input.toLowerCase())
+                    }
                   >
                     {alergias
                       .filter((alergia) => alergia.activo)
                       .map((alergia) => (
-                        <Option key={`alergia-${alergia.id}`} value={alergia.id}>
+                        <Option
+                          key={`alergia-${alergia.id}`}
+                          value={alergia.id}
+                        >
                           {alergia.nombre}
                         </Option>
                       ))}
@@ -1763,8 +1774,11 @@ const GestionPanel = ({
                     placeholder="Seleccione las dietas"
                     style={{ width: "100%" }}
                     className="gestion-panel__select-multiple"
+                    showSearch
+                    filterOption={(input, option) =>
+                      option.children.toLowerCase().includes(input.toLowerCase())
+                    }
                   >
-                    {/* Muestra solo dietas activas */}
                     {dietas
                       .filter((dieta) => dieta.activo)
                       .map((dieta) => (
@@ -1785,8 +1799,11 @@ const GestionPanel = ({
                     style={{ width: "100%" }}
                     allowClear
                     className="gestion-panel__select-multiple"
+                    showSearch
+                    filterOption={(input, option) =>
+                      option.children.toLowerCase().includes(input.toLowerCase())
+                    }
                   >
-                    {/* Muestra solo alergias activas */}
                     {alergias
                       .filter((alergia) => alergia.activo)
                       .map((alergia) => (
